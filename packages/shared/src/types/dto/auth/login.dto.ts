@@ -1,78 +1,64 @@
-import { z } from 'zod';
-import { User } from '../../models/user.types';
+import { LoginMethod, ClientType } from '../../enums';
+import { UserDTO } from '../user';
 
 /**
  * Login request DTO
  */
-export interface LoginDTO {
-  email?: string;
-  phone?: string;
+export interface LoginRequestDTO {
+  identifier: string;  // email or phone
   password: string;
-  loginMethod: 'email' | 'phone';
+  loginMethod?: LoginMethod;
+  clientType?: ClientType;
+  deviceId?: string;
   rememberMe?: boolean;
-}
-
-/**
- * Login validation schema
- */
-export const LoginDTOSchema = z.object({
-  email: z.string().email('Invalid email format').optional(),
-  phone: z.string()
-    .regex(/^\+?[1-9]\d{8,14}$/, 'Invalid phone number')
-    .optional(),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  loginMethod: z.enum(['email', 'phone']),
-  rememberMe: z.boolean().optional().default(false),
-}).refine(
-  (data) => {
-    if (data.loginMethod === 'email') {
-      return !!data.email;
-    }
-    return !!data.phone;
-  },
-  {
-    message: 'Email or phone is required based on login method',
-  }
-);
-
-/**
- * User response DTO (without sensitive data)
- */
-export interface UserResponseDTO {
-  id: string;
-  name: string | null;
-  email: string;
-  role: string;
-  image: string | null;
-  phone: string | null;
-  position: string | null;
-  department: string | null;
-  isActive: boolean;
-  lastLoginAt: Date | string | null;
-  createdAt: Date | string;
 }
 
 /**
  * Login response DTO
  */
 export interface LoginResponseDTO {
-  user: UserResponseDTO;
-  accessToken: string;
-  refreshToken?: string; // Only for mobile
-  expiresIn?: number; // Token expiry in seconds
-  sessionId?: string; // Only for web
+  success: boolean;
+  user: UserDTO;
+  // For mobile
+  accessToken?: string;
+  refreshToken?: string;
+  expiresIn?: number;
+  // For web
+  sessionId?: string;
+  redirectUrl?: string;
 }
 
 /**
- * Refresh token DTO
+ * Refresh token request DTO
  */
-export interface RefreshTokenDTO {
+export interface RefreshTokenRequestDTO {
   refreshToken: string;
+  deviceId?: string;
 }
 
 /**
- * Refresh token validation schema
+ * Refresh token response DTO
  */
-export const RefreshTokenDTOSchema = z.object({
-  refreshToken: z.string().min(1, 'Refresh token is required'),
-});
+export interface RefreshTokenResponseDTO {
+  accessToken: string;
+  refreshToken?: string;
+  expiresIn: number;
+}
+
+/**
+ * Logout request DTO
+ */
+export interface LogoutRequestDTO {
+  refreshToken?: string;
+  sessionId?: string;
+  deviceId?: string;
+  everywhere?: boolean; // Logout from all devices
+}
+
+/**
+ * Logout response DTO
+ */
+export interface LogoutResponseDTO {
+  success: boolean;
+  message: string;
+}

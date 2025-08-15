@@ -1,12 +1,12 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@auth/prisma-adapter'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@repo/database'
 import { comparePassword } from '../utils/password'
 import { loginSchema } from '../schemas/auth.schema'
 import { createUserActivityLog } from '../utils/activity-logger'
 import { handleRegistrationWithInvite } from './registration'
-import type { User, Role } from '@prisma/client'
+import type { User, Role } from '@repo/database'
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as any,

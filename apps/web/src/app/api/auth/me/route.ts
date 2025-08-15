@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@repo/database';
 import { ApiResponse } from '@/lib/api/response';
 import { protectedRoute } from '@/lib/api/protected-route';
 import { sanitizeUser } from '@/lib/api/validators';

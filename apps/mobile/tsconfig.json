@@ -1,26 +1,39 @@
 {
-  "extends": "expo/tsconfig.base",
+  "extends": "@repo/config-typescript/react-native.json",
   "compilerOptions": {
-    "strict": true,
+    "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./*"
-      ],
-      "@/src/*": [
-        "./src/*"
-      ],
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/features/*": ["./src/features/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/utils/*": ["./src/utils/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/assets/*": ["./assets/*"],
+      "@repo/api": ["../../packages/api/src"],
+      "@repo/api/*": ["../../packages/api/src/*"],
+      "@repo/database": ["../../packages/database/src"],
+      "@repo/database/*": ["../../packages/database/src/*"],
       "@repo/shared": ["../../packages/shared/src"],
-      "@repo/shared/*": ["../../packages/shared/src/*"],
-      "@repo/ui": ["../../packages/ui/src"],
-      "@repo/ui/*": ["../../packages/ui/src/*"]
-    }
+      "@repo/shared/*": ["../../packages/shared/src/*"]
+    },
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
-    "nativewind-env.d.ts",
-    "env.d.ts"
+    "../../packages/*/src/**/*.ts",
+    "../../packages/*/src/**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "babel.config.js",
+    "metro.config.js"
   ]
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@repo/database'
 import type { VehicleCostSummary } from '@/types/fleet'
 
 // GET /api/vehicles/costs - Get vehicle cost summaries

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@repo/database'
 import { UpdateUserDTO } from '@/features/users/types'
 import { authenticateToken, hasRequiredRole } from '@/lib/auth/middleware'
 import { ApiResponse } from '@/lib/api/response'

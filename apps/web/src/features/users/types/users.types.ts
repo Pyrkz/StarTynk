@@ -1,4 +1,4 @@
-import { User, InvitationCode, Role, UserActivityLog } from '@prisma/client'
+import { User, InvitationCode, Role, UserActivityLog } from '@repo/database'
 
 // Enhanced User type with relations
 export interface UserWithRelations extends User {

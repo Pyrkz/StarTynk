@@ -215,22 +215,22 @@ export const RolePermissions: Record<Role, Permission[]> = {
     Permission.DELIVERY_CONFIRM,
   ],
   
-  [Role.DEVELOPER]: [
-    // View-only access to projects
-    Permission.PROJECT_VIEW,
-    Permission.PROJECT_VIEW_ALL,
-    
-    // View tasks
-    Permission.TASK_VIEW,
-    Permission.TASK_VIEW_ALL,
-    
-    // View quality reports
-    Permission.QUALITY_VIEW,
-    
-    // View reports and finance
-    Permission.REPORT_VIEW,
-    Permission.FINANCE_VIEW,
-  ],
+  // [Role.DEVELOPER]: [
+  //   // View-only access to projects
+  //   Permission.PROJECT_VIEW,
+  //   Permission.PROJECT_VIEW_ALL,
+  //   
+  //   // View tasks
+  //   Permission.TASK_VIEW,
+  //   Permission.TASK_VIEW_ALL,
+  //   
+  //   // View quality reports
+  //   Permission.QUALITY_VIEW,
+  //   
+  //   // View reports and finance
+  //   Permission.REPORT_VIEW,
+  //   Permission.FINANCE_VIEW,
+  // ],
   
   [Role.USER]: [
     // Basic view permissions

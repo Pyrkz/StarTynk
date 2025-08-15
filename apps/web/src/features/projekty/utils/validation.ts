@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { ProjectStatus } from '@prisma/client'
+import { ProjectStatus } from '@repo/database'
 
 export const createProjectSchema = z.object({
   name: z.string().min(1, 'Nazwa projektu jest wymagana').max(255),

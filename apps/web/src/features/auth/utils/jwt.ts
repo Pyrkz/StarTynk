@@ -1,6 +1,6 @@
 // JWT utils - używane gdy potrzebna jest własna implementacja tokenów
 // NextAuth zarządza tokenami automatycznie
-import type { Role } from '@prisma/client'
+import type { Role } from '@repo/database'
 
 interface JWTPayload {
   id: string

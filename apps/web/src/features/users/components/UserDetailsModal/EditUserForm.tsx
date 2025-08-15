@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button, Input } from '@/components/ui'
 import { UserWithRelations } from '@/features/users/types'
-import { Role } from '@prisma/client'
+import { Role } from '@repo/database'
 
 const editUserSchema = z.object({
   name: z.string().min(2, 'Nazwa musi mieć minimum 2 znaki').optional().or(z.literal('')),

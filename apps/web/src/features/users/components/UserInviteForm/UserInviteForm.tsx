@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { Input, Button } from '@/components/ui'
 import { CreateInvitationDTO } from '@/features/users/types'
-import { Role } from '@prisma/client'
+import { Role } from '@repo/database'
 
 interface UserInviteFormProps {
   onSubmit: (data: CreateInvitationDTO) => Promise<void>

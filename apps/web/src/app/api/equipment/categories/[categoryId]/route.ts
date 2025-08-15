@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/features/auth/lib/auth-options';
-import { prisma } from '@/lib/prisma';
-import { EquipmentStatus } from '@/lib/prisma-types';
+import { prisma } from '@repo/database';
+import { EquipmentStatus } from '@repo/shared/types';
 
 export async function GET(
   request: NextRequest,

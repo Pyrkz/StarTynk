@@ -1,8 +1,8 @@
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@repo/database'
 import { hashPassword } from '../utils/password'
 import { registerWithInviteSchema } from '../schemas/auth.schema'
 import { createUserActivityLog } from '../utils/activity-logger'
-import type { Role } from '@prisma/client'
+import type { Role } from '@repo/database'
 
 export async function handleRegistrationWithInvite(credentials: any) {
   try {

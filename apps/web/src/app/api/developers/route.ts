@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@repo/database'
 
 // GET /api/developers - List all active developers
 export async function GET() {

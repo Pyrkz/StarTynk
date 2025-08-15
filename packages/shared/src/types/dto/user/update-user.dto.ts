@@ -1,4 +1,3 @@
-import { z } from 'zod';
 import { Role } from '../../enums';
 
 /**
@@ -7,50 +6,48 @@ import { Role } from '../../enums';
 export interface UpdateUserDTO {
   name?: string;
   role?: Role;
-  phone?: string;
-  position?: string;
-  department?: string;
-  employmentStartDate?: Date | string;
-  employmentEndDate?: Date | string;
+  phone?: string | null;
+  position?: string | null;
+  department?: string | null;
+  employmentStartDate?: string | null;
+  employmentEndDate?: string | null;
   isActive?: boolean;
-  image?: string;
+  image?: string | null;
 }
-
-/**
- * Update user validation schema
- */
-export const UpdateUserDTOSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters').optional(),
-  role: z.nativeEnum(Role).optional(),
-  phone: z.string()
-    .regex(/^\+?[1-9]\d{8,14}$/, 'Invalid phone number')
-    .optional()
-    .nullable(),
-  position: z.string().optional().nullable(),
-  department: z.string().optional().nullable(),
-  employmentStartDate: z.union([z.date(), z.string()]).optional().nullable(),
-  employmentEndDate: z.union([z.date(), z.string()]).optional().nullable(),
-  isActive: z.boolean().optional(),
-  image: z.string().url('Invalid image URL').optional().nullable(),
-});
 
 /**
  * Update profile DTO (for users updating their own profile)
  */
 export interface UpdateProfileDTO {
   name?: string;
-  phone?: string;
-  image?: string;
+  phone?: string | null;
+  image?: string | null;
 }
 
 /**
- * Update profile validation schema
+ * Change password DTO
  */
-export const UpdateProfileDTOSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters').optional(),
-  phone: z.string()
-    .regex(/^\+?[1-9]\d{8,14}$/, 'Invalid phone number')
-    .optional()
-    .nullable(),
-  image: z.string().url('Invalid image URL').optional().nullable(),
-});
+export interface ChangePasswordDTO {
+  currentPassword: string;
+  newPassword: string;
+}
+
+/**
+ * Reset password DTO
+ */
+export interface ResetPasswordDTO {
+  token: string;
+  newPassword: string;
+}
+
+/**
+ * Update user response DTO
+ */
+export interface UpdateUserResponseDTO {
+  id: string;
+  email?: string | null;
+  phone?: string | null;
+  name?: string | null;
+  role: Role;
+  updatedAt: string;
+}

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@repo/database';
 import { ApiResponse } from '@/lib/api/response';
 import { protectedRoute } from '@/lib/api/protected-route';
 import { validateRequestBody } from '@/lib/api/validators';

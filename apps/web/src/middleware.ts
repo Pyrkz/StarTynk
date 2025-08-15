@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getToken } from 'next-auth/jwt'
-import type { Role } from '@prisma/client'
+import type { Role } from '@repo/database'
 
 // Konfiguracja tras
 const protectedRoutes = [
@@ -35,54 +35,93 @@ const roleHierarchy: Record<Role, number> = {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   
+  // Handle API versioning redirect
+  if (
+    pathname.startsWith('/api/') && 
+    !pathname.startsWith('/api/v') &&
+    !pathname.startsWith('/api/auth/[...nextauth]')
+  ) {
+    const newPath = pathname.replace('/api/', '/api/v1/');
+    const url = new URL(newPath, request.url);
+    url.search = request.nextUrl.search;
+    return NextResponse.redirect(url);
+  }
+
   // Handle CORS for API routes
   if (pathname.startsWith('/api')) {
     const response = NextResponse.next()
     
+    // Add API version header
+    response.headers.set('X-API-Version', process.env.API_VERSION || 'v1')
+    response.headers.set('X-Response-Time', Date.now().toString())
+    
     // Get origin from request
     const origin = request.headers.get('origin')
+    const env = process.env.NODE_ENV || 'production'
     
-    // Define allowed origins
-    const allowedOrigins = [
-      'http://localhost:8081', // Expo development
-      'http://localhost:19000', // Expo web
-      'http://localhost:19001', // Expo web
-      'http://localhost:19002', // Expo web
-      'http://localhost:3000', // Next.js development
-      'http://localhost:3001', // Alternative Next.js port
-    ]
-    
-    // Add production URLs from environment
-    if (process.env.MOBILE_APP_URL) {
-      allowedOrigins.push(process.env.MOBILE_APP_URL)
+    // Define allowed origins based on environment
+    const allowedOrigins: Record<string, (string | RegExp)[]> = {
+      development: [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:8081',
+        'http://localhost:19000',
+        'http://localhost:19001',
+        'http://localhost:19002',
+        'exp://localhost:8081',
+        /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d+$/,  // Local network IPs
+        /^http:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+$/,  // Local network IPs
+        /^exp:\/\/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+$/,  // Expo URLs
+      ],
+      staging: [
+        'https://staging.startynk.com',
+        'https://staging-mobile.startynk.com',
+        'exp://exp.host/@yourusername/startynk-staging',
+      ],
+      production: [
+        'https://startynk.com',
+        'https://www.startynk.com',
+        'https://mobile.startynk.com',
+        'exp://exp.host/@yourusername/startynk',
+      ],
     }
+    
+    // Add custom origins from environment
+    if (process.env.MOBILE_APP_URL) {
+      allowedOrigins[env].push(process.env.MOBILE_APP_URL)
+    }
+    
+    const origins = allowedOrigins[env] || allowedOrigins.production
     
     // Check if origin is allowed
-    const isAllowedOrigin = origin && (
-      allowedOrigins.includes(origin) ||
-      origin.includes('exp://') || // Expo development
-      origin.includes('expo.dev') || // Expo development
-      origin.includes('localhost') || // Local development
-      origin.includes('192.168.') || // Local network
-      origin.includes('10.0.') // Local network
-    )
+    const isAllowedOrigin = origin && origins.some(allowed => {
+      if (allowed instanceof RegExp) {
+        return allowed.test(origin)
+      }
+      return allowed === origin
+    })
     
-    // Set CORS headers
-    if (isAllowedOrigin) {
+    // Skip CORS for same-origin requests
+    const requestUrl = new URL(request.url)
+    if (origin === requestUrl.origin) {
+      // Same origin request, no CORS needed
+    } else if (!isAllowedOrigin && env === 'development') {
+      // In development, allow all origins but log warning
+      console.warn(`⚠️ CORS: Allowing origin ${origin} in development mode`)
+      response.headers.set('Access-Control-Allow-Origin', origin || '*')
+    } else if (isAllowedOrigin) {
       response.headers.set('Access-Control-Allow-Origin', origin)
-    } else if (process.env.NODE_ENV === 'development') {
-      // In development, allow any origin
-      response.headers.set('Access-Control-Allow-Origin', '*')
     }
     
+    // Set CORS headers
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH')
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-Client-Type, X-Device-Id, X-App-Version')
     response.headers.set('Access-Control-Allow-Credentials', 'true')
     response.headers.set('Access-Control-Max-Age', '86400') // 24 hours
     
     // Handle preflight requests
     if (request.method === 'OPTIONS') {
-      return new Response(null, { status: 200, headers: response.headers })
+      return new Response(null, { status: 204, headers: response.headers })
     }
     
     // For API routes, skip the auth check below

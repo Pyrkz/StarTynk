@@ -24,9 +24,9 @@ export interface ListProjectsDTO extends PaginationParams {
 }
 
 /**
- * Project statistics DTO
+ * Project statistics summary DTO
  */
-export interface ProjectStatisticsDTO {
+export interface ProjectStatisticsSummaryDTO {
   totalProjects: number;
   projectsByStatus: Record<ProjectStatus, number>;
   activeProjects: number;

@@ -1,6 +1,6 @@
 import { SIDEBAR_CONSTANTS } from './constants'
 import type { NavigationItem, NavigationGroup, SidebarState } from '../types'
-import type { Role } from '@prisma/client'
+import type { Role } from '@repo/database'
 
 /**
  * Check if user has required role for navigation item

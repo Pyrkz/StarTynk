@@ -1,12 +1,12 @@
-import { 
-  Vehicle, 
-  VehicleAssignment,
-  User,
-  VehicleStatus,
-  ReminderType
-} from '@prisma/client'
+/**
+ * Web-specific type extensions
+ * These types extend the base types from @repo/shared/types with UI-specific fields
+ */
 
-// Vehicle types
+import type { ReminderType } from '@repo/shared/types';
+import type { Vehicle, VehicleAssignment, User } from '@repo/database';
+
+// Vehicle types with UI-specific extensions
 export type VehicleWithCurrentAssignment = Vehicle & {
   assignments: (VehicleAssignment & { user: User })[]
 }
@@ -48,12 +48,3 @@ export type VehicleCostSummary = {
   fuelCost: number
   insuranceCost: number
 }
-
-// Re-export Prisma types for vehicles only
-export type { 
-  Vehicle,
-  VehicleAssignment,
-  VehicleStatus,
-  User,
-  ReminderType
-} from '@prisma/client'

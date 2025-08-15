@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { UserFilters, UsersListResponse, UserWithRelations, UpdateUserDTO } from '@/features/users/types'
+import { useUsers as useSharedUsers, useUpdateUser, useDeleteUser } from '@repo/features/users'
+import { UserFilters } from '@/features/users/types'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 interface UseUsersOptions {
   initialFilters?: UserFilters
@@ -9,106 +11,91 @@ interface UseUsersOptions {
 }
 
 export function useUsers(options: UseUsersOptions = {}) {
+  const router = useRouter()
   const { initialFilters = {}, autoFetch = true } = options
-  const [users, setUsers] = useState<UserWithRelations[]>([])
-  const [total, setTotal] = useState(0)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [filters, setFilters] = useState<UserFilters>(initialFilters)
 
-  const fetchUsers = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+  // Use shared hook with web-specific options
+  const {
+    users,
+    total,
+    isLoading: loading,
+    error,
+    filters,
+    setFilters,
+    refetch: fetchUsers,
+    pagination,
+  } = useSharedUsers({
+    initialFilters: {
+      search: initialFilters.search,
+      role: initialFilters.role === 'ALL' ? undefined : initialFilters.role,
+      isActive: initialFilters.isActive === 'ALL' ? undefined : initialFilters.isActive,
+    },
+    pageSize: initialFilters.pageSize || 10,
+  })
 
-    try {
-      const params = new URLSearchParams()
-      
-      if (filters.search) params.append('search', filters.search)
-      if (filters.role && filters.role !== 'ALL') params.append('role', filters.role)
-      if (filters.isActive !== undefined && filters.isActive !== 'ALL') {
-        params.append('isActive', String(filters.isActive))
-      }
-      if (filters.department) params.append('department', filters.department)
-      if (filters.hasLogin !== undefined) params.append('hasLogin', String(filters.hasLogin))
-      if (filters.sortBy) params.append('sortBy', filters.sortBy)
-      if (filters.sortOrder) params.append('sortOrder', filters.sortOrder)
-      if (filters.page) params.append('page', String(filters.page))
-      if (filters.pageSize) params.append('pageSize', String(filters.pageSize))
+  // Use shared mutations
+  const updateUserMutation = useUpdateUser()
+  const deleteUserMutation = useDeleteUser()
 
-      const response = await fetch(`/api/users?${params}`)
-      if (!response.ok) {
-        throw new Error('Failed to fetch users')
-      }
-
-      const data: UsersListResponse = await response.json()
-      setUsers(data.users)
-      setTotal(data.total)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-    } finally {
-      setLoading(false)
+  // Auto fetch on mount if needed
+  useEffect(() => {
+    if (autoFetch && !users.length && !loading) {
+      fetchUsers()
     }
-  }, [filters])
+  }, [autoFetch])
 
-  const updateUser = async (userId: string, data: UpdateUserDTO) => {
+  // Handle pagination changes from filters
+  useEffect(() => {
+    if (initialFilters.page && initialFilters.page !== pagination.page) {
+      pagination.goToPage(initialFilters.page)
+    }
+  }, [initialFilters.page])
+
+  // Web-specific update user wrapper
+  const updateUser = async (userId: string, data: any) => {
     try {
-      const response = await fetch(`/api/users/${userId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to update user')
-      }
-
-      const updatedUser = await response.json()
-      
-      // Update local state
-      setUsers((prevUsers) =>
-        prevUsers.map((user) => (user.id === userId ? updatedUser : user))
-      )
-
-      return updatedUser
+      const result = await updateUserMutation.mutateAsync({ id: userId, data })
+      return result
     } catch (err) {
       throw err
     }
   }
 
+  // Web-specific delete user wrapper
   const deleteUser = async (userId: string) => {
     try {
-      const response = await fetch(`/api/users/${userId}`, {
-        method: 'DELETE',
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to delete user')
-      }
-
-      // Refresh users list
+      await deleteUserMutation.mutateAsync(userId)
       await fetchUsers()
     } catch (err) {
       throw err
     }
   }
 
-  useEffect(() => {
-    if (autoFetch) {
-      fetchUsers()
-    }
-  }, [fetchUsers, autoFetch])
-
   return {
     users,
     total,
     loading,
-    error,
-    filters,
-    setFilters,
+    error: error ? error.message : null,
+    filters: {
+      ...filters,
+      role: filters.role || 'ALL',
+      isActive: filters.isActive ?? 'ALL',
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+    },
+    setFilters: (newFilters: UserFilters) => {
+      setFilters({
+        search: newFilters.search,
+        role: newFilters.role === 'ALL' ? undefined : newFilters.role,
+        isActive: newFilters.isActive === 'ALL' ? undefined : newFilters.isActive,
+      })
+      if (newFilters.page) {
+        pagination.goToPage(newFilters.page)
+      }
+      if (newFilters.pageSize) {
+        pagination.changePageSize(newFilters.pageSize)
+      }
+    },
     fetchUsers,
     updateUser,
     deleteUser,

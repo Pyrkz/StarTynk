@@ -7,14 +7,19 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
-    "build:vercel": "prisma generate && SKIP_ENV_VALIDATION=true next build",
+    "build": "next build",
+    "build:vercel": "SKIP_ENV_VALIDATION=true next build",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "test": "jest",
     "test:watch": "jest --watch",
-    "postinstall": "prisma generate",
+    "test:unit": "jest --testPathPattern='(unit|spec)\\.test\\.(ts|tsx)'",
+    "test:integration": "jest --testPathPattern='integration\\.test\\.(ts|tsx)' --runInBand",
+    "test:e2e": "playwright test",
+    "test:coverage": "jest --coverage",
+    "test:performance": "jest --testPathPattern='perf\\.test\\.(ts|tsx)'",
+    "analyze": "ANALYZE=true npm run build",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf .next .turbo node_modules"
   },
@@ -22,8 +27,10 @@
     "@auth/prisma-adapter": "^2.10.0",
     "@headlessui/react": "^2.2.6",
     "@hookform/resolvers": "^5.2.0",
-    "@prisma/client": "^6.12.0",
+    "@repo/database": "workspace:*",
+    "@repo/features": "workspace:*",
     "@repo/shared": "workspace:*",
+    "@tanstack/react-query": "^5.32.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/decimal.js": "^0.0.32",
     "@types/jsonwebtoken": "^9.0.10",
@@ -44,7 +51,8 @@
     "react-hook-form": "^7.61.1",
     "recharts": "^3.1.0",
     "tailwind-merge": "^3.3.1",
-    "zod": "^4.0.10"
+    "zod": "^4.0.10",
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -60,8 +68,9 @@
     "eslint-config-next": "15.4.4",
     "jest": "^30.0.5",
     "jest-environment-jsdom": "^30.0.5",
-    "prisma": "^6.12.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "webpack-bundle-analyzer": "^4.10.2",
+    "web-vitals": "^4.2.0"
   }
 }

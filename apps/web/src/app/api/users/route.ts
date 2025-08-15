@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@repo/database'
 import { UserFilters, UsersListResponse, UserWithRelations } from '@/features/users/types'
-import { Prisma } from '@prisma/client'
+import { Prisma } from '@repo/database'
 import { authenticateToken } from '@/lib/auth/middleware'
 import { ApiResponse } from '@/lib/api/response'
 

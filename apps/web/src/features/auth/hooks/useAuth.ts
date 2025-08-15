@@ -1,79 +1,47 @@
 'use client'
 
-import { useSession, signIn, signOut } from 'next-auth/react'
+import { useAuth as useSharedAuth, usePermissions } from '@repo/features/auth'
 import { useRouter } from 'next/navigation'
+import { signOut } from 'next-auth/react'
+import { LoginRequestDTO } from '@repo/shared/types'
 import { useCallback } from 'react'
-import type { Role } from '@prisma/client'
 import { roleHierarchy } from '../lib/role-utils'
 
-interface UseAuthReturn {
-  user: {
-    id: string
-    email: string
-    name?: string | null
-    image?: string | null
-    role: Role
-  } | null
-  isAuthenticated: boolean
-  isLoading: boolean
-  hasRole: (requiredRole: Role) => boolean
-  hasAnyRole: (roles: Role[]) => boolean
-  canAccess: (minRole: Role) => boolean
-  login: (email: string, password: string) => Promise<void>
-  logout: () => Promise<void>
-}
-
-export function useAuth(): UseAuthReturn {
-  const { data: session, status } = useSession()
+export function useAuth() {
   const router = useRouter()
+  const permissions = usePermissions()
   
-  const isLoading = status === 'loading'
-  const isAuthenticated = !!session?.user
-  
-  const hasRole = useCallback((requiredRole: Role): boolean => {
-    if (!session?.user?.role) return false
-    return session.user.role === requiredRole
-  }, [session])
-  
-  const hasAnyRole = useCallback((roles: Role[]): boolean => {
-    if (!session?.user?.role) return false
-    return roles.includes(session.user.role)
-  }, [session])
-  
-  const canAccess = useCallback((minRole: Role): boolean => {
-    if (!session?.user?.role) return false
-    return roleHierarchy[session.user.role] >= roleHierarchy[minRole]
-  }, [session])
-  
-  const login = useCallback(async (email: string, password: string) => {
-    const result = await signIn('credentials', {
-      email,
-      password,
-      redirect: false,
-    })
-    
-    if (result?.error) {
-      throw new Error(result.error)
-    }
-    
-    if (result?.ok) {
+  const auth = useSharedAuth({
+    onLoginSuccess: () => {
       router.push('/dashboard')
-    }
-  }, [router])
-  
-  const logout = useCallback(async () => {
-    await signOut({ redirect: false })
-    router.push('/login')
-  }, [router])
-  
+    },
+    onLogoutSuccess: async () => {
+      await signOut({ redirect: false })
+      router.push('/login')
+    },
+  })
+
+  // Web-specific login that uses the shared auth
+  const login = useCallback(async (email: string, password: string) => {
+    const credentials: LoginRequestDTO = { email, password }
+    auth.login(credentials)
+  }, [auth])
+
+  // Web-specific role check using roleHierarchy
+  const canAccess = useCallback((minRole: any): boolean => {
+    if (!auth.user?.role) return false
+    return roleHierarchy[auth.user.role] >= roleHierarchy[minRole]
+  }, [auth.user])
+
   return {
-    user: session?.user || null,
-    isAuthenticated,
-    isLoading,
-    hasRole,
-    hasAnyRole,
-    canAccess,
+    ...auth,
+    ...permissions,
+    // Override specific methods for web compatibility
     login,
-    logout,
+    canAccess,
+    // Add web-specific methods
+    redirectToLogin: () => router.push('/login'),
+    redirectToDashboard: () => router.push('/dashboard'),
+    redirectToProfile: () => router.push('/profile'),
   }
 }

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@repo/database';
 import { ApiResponse } from '@/lib/api/response';
 import { authenticateToken } from '@/lib/auth/middleware';
 import { sanitizeUser } from '@/lib/api/validators';

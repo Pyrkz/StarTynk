@@ -2,7 +2,7 @@
 // This file acts as a bridge to ensure TypeScript can properly resolve Prisma types
 
 // Import all needed types from Prisma client
-import type { Prisma } from '@prisma/client'
+import type { Prisma } from '@repo/database'
 
 // Export enums that are commonly used across the application
 export { 
@@ -15,7 +15,7 @@ export {
   TaskPriority,
   EquipmentStatus,
   EquipmentHistoryAction
-} from '@prisma/client'
+} from '@repo/database'
 
 // Export commonly used Prisma utility types
 export type { Prisma }
@@ -32,4 +32,4 @@ export type {
   User,
   Developer,
   Apartment
-} from '@prisma/client'
+} from '@repo/database'

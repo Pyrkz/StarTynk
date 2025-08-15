@@ -1,14 +1,15 @@
-// Import types from centralized Prisma types file
+/**
+ * Fleet-specific validation schemas and UI helpers
+ * Base types are imported from @repo/shared/types
+ */
+
 import { 
   VehicleStatus, 
-  VehicleType, 
   MaintenanceType, 
-  ReminderType
-} from '@/lib/prisma-types'
+  ReminderType,
+  VehicleType
+} from '@repo/shared/types'
 import { z } from 'zod'
-
-// Re-export Prisma enums
-export type { VehicleStatus, MaintenanceType, ReminderType, VehicleType }
 
 // Zod Schemas
 export const vehicleSchema = z.object({
@@ -46,78 +47,34 @@ export const reminderSchema = z.object({
   daysBefore: z.number().int().min(1).max(90).default(7),
 })
 
-// Define Vehicle model interface based on schema
-export interface Vehicle {
-  id: string
-  make: string
-  model: string
-  year: number
-  licensePlate: string
-  vin: string | null
-  type: VehicleType
-  insuranceExpiry: Date | null
-  inspectionExpiry: Date | null
-  purchaseDate: Date | null
-  purchasePrice: number | null
-  status: VehicleStatus
-  currentMileage: number
-  lastOilChangeMileage: number | null
-  lastTransOilChangeMileage: number | null
-  engineOilInterval: number
-  transOilInterval: number
-  tireRotationInterval: number
-  lastTireRotationMileage: number | null
-  generalServiceInterval: number
-  lastGeneralServiceMileage: number | null
-  photoUrl: string | null
-  location: string | null
-  isActive: boolean
-  createdAt: Date
-  updatedAt: Date
-  deletedAt: Date | null
+// Web UI specific vehicle extensions (not in database)
+export interface VehicleUIExtensions {
+  type?: VehicleType
+  currentMileage?: number
+  lastOilChangeMileage?: number | null
+  lastTransOilChangeMileage?: number | null
+  engineOilInterval?: number
+  transOilInterval?: number
+  tireRotationInterval?: number
+  lastTireRotationMileage?: number | null
+  generalServiceInterval?: number
+  lastGeneralServiceMileage?: number | null
+  photoUrl?: string | null
+  location?: string | null
 }
 
-export interface VehicleAssignment {
-  id: string
-  vehicleId: string
-  userId: string
-  startDate: Date
-  endDate: Date | null
-  isActive: boolean
-  createdAt: Date
-  updatedAt: Date
-}
+// Import base types from database
+import type { 
+  Vehicle,
+  VehicleAssignment,
+  VehicleMaintenance,
+  VehicleReminder
+} from '@repo/database'
 
-export interface VehicleMaintenance {
-  id: string
-  vehicleId: string
-  type: MaintenanceType
-  description: string
-  cost: number
-  serviceDate: Date
-  nextDueDate: Date | null
-  mileage: number | null
-  serviceProvider: string | null
-  invoiceUrl: string | null
-  isActive: boolean
-  createdAt: Date
-  updatedAt: Date
-  deletedAt: Date | null
-}
+// Extended vehicle type for UI
+export type ExtendedVehicle = Vehicle & VehicleUIExtensions
 
-export interface VehicleReminder {
-  id: string
-  vehicleId: string
-  type: ReminderType
-  dueDate: Date
-  description: string
-  daysBefore: number
-  isCompleted: boolean
-  isActive: boolean
-  createdAt: Date
-  updatedAt: Date
-}
-
+// VehicleProjectAssignment interface for future use
 export interface VehicleProjectAssignment {
   id: string
   vehicleId: string
@@ -129,8 +86,8 @@ export interface VehicleProjectAssignment {
   updatedAt: Date
 }
 
-// Extended Types with Relations
-export type VehicleWithRelations = Vehicle & {
+// Extended Types with Relations for UI
+export type VehicleWithRelations = ExtendedVehicle & {
   assignments: (VehicleAssignment & {
     user: {
       id: string
@@ -149,7 +106,7 @@ export type VehicleWithRelations = Vehicle & {
   reminders: VehicleReminder[]
 }
 
-export type VehicleWithCurrentAssignment = Vehicle & {
+export type VehicleWithCurrentAssignment = ExtendedVehicle & {
   assignments: (VehicleAssignment & {
     user: {
       id: string
@@ -159,11 +116,8 @@ export type VehicleWithCurrentAssignment = Vehicle & {
   })[]
 }
 
-// Base vehicle type from Prisma
-export type BaseVehicle = Vehicle
-
-// Extended vehicle data for details page
-export interface ExtendedVehicleData extends BaseVehicle {
+// Extended vehicle data for details page with UI-specific fields
+export interface ExtendedVehicleData extends ExtendedVehicle {
   assignments: Array<{
     id: string
     userId: string
@@ -252,18 +206,8 @@ export interface ExtendedVehicleData extends BaseVehicle {
   photos?: string[]
 }
 
-// Statistics Types
-export interface VehicleStatistics {
-  total: number
-  active: number
-  inMaintenance: number
-  retired: number
-  dueForService: number
-  dueForInspection: number
-  dueForInsurance: number
-}
-
-export interface VehicleCostSummary {
+// Additional cost fields for UI display
+export interface VehicleCostSummaryExtended {
   vehicleId: string
   vehicle: {
     make: string
@@ -277,20 +221,8 @@ export interface VehicleCostSummary {
   monthlyAverage: number
 }
 
-export interface UpcomingReminder {
-  id: string
-  vehicleId: string
-  vehicle: {
-    make: string
-    model: string
-    licensePlate: string
-  }
-  type: ReminderType
-  dueDate: string
-  daysUntilDue: number
-  description: string
-  urgency: 'critical' | 'urgent' | 'warning' | 'normal'
-}
+// Import UpcomingReminder type from index
+import type { UpcomingReminder } from './index'
 
 // Helper function to determine reminder urgency
 export function getReminderUrgency(daysUntilDue: number): UpcomingReminder['urgency'] {

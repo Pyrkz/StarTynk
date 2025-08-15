@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@repo/database';
 import { ApiResponse } from '@/lib/api/response';
 import { publicRoute } from '@/lib/api/protected-route';
 import { validateRequestBody, sanitizeUser } from '@/lib/api/validators';
@@ -8,6 +8,7 @@ import { validateUserCredentials, updateLastLogin } from '@/lib/auth/providers';
 import { generateTokenPair } from '@/lib/auth/jwt';
 import { LoginDTO } from '@shared/types';
 import { createUserActivityLog } from '@/features/auth/utils/activity-logger';
+import { rateLimit, createRateLimitResponse, addRateLimitHeaders } from '@/lib/rate-limit';
 
 // Validation schema for login
 const loginSchema = z.object({
@@ -28,6 +29,14 @@ const loginSchema = z.object({
 });
 
 export const POST = publicRoute(async (request: NextRequest) => {
+  // Apply rate limiting for login attempts
+  const rateLimitResult = await rateLimit(request, 'login');
+  const rateLimitResponse = createRateLimitResponse(rateLimitResult);
+  
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   // Validate request body
   const body = await validateRequestBody(request, loginSchema);
   
@@ -94,9 +103,12 @@ export const POST = publicRoute(async (request: NextRequest) => {
   });
 
   // Return user data with tokens
-  return ApiResponse.success({
+  const response = ApiResponse.success({
     user: sanitizeUser(user),
     accessToken,
     refreshToken
   });
+
+  // Add rate limit headers to response
+  return addRateLimitHeaders(response, rateLimitResult);
 });

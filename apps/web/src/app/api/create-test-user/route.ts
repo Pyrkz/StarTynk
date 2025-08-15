@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@repo/database'
 import { hashPassword } from '@/features/auth/utils/password'
 
 export async function GET() {

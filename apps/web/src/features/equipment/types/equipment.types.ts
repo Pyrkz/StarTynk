@@ -6,7 +6,7 @@ import {
   EquipmentStatus,
   EquipmentHistoryAction,
   User 
-} from '@prisma/client';
+} from '@repo/database';
 
 // ============== BASE TYPES ==============
 export interface EquipmentWithRelations {

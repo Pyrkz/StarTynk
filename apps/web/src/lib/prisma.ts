@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '@repo/database'
 
 // Skip Prisma initialization during build if no DATABASE_URL
 const globalForPrisma = globalThis as unknown as {

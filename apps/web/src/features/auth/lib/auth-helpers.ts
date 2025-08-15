@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from './auth-options'
 import { redirect } from 'next/navigation'
-import type { Role } from '@prisma/client'
+import type { Role } from '@repo/database'
 import { hasRequiredRole } from './role-utils'
 
 /**

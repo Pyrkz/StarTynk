@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@repo/database'
 import { authenticateToken, hasRequiredRole } from '@/lib/auth/middleware'
 import { ApiResponse } from '@/lib/api/response'
 import { parseQueryParams, listQuerySchema, sanitizeUser } from '@/lib/api/validators'
 import { z } from 'zod'
 import { Role, ProjectStatus } from '@shared/types'
-import { Prisma } from '@prisma/client'
+import { Prisma } from '@repo/database'
 
 // Helper to check authentication
 async function checkAuth(request: NextRequest) {

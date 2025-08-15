@@ -12,7 +12,12 @@
     "type-check": "tsc --noEmit",
     "clean": "rm -rf node_modules .expo .turbo",
     "dev": "expo start",
-    "build": "expo build"
+    "build": "expo build",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:unit": "jest --testPathPattern='(unit|spec)\\.test\\.(ts|tsx)'",
+    "test:integration": "jest --testPathPattern='integration\\.test\\.(ts|tsx)' --runInBand",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.1",
@@ -23,8 +28,16 @@
     "@react-navigation/elements": "^2.3.8",
     "@react-navigation/native": "^7.1.6",
     "@react-navigation/stack": "^7.4.7",
+    "@repo/database": "workspace:*",
+    "@repo/features": "workspace:*",
     "@repo/shared": "workspace:*",
+    "@tanstack/react-query": "^5.32.0",
     "axios": "^1.11.0",
+    "expo-local-authentication": "~15.2.0",
+    "expo-secure-store": "~15.0.0",
+    "expo-device": "~6.0.2",
+    "expo-network": "~6.0.1",
+    "zustand": "^4.5.2",
     "expo": "~53.0.20",
     "expo-blur": "~14.1.5",
     "expo-constants": "~17.1.7",
@@ -59,7 +72,10 @@
     "babel-plugin-module-resolver": "^5.0.2",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~9.2.0",
-    "typescript": "~5.8.3"
+    "typescript": "~5.8.3",
+    "jest-expo": "~51.0.0",
+    "@testing-library/react-native": "^12.4.3",
+    "@testing-library/jest-native": "^5.4.3"
   },
   "private": true
 }

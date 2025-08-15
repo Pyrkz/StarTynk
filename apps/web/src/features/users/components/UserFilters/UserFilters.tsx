@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { UserFilters as UserFiltersType } from '@/features/users/types'
-import { Role } from '@prisma/client'
+import { Role } from '@repo/database'
 import { SearchInput } from './SearchInput'
 import { FilterSelect } from './FilterSelect'
 import { SortSelect } from './SortSelect'

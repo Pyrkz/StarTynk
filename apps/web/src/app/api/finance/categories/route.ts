@@ -6,7 +6,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/features/auth/lib/auth-options';
 import { getExpenseCategoryBreakdown } from '@/lib/financial-aggregations';
 import { calculateCategoryBreakdown } from '@/lib/financial-calculations';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@repo/database';
 
 export async function GET(request: NextRequest) {
   try {

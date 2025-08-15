@@ -1,0 +1,95 @@
+{
+  "cli": {
+    "version": ">= 5.0.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "base": {
+      "node": "18.17.0",
+      "pnpm": "9.0.0",
+      "env": {
+        "NODE_ENV": "production"
+      },
+      "cache": {
+        "key": "v1-{{ checksum 'pnpm-lock.yaml' }}"
+      }
+    },
+    "development": {
+      "extends": "base",
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "NODE_ENV": "development",
+        "APP_VARIANT": "development",
+        "EXPO_PUBLIC_ENVIRONMENT": "development"
+      },
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug"
+      },
+      "ios": {
+        "buildConfiguration": "Debug",
+        "simulator": true
+      },
+      "channel": "development"
+    },
+    "preview": {
+      "extends": "base",
+      "distribution": "internal",
+      "env": {
+        "NODE_ENV": "staging",
+        "APP_VARIANT": "staging",
+        "EXPO_PUBLIC_ENVIRONMENT": "staging"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": false,
+        "enterpriseProvisioning": "adhoc"
+      },
+      "channel": "staging"
+    },
+    "production": {
+      "extends": "base",
+      "env": {
+        "NODE_ENV": "production",
+        "APP_VARIANT": "production",
+        "EXPO_PUBLIC_ENVIRONMENT": "production"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "ios": {
+        "buildConfiguration": "Release"
+      },
+      "channel": "production"
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./secrets/google-play-service-account.json",
+        "track": "production",
+        "releaseStatus": "completed"
+      },
+      "ios": {
+        "appleId": "your-apple-id@example.com",
+        "ascAppId": "1234567890",
+        "appleTeamId": "YOUR_TEAM_ID"
+      }
+    },
+    "preview": {
+      "android": {
+        "serviceAccountKeyPath": "./secrets/google-play-service-account.json",
+        "track": "internal",
+        "releaseStatus": "draft"
+      },
+      "ios": {
+        "appleId": "your-apple-id@example.com",
+        "ascAppId": "1234567890",
+        "appleTeamId": "YOUR_TEAM_ID"
+      }
+    }
+  }
+}

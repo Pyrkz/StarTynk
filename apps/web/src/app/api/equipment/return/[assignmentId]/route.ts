@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/features/auth/lib/auth-options';
-import { prisma } from '@/lib/prisma';
-import { EquipmentHistoryAction } from '@prisma/client';
+import { prisma } from '@repo/database';
+import { EquipmentHistoryAction } from '@repo/database';
 
 export async function POST(
   request: NextRequest,

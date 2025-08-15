@@ -1,5 +1,5 @@
 // Import types from centralized Prisma types file
-import { ProjectStatus, TaskStatus, TaskPriority } from '@/lib/prisma-types'
+import { ProjectStatus, TaskStatus, TaskPriority } from '@repo/shared/types'
 
 // Re-export enums for consistency
 export type { ProjectStatus, TaskStatus, TaskPriority }

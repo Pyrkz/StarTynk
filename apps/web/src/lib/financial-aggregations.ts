@@ -1,7 +1,7 @@
 // Financial Data Aggregation Functions
 // Database query aggregation functions for company-wide financial data
 
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@repo/database';
 import { Decimal } from '@prisma/client/runtime/library';
 import type {
   FinancialOverview,

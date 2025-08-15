@@ -2,36 +2,54 @@ module.exports = function (api) {
   api.cache(true);
   return {
     presets: [
-      ["babel-preset-expo", { jsxImportSource: "nativewind" }],
-      "nativewind/babel",
+      ['babel-preset-expo', { 
+        jsxImportSource: 'nativewind',
+        lazyImports: true
+      }],
+      'nativewind/babel',
     ],
     plugins: [
       [
-        "module-resolver",
+        'module-resolver',
         {
-          root: ["./"],
+          root: ['./'],
+          extensions: [
+            '.ios.ts',
+            '.android.ts',
+            '.ts',
+            '.ios.tsx',
+            '.android.tsx',
+            '.tsx',
+            '.jsx',
+            '.js',
+            '.json'
+          ],
           alias: {
-            "@": "./",
-            "@/src": "./src",
-            "@repo/shared": "../../packages/shared/src",
-            "@repo/ui": "../../packages/ui/src",
-          },
-        },
+            '@': './src',
+            '@components': './src/components',
+            '@features': './src/features',
+            '@lib': './src/lib',
+            '@utils': './src/utils',
+            '@hooks': './src/hooks',
+            '@assets': './assets',
+            '@repo/api': '../../packages/api/src',
+            '@repo/database': '../../packages/database/src',
+            '@repo/shared': '../../packages/shared/src'
+          }
+        }
       ],
       [
-        "module:react-native-dotenv",
+        'module:react-native-dotenv',
         {
-          envName: "APP_ENV",
-          moduleName: "@env",
-          path: ".env",
-          blocklist: null,
-          allowlist: null,
-          safe: false,
-          allowUndefined: true,
-          verbose: false,
-        },
+          envName: 'APP_ENV',
+          moduleName: '@env',
+          path: '.env',
+          safe: true,
+          allowUndefined: false,
+          verbose: false
+        }
       ],
-      "react-native-reanimated/plugin",
-    ],
+      'react-native-reanimated/plugin'
+    ]
   };
 };

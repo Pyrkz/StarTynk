@@ -1,4 +1,4 @@
-import type { Role } from '@prisma/client'
+import type { Role } from '@repo/database'
 
 // Hierarchia ról - wyższa wartość = więcej uprawnień
 export const roleHierarchy: Record<Role, number> = {

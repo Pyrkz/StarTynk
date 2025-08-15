@@ -5,4 +5,4 @@ export * from './types';
 export * from './utils';
 
 // Export auth module
-export * from './auth';
+export * from './auth/constants';

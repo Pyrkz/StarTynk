@@ -1,4 +1,4 @@
-import { ProjectStatus } from '@prisma/client'
+import { ProjectStatus } from '@repo/database'
 
 export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   PLANNING: 'Planowanie',

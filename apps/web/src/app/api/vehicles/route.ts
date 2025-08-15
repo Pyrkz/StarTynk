@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { z } from 'zod'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@repo/database'
 import { vehicleSchema } from '@/types/fleet'
-import { Prisma } from '@prisma/client'
+import { Prisma } from '@repo/database'
 
 // GET /api/vehicles - Get paginated vehicles list
 export async function GET(request: NextRequest) {

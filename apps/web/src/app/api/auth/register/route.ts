@@ -1,118 +1,143 @@
-import { NextRequest } from 'next/server';
-import { z } from 'zod';
-import { prisma } from '@/lib/prisma';
-import { ApiResponse } from '@/lib/api/response';
-import { publicRoute } from '@/lib/api/protected-route';
-import { validateRequestBody, sanitizeUser, passwordSchema, emailSchema, phoneSchema } from '@/lib/api/validators';
-import { createUser } from '@/lib/auth/providers';
-import { generateTokenPair } from '@/lib/auth/jwt';
-import { Role, RegisterDTO } from '@shared/types';
-import { createUserActivityLog } from '@/features/auth/utils/activity-logger';
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@repo/database';
+import bcrypt from 'bcryptjs';
+import { unifiedRegisterRequestSchema } from '@repo/shared/types';
+import { ApiResponse } from '@/lib/api/api-response';
+import { normalizeEmail, normalizePhone, validatePassword, validateEmail, validatePhone } from '@/lib/auth/validators';
+import { detectClientType, generateAuthResponse } from '@/lib/auth/unified-auth';
+import { logUserActivity } from '@/features/auth/utils/activity-logger';
 
-// Validation schema for registration
-const registerSchema = z.object({
-  email: emailSchema,
-  phone: phoneSchema,
-  password: passwordSchema,
-  name: z.string().min(2).max(100),
-  role: z.nativeEnum(Role).optional().default(Role.DEVELOPER),
-  invitationCode: z.string().optional(),
-});
-
-export const POST = publicRoute(async (request: NextRequest) => {
-  // Validate request body
-  const body = await validateRequestBody(request, registerSchema);
-  
-  // Check if invitation code is provided and valid
-  let invitation = null;
-  if (body.invitationCode) {
-    invitation = await prisma.invitationCode.findUnique({
-      where: { code: body.invitationCode }
-    });
-
-    if (!invitation) {
-      return ApiResponse.badRequest('Invalid invitation code');
-    }
-
-    if (invitation.usedAt) {
-      return ApiResponse.badRequest('Invitation code has already been used');
-    }
-
-    if (invitation.expiresAt < new Date()) {
-      return ApiResponse.badRequest('Invitation code has expired');
-    }
-
-    // Check if email matches invitation
-    if (invitation.email.toLowerCase() !== body.email.toLowerCase()) {
-      return ApiResponse.badRequest('Email does not match invitation');
-    }
-
-    // Use role from invitation if not specified
-    if (!body.role) {
-      body.role = invitation.role as Role;
-    }
-  }
-
+export async function POST(request: NextRequest) {
   try {
+    // Parse request body
+    const body = await request.json();
+    
+    // Validate request
+    const validation = unifiedRegisterRequestSchema.safeParse(body);
+    if (!validation.success) {
+      return ApiResponse.badRequest('Invalid request', validation.error.errors);
+    }
+    
+    const { email, phone, password, name } = validation.data;
+    
+    // Validate at least one identifier
+    if (!email && !phone) {
+      return ApiResponse.badRequest('Email or phone number is required');
+    }
+    
+    // Validate email format if provided
+    if (email && !validateEmail(email)) {
+      return ApiResponse.badRequest('Invalid email format');
+    }
+    
+    // Validate phone format if provided
+    if (phone && !validatePhone(phone)) {
+      return ApiResponse.badRequest('Invalid phone number format');
+    }
+    
+    // Validate password strength
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      return ApiResponse.badRequest(passwordValidation.errors.join('. '));
+    }
+    
+    // Normalize identifiers
+    const normalizedEmail = email ? normalizeEmail(email) : null;
+    const normalizedPhone = phone ? normalizePhone(phone) : null;
+    
+    // Check for existing users
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          normalizedEmail ? { email: normalizedEmail } : null,
+          normalizedPhone ? { phone: normalizedPhone } : null,
+        ].filter(Boolean) as any
+      }
+    });
+    
+    if (existingUser) {
+      if (existingUser.email === normalizedEmail) {
+        return ApiResponse.conflict('Email is already registered');
+      }
+      if (existingUser.phone === normalizedPhone) {
+        return ApiResponse.conflict('Phone number is already registered');
+      }
+    }
+    
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 12);
+    
     // Create user
-    const user = await createUser({
-      email: body.email,
-      password: body.password,
-      name: body.name,
-      phone: body.phone,
-      role: body.role,
-    });
-
-    // Mark invitation as used if provided
-    if (invitation) {
-      await prisma.invitationCode.update({
-        where: { id: invitation.id },
-        data: { usedAt: new Date() }
-      });
-
-      // Update user with inviter information
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { invitedBy: invitation.invitedBy }
-      });
-    }
-
-    // Generate tokens
-    const { accessToken, refreshToken } = generateTokenPair(
-      user.id,
-      user.email,
-      user.role as Role
-    );
-
-    // Store refresh token in database
-    await prisma.refreshToken.create({
+    const user = await prisma.user.create({
       data: {
-        token: refreshToken,
-        userId: user.id,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
+        email: normalizedEmail,
+        phone: normalizedPhone,
+        password: hashedPassword,
+        name,
+        emailVerified: null, // Needs verification
+        phoneVerified: null, // Needs verification
       }
     });
-
-    // Log registration
-    await createUserActivityLog({
-      userId: user.id,
-      action: 'REGISTRATION',
-      details: { 
-        method: 'mobile',
-        withInvitation: !!invitation 
-      }
-    });
-
-    // Return user data with tokens
-    return ApiResponse.created({
-      user: sanitizeUser(user),
-      accessToken,
-      refreshToken
-    });
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('already exists')) {
-      return ApiResponse.conflict(error.message);
+    
+    // TODO: Send verification email/SMS
+    if (normalizedEmail) {
+      // await sendEmailVerification(user.id, normalizedEmail);
     }
-    throw error;
+    if (normalizedPhone) {
+      // await sendPhoneVerification(user.id, normalizedPhone);
+    }
+    
+    // Log registration
+    await logUserActivity({
+      userId: user.id,
+      action: 'REGISTER',
+      details: JSON.stringify({ 
+        hasEmail: !!email,
+        hasPhone: !!phone,
+        clientType: detectClientType(request)
+      }),
+      ipAddress: request.headers.get('X-Forwarded-For') || request.headers.get('X-Real-IP') || undefined,
+      userAgent: request.headers.get('User-Agent') || undefined,
+    });
+    
+    // Detect client type
+    const clientType = detectClientType(request);
+    const loginMethod = email ? 'email' : 'phone';
+    
+    // For mobile, auto-login after registration
+    if (clientType === 'mobile') {
+      const authResponse = await generateAuthResponse(
+        user,
+        clientType,
+        loginMethod,
+        undefined,
+        request
+      );
+      return NextResponse.json(authResponse);
+    }
+    
+    // For web, return success message
+    return NextResponse.json({
+      success: true,
+      message: 'Registration successful. Please verify your account.',
+      userId: user.id,
+      requiresVerification: true,
+    });
+    
+  } catch (error) {
+    console.error('Registration error:', error);
+    return ApiResponse.error('Registration failed');
   }
-});
+}
+
+// OPTIONS method for CORS
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Type',
+    },
+  });
+}

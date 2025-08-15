@@ -1,5 +1,5 @@
 import { ZodError } from 'zod';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@repo/database';
 import { ApiResponse } from './response';
 import { NextResponse } from 'next/server';
 

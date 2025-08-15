@@ -1,33 +1,27 @@
-// Import types from centralized Prisma types file
-import { 
-  VehicleStatus, 
-  VehicleType, 
-  MaintenanceType, 
-  ReminderType,
-  Vehicle as PrismaVehicle,
-  VehicleAssignment as PrismaVehicleAssignment,
-  VehicleMaintenance as PrismaVehicleMaintenance,
-  VehicleReminder as PrismaVehicleReminder,
-  VehicleProjectAssignment as PrismaVehicleProjectAssignment
-} from '@/lib/prisma-types'
-import { z } from 'zod'
+// Import types from fleet.ts
+import type { 
+  Vehicle, 
+  VehicleAssignment, 
+  VehicleMaintenance, 
+  VehicleReminder, 
+  VehicleProjectAssignment,
+  VehicleStatus,
+  VehicleType,
+  MaintenanceType,
+  ReminderType
+} from './fleet'
 
-// Re-export enums from Prisma
-export type { VehicleStatus, VehicleType, MaintenanceType, ReminderType }
-
-// Import base types from the main fleet types file for custom interfaces
-import type { Vehicle, VehicleAssignment, VehicleMaintenance, VehicleReminder, VehicleProjectAssignment } from './fleet'
-
-// Re-export for external use (prefer custom interfaces from fleet.ts)
-export type { Vehicle, VehicleAssignment, VehicleMaintenance, VehicleReminder, VehicleProjectAssignment }
-
-// Also re-export Prisma types as fallback
+// Re-export types
 export type { 
-  PrismaVehicle, 
-  PrismaVehicleAssignment, 
-  PrismaVehicleMaintenance, 
-  PrismaVehicleReminder, 
-  PrismaVehicleProjectAssignment 
+  Vehicle, 
+  VehicleAssignment, 
+  VehicleMaintenance, 
+  VehicleReminder, 
+  VehicleProjectAssignment,
+  VehicleStatus,
+  VehicleType,
+  MaintenanceType,
+  ReminderType
 }
 
 // Service Alert Types

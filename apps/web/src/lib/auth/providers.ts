@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@repo/database';
 import bcrypt from 'bcryptjs';
 import { Role } from '@shared/types';
 

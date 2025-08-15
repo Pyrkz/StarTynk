@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import type { Role } from '@prisma/client'
+import type { Role } from '@repo/database'
 
 // Navigation item types
 export interface NavigationItem {

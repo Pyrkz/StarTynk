@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@repo/database'
 import { generateInvitationCode } from '@/lib/utils'
 import { sendInvitationEmail } from '@/lib/email'
 import { CreateInvitationDTO, InvitationsListResponse, InvitationWithInviter } from '@/features/users/types'

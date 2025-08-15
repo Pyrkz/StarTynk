@@ -2,12 +2,18 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./base.json",
   "compilerOptions": {
-    "target": "esnext",
-    "lib": ["es2022"],
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": ["ES2022"],
     "jsx": "react-native",
-    "module": "esnext",
     "moduleResolution": "node",
-    "types": ["react-native"],
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "noEmit": true,
+    "types": ["react-native", "jest"],
+    "verbatimModuleSyntax": false
   }
 }

@@ -1,7 +1,7 @@
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@repo/database'
 
 interface ActivityLogData {
-  userId: string
+  userId: string | null
   action: string
   details?: any
   ipAddress?: string
@@ -9,23 +9,33 @@ interface ActivityLogData {
 }
 
 /**
- * Tworzy log aktywności użytkownika
+ * Create user activity log
  */
-export async function createUserActivityLog(data: ActivityLogData): Promise<void> {
+export async function logUserActivity(data: ActivityLogData): Promise<void> {
   try {
+    // Only log if we have a user ID
+    if (!data.userId) return;
+    
     await prisma.userActivityLog.create({
       data: {
         userId: data.userId,
         action: data.action,
-        details: data.details || {},
+        details: typeof data.details === 'string' ? data.details : JSON.stringify(data.details || {}),
         ipAddress: data.ipAddress,
         userAgent: data.userAgent,
       }
     })
   } catch (error) {
-    // Nie przerywaj procesu autoryzacji jeśli logowanie się nie powiedzie
+    // Don't break auth flow if logging fails
     console.error('Failed to create activity log:', error)
   }
+}
+
+/**
+ * Legacy function for backward compatibility
+ */
+export async function createUserActivityLog(data: ActivityLogData): Promise<void> {
+  return logUserActivity(data);
 }
 
 /**

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { prisma } from '@/lib/prisma'
-import { Prisma } from '@prisma/client'
+import { prisma } from '@repo/database'
+import { Prisma } from '@repo/database'
 import type { UpcomingReminder } from '@/types/fleet'
 import { getReminderUrgency } from '@/types/fleet'
 
