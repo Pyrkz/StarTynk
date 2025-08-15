@@ -1,0 +1,1 @@
+export { DeliveryReceiptInterface } from './DeliveryReceiptInterface'

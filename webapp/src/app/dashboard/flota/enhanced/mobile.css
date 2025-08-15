@@ -1,0 +1,347 @@
+/* Mobile optimization for Fleet Dashboard */
+
+/* Mobile-first responsive utilities */
+@media (max-width: 640px) {
+  /* Compact statistics cards */
+  .fleet-stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .fleet-stat-card {
+    padding: 1rem;
+  }
+
+  .fleet-stat-card h3 {
+    font-size: 0.875rem;
+  }
+
+  .fleet-stat-card .stat-value {
+    font-size: 1.5rem;
+  }
+
+  /* Service alerts widget - stack vertically */
+  .service-alerts-container {
+    padding: 1rem;
+  }
+
+  .alert-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .alert-actions {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* Vehicle cards - single column */
+  .vehicle-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  /* Compact vehicle card */
+  .vehicle-card-mobile {
+    position: relative;
+  }
+
+  .vehicle-card-header {
+    padding: 0.75rem;
+  }
+
+  .vehicle-photo {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  /* Swipeable service bars */
+  .service-bars-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  .service-bar-mobile {
+    min-width: 200px;
+    flex-shrink: 0;
+  }
+
+  /* Touch-friendly buttons */
+  .touch-button {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.75rem 1rem;
+  }
+
+  /* Compact filters */
+  .filters-mobile {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    padding: 1rem;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    z-index: 50;
+  }
+
+  .filters-mobile.open {
+    transform: translateY(0);
+  }
+
+  /* List view optimizations */
+  .vehicle-list-mobile {
+    font-size: 0.875rem;
+  }
+
+  .vehicle-list-mobile td {
+    padding: 0.5rem;
+  }
+
+  /* Hide less important columns on mobile */
+  .hide-mobile {
+    display: none;
+  }
+
+  /* Sticky header for better navigation */
+  .sticky-header-mobile {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 40;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Bottom navigation for quick actions */
+  .bottom-nav-mobile {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-around;
+    padding: 0.5rem;
+    z-index: 50;
+  }
+
+  .bottom-nav-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.5rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+
+  .bottom-nav-button.active {
+    color: #3b82f6;
+  }
+
+  /* Pull-to-refresh indicator */
+  .pull-to-refresh {
+    position: absolute;
+    top: -3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2rem;
+    height: 2rem;
+  }
+
+  /* Optimized search bar */
+  .search-bar-mobile {
+    position: sticky;
+    top: 0;
+    background: white;
+    padding: 0.75rem;
+    border-bottom: 1px solid #e5e7eb;
+    z-index: 30;
+  }
+
+  .search-input-mobile {
+    width: 100%;
+    padding: 0.5rem 2.5rem;
+    font-size: 1rem;
+  }
+
+  /* Action sheet for vehicle options */
+  .action-sheet {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+    padding: 1.5rem;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    z-index: 60;
+    box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .action-sheet.open {
+    transform: translateY(0);
+  }
+
+  .action-sheet-handle {
+    width: 3rem;
+    height: 0.25rem;
+    background: #d1d5db;
+    border-radius: 0.25rem;
+    margin: 0 auto 1rem;
+  }
+
+  /* Gesture hints */
+  .swipe-hint {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 0.75rem;
+  }
+
+  /* Skeleton loading for better perceived performance */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      #f3f4f6 25%,
+      #e5e7eb 50%,
+      #f3f4f6 75%
+    );
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+  }
+
+  @keyframes loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  /* Offline indicator */
+  .offline-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #fbbf24;
+    color: #78350f;
+    padding: 0.5rem;
+    text-align: center;
+    font-size: 0.875rem;
+    z-index: 100;
+  }
+
+  /* Optimized spacing */
+  .mobile-spacing {
+    padding: 0.75rem;
+  }
+
+  .mobile-gap {
+    gap: 0.5rem;
+  }
+
+  /* Touch-optimized dropdown */
+  .dropdown-mobile {
+    position: fixed;
+    left: 0.5rem;
+    right: 0.5rem;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .fleet-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .vehicle-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .service-alerts-container {
+    max-height: 400px;
+    overflow-y: auto;
+  }
+}
+
+/* Accessibility improvements for mobile */
+@media (hover: none) and (pointer: coarse) {
+  /* Larger touch targets */
+  button, a, .clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Remove hover effects on touch devices */
+  .hover\:bg-gray-50:hover {
+    background-color: transparent;
+  }
+
+  /* Add active states for better feedback */
+  button:active, a:active, .clickable:active {
+    opacity: 0.7;
+    transform: scale(0.98);
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .dark-mode-support {
+    background-color: #1f2937;
+    color: #f3f4f6;
+  }
+
+  .dark-mode-support .bg-white {
+    background-color: #374151;
+  }
+
+  .dark-mode-support .text-gray-900 {
+    color: #f3f4f6;
+  }
+
+  .dark-mode-support .border {
+    border-color: #4b5563;
+  }
+}
+
+/* Performance optimizations */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Print styles for mobile reports */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .vehicle-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-friendly {
+    color: black !important;
+    background: white !important;
+  }
+}
