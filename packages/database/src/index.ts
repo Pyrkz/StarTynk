@@ -1,6 +1,8 @@
-export * from '@prisma/client';
+// Export database client
 export { prisma } from './client';
-export type { Prisma } from '@prisma/client';
+
+// Export generated types and enums
+export * from './types';
 
 // Re-export useful Prisma utilities
 export {

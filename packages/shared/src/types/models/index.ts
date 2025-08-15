@@ -1,13 +1,17 @@
-/**
- * Core domain models
- * Export all model types from a single entry point
- */
+// User-related types
+export type * from './user.types';
 
-export * from './user.types';
-export * from './project.types';
-export * from './task.types';
-export * from './material.types';
-export * from './equipment.types';
-export * from './vehicle.types';
-export * from './delivery.types';
-export * from './common.types';
+// Project-related types  
+export type * from './project.types';
+
+// Vehicle-related types
+export type * from './vehicle.types';
+
+// Equipment-related types
+export type * from './equipment.types';
+
+// Material-related types
+export type * from './material.types';
+
+// Task/HR-related types
+export type * from './task.types';

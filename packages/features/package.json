@@ -5,22 +5,34 @@
   "types": "./src/index.ts",
   "scripts": {
     "lint": "eslint .",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "@repo/api": "workspace:*",
     "@repo/database": "workspace:*",
     "@repo/shared": "workspace:*",
+    "@repo/validation": "workspace:*",
+    "@repo/utils": "workspace:*",
+    "@repo/auth": "workspace:*",
     "@tanstack/react-query": "^5.32.0",
     "zustand": "^4.5.2",
-    "axios": "^1.7.2"
+    "axios": "^1.7.2",
+    "expo-server-sdk": "^3.10.0",
+    "node-cron": "^3.0.0"
   },
   "peerDependencies": {
     "react": ">=18.0.0"
   },
   "devDependencies": {
     "@repo/config-typescript": "workspace:*",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.0.0",
     "@types/react": "^18.3.3",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0",
     "typescript": "^5.5.4"
   }
 }

@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { prisma } from '@repo/database'
 import { UserFilters, UsersListResponse, UserWithRelations } from '@/features/users/types'
 import { Prisma } from '@repo/database'
-import { authenticateToken } from '@/lib/auth/middleware'
+import { withAuth } from '@repo/auth'
 import { ApiResponse } from '@/lib/api/response'
 
 // GET /api/users - List users with filters

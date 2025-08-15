@@ -1,16 +1,37 @@
 import { NextRequest } from 'next/server';
-import { authService } from '@repo/api/services';
-import { ApiResponse } from '@repo/shared/utils';
+import {
+  loginHandler,
+  validateBody,
+  loginSchema,
+  authRateLimit,
+  errorHandler,
+  loggingMiddleware,
+  defaultCors
+} from '@repo/api';
 
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const result = await authService.login(body);
-    
-    return ApiResponse.success(result, {
-      message: 'Login successful',
-    });
-  } catch (error) {
-    return ApiResponse.fromError(error);
-  }
+  return loggingMiddleware(request, async (req) => {
+    try {
+      // Handle CORS
+      const corsResponse = defaultCors(req);
+      if (corsResponse) return corsResponse;
+
+      // Apply rate limiting
+      await authRateLimit(req);
+
+      // Validate request body
+      const validateInput = validateBody(loginSchema);
+      const input = await validateInput(req);
+
+      // Execute business logic
+      return await loginHandler(input);
+
+    } catch (error) {
+      return await errorHandler(error, req);
+    }
+  });
+}
+
+export async function OPTIONS(request: NextRequest) {
+  return defaultCors(request) || new Response(null, { status: 200 });
 }

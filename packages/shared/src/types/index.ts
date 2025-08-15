@@ -1,19 +1,67 @@
-/**
- * Shared types architecture
- * Central export point for all type definitions
- */
+// Export all model types
+export * from './models';
 
-// Export all enums
-export * from './enums';
+// Export all API types
+export * from './api';
 
-// Export all DTOs
+// Export all DTO types
 export * from './dto';
 
-// Export all mappers
-export * from './mappers';
-
-// Export all interfaces
-export * from './interfaces';
-
-// Export all type guards
+// Export type guards
 export * from './guards';
+
+// Re-export commonly used database types and enums for convenience
+export type {
+  User,
+  Project,
+  Task,
+  Vehicle,
+  Equipment,
+  Material,
+  Developer,
+  Apartment,
+  TaskAssignment,
+  QualityControl,
+  ProjectAssignment,
+  Attendance,
+  LeaveRequest,
+  Payroll,
+  MaterialOrder,
+  MaterialOrderItem,
+  Delivery,
+  DeliveryItem,
+  VehicleAssignment,
+  VehicleMaintenance,
+  VehicleReminder,
+  EquipmentAssignment,
+  EquipmentHistory,
+  Photo,
+  Comment,
+  PaymentCalculation,
+  Bonus,
+  Deduction
+} from '@repo/database';
+
+// Re-export enums for easy access
+export {
+  Role,
+  ProjectStatus,
+  TaskStatus,
+  TaskPriority,
+  QualityStatus,
+  QualityIssueType,
+  EquipmentStatus,
+  EquipmentHistoryAction,
+  VehicleStatus,
+  MaintenanceType,
+  ReminderType,
+  PhotoType,
+  material_orders_status,
+  deliveries_status,
+  LeaveType,
+  LeaveStatus,
+  PaymentStatus,
+  PaymentMethod,
+  BonusType,
+  DeductionType
+} from '@repo/database';

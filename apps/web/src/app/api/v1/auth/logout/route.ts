@@ -1,40 +1,31 @@
 import { NextRequest } from 'next/server';
-import { authService } from '@repo/api/services';
-import { ApiResponse } from '@repo/shared/utils';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import {
+  logoutHandler,
+  standardRateLimit,
+  errorHandler,
+  loggingMiddleware,
+  defaultCors
+} from '@repo/api';
 
 export async function POST(request: NextRequest) {
-  try {
-    // Try to get user from session first
-    const session = await getServerSession(authOptions);
-    
-    if (session?.user?.id) {
-      // Session-based logout
-      const body = await request.json().catch(() => ({}));
-      await authService.logout(session.user.id, body.deviceId);
-      
-      return ApiResponse.success(null, {
-        message: 'Logout successful',
-      });
+  return loggingMiddleware(request, async (req) => {
+    try {
+      // Handle CORS
+      const corsResponse = defaultCors(req);
+      if (corsResponse) return corsResponse;
+
+      // Apply rate limiting
+      await standardRateLimit(req);
+
+      // Execute business logic
+      return await logoutHandler(req);
+
+    } catch (error) {
+      return await errorHandler(error, req);
     }
-    
-    // If no session, check for bearer token
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return ApiResponse.unauthorized('No authentication provided');
-    }
-    
-    const token = authHeader.substring(7);
-    const payload = await authService.verifyToken(token);
-    
-    const body = await request.json().catch(() => ({}));
-    await authService.logout(payload.sub, body.deviceId);
-    
-    return ApiResponse.success(null, {
-      message: 'Logout successful',
-    });
-  } catch (error) {
-    return ApiResponse.fromError(error);
-  }
+  });
+}
+
+export async function OPTIONS(request: NextRequest) {
+  return defaultCors(request) || new Response(null, { status: 200 });
 }

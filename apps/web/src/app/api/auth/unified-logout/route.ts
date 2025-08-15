@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { detectClientType, clearSession } from '@/lib/auth/unified-auth';
+import { 
+  detectClientType, 
+  authenticateRequest,
+  revokeAllUserTokens,
+  getCorsHeaders,
+  JWTAuthProvider,
+  SessionAuthProvider
+} from '@repo/auth';
 import { ApiResponse } from '@/lib/api/api-response';
-import { authenticateRequest } from '@/lib/auth/middleware';
-import { logUserActivity } from '@/features/auth/utils/activity-logger';
 import type { LogoutResponse } from '@repo/shared/types';
 
 export async function POST(request: NextRequest) {
@@ -10,22 +15,26 @@ export async function POST(request: NextRequest) {
     // Detect client type
     const clientType = detectClientType(request);
     
-    // Get current user
-    const user = await authenticateRequest(request);
+    // Get current user (optional - logout should work even if not authenticated)
+    const authResult = await authenticateRequest(request);
     
-    if (user) {
-      // Log logout activity
-      await logUserActivity({
-        userId: user.id,
-        action: 'LOGOUT',
-        details: JSON.stringify({ clientType }),
-        ipAddress: request.headers.get('X-Forwarded-For') || request.headers.get('X-Real-IP') || undefined,
-        userAgent: request.headers.get('User-Agent') || undefined,
-      });
+    if (authResult.authenticated && authResult.user) {
+      // Revoke tokens for mobile or clear session for web
+      if (clientType === 'mobile') {
+        await revokeAllUserTokens(authResult.user.id);
+      } else {
+        const sessionProvider = new SessionAuthProvider();
+        await sessionProvider.clearSession(request);
+      }
+    } else if (clientType === 'mobile') {
+      // For mobile, try to clear session anyway using the provider
+      const jwtProvider = new JWTAuthProvider();
+      await jwtProvider.clearSession(request);
+    } else {
+      // For web, clear session anyway
+      const sessionProvider = new SessionAuthProvider();
+      await sessionProvider.clearSession(request);
     }
-    
-    // Clear session based on client type
-    await clearSession(request, clientType);
     
     const response: LogoutResponse = {
       success: true,
@@ -47,12 +56,14 @@ export async function GET(request: NextRequest) {
 
 // OPTIONS method for CORS
 export async function OPTIONS(request: NextRequest) {
+  const origin = request.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+  
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      ...corsHeaders,
       'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Type',
     },
   });
 }

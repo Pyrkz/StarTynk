@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -13,10 +13,13 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String?  access_token      String?  expires_at        Int?
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String?  session_state     String?
+  id_token          String? @db.Text
+  session_state     String?
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
@@ -25,8 +28,8 @@ model Account {
 }
 
 model Session {
-  id           String@id @default(cuid())
-  sessionToken String@unique
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -36,12 +39,10 @@ model Session {
 }
 
 model User {
-  id                   String   @id @default(cuid())
+  id                   String                @id @default(cuid())
   name                 String?
-  email                String?  @unique
+  email                String                @unique
   emailVerified        DateTime?
-  phone                String?  @unique
-  phoneVerified        DateTime?
   image                String?
   password             String?
   role                 Role                  @default(USER)
@@ -55,6 +56,7 @@ model User {
   employmentStartDate  DateTime?
   lastLoginAt          DateTime?
   loginCount           Int                   @default(0)
+  phone                String?
   position             String?
   accounts             Account[]
   comments             Comment[]
@@ -72,16 +74,24 @@ model User {
   invitedUsers         User[]                @relation("InvitedUsers")
   vehicleAssignments   VehicleAssignment[]
   refreshTokens        RefreshToken[]
+  projectAssignments   ProjectAssignment[]
+  attendanceRecords    Attendance[]
+  leaveRequests        LeaveRequest[]
+  approvedLeaves       LeaveRequest[]        @relation("LeaveApprovals")
+  payrollRecords       Payroll[]
+  bonuses              Bonus[]
+  deductions           Deduction[]
+  pushTokens           PushToken[]
+  syncQueue            SyncQueue[]
+  notificationSchedules NotificationSchedule[]
 
   @@index([invitedBy], map: "users_invitedBy_fkey")
-  @@index([email])
-  @@index([phone])
   @@map("users")
 }
 
 model VerificationToken {
   identifier String
-  token      String@unique
+  token      String   @unique
   expires    DateTime
 
   @@unique([identifier, token])
@@ -89,15 +99,16 @@ model VerificationToken {
 }
 
 model InvitationCode {
-  id          String @id @default(cuid())
-  code        String @unique
+  id          String    @id @default(cuid())
+  code        String    @unique
   email       String
   usedAt      DateTime?
   expiresAt   DateTime
   createdAt   DateTime  @default(now())
   invitedBy   String
   lastSentAt  DateTime  @default(now())
-  message     String?    resendCount Int       @default(0)
+  message     String?   @db.Text
+  resendCount Int       @default(0)
   role        Role      @default(USER)
   inviter     User      @relation("InvitedBy", fields: [invitedBy], references: [id])
 
@@ -106,10 +117,11 @@ model InvitationCode {
 }
 
 model UserActivityLog {
-  id        String@id @default(cuid())
+  id        String   @id @default(cuid())
   userId    String
   action    String
-  details   String?   ipAddress String?
+  details   String?  @db.LongText
+  ipAddress String?
   userAgent String?
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
@@ -119,23 +131,24 @@ model UserActivityLog {
 }
 
 model RefreshToken {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  deviceId  String?
-  userAgent String?
-  ip        String?
+  id          String   @id @default(cuid())
+  token       String   @unique
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  deviceId    String?
+  userAgent   String?
+  ip          String?
   loginMethod String?
   
   @@index([userId])
+  @@index([deviceId])
   @@map("refresh_tokens")
 }
 
 model Developer {
-  id        String @id @default(cuid())
+  id        String    @id @default(cuid())
   name      String
   address   String?
   contact   String?
@@ -151,27 +164,31 @@ model Developer {
 }
 
 model Project {
-  id             String       @id @default(cuid())
-  name           String
-  address        String
-  developerId    String
-  startDate      DateTime
-  endDate        DateTime
-  baseRate       Decimal         @db.Decimal(10, 2)
-  status         ProjectStatus   @default(PLANNING)
-  description    String?          createdById    String
-  coordinatorId  String?
-  isActive       Boolean         @default(true)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  deletedAt      DateTime?
-  apartments     Apartment[]
-  deliveries     Delivery[]
-  materialOrders MaterialOrder[]
-  coordinator    User?           @relation("ProjectCoordinator", fields: [coordinatorId], references: [id])
-  createdBy      User            @relation("ProjectCreator", fields: [createdById], references: [id])
-  developer      Developer       @relation(fields: [developerId], references: [id])
-  tasks          Task[]
+  id                 String               @id @default(cuid())
+  name               String
+  address            String
+  developerId        String
+  startDate          DateTime
+  endDate            DateTime
+  baseRate           Decimal              @db.Decimal(10, 2)
+  status             ProjectStatus        @default(PLANNING)
+  description        String?              @db.Text
+  createdById        String
+  coordinatorId      String?
+  isActive           Boolean              @default(true)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  deletedAt          DateTime?
+  apartments         Apartment[]
+  deliveries         Delivery[]
+  materialOrders     MaterialOrder[]
+  coordinator        User?                @relation("ProjectCoordinator", fields: [coordinatorId], references: [id])
+  createdBy          User                 @relation("ProjectCreator", fields: [createdById], references: [id])
+  developer          Developer            @relation(fields: [developerId], references: [id])
+  tasks              Task[]
+  projectAssignments ProjectAssignment[]
+  attendanceRecords  Attendance[]
+  payrollRecords     Payroll[]
 
   @@index([coordinatorId], map: "projects_coordinatorId_fkey")
   @@index([createdById], map: "projects_createdById_fkey")
@@ -180,7 +197,7 @@ model Project {
 }
 
 model Apartment {
-  id        String @id @default(cuid())
+  id        String    @id @default(cuid())
   projectId String
   number    String
   floor     Int?
@@ -199,11 +216,12 @@ model Apartment {
 }
 
 model Task {
-  id              String  @id @default(cuid())
+  id              String               @id @default(cuid())
   projectId       String
   apartmentId     String?
   title           String
-  description     String?               area            Decimal              @db.Decimal(8, 2)
+  description     String?              @db.Text
+  area            Decimal              @db.Decimal(8, 2)
   rate            Decimal              @db.Decimal(10, 2)
   status          TaskStatus           @default(NEW)
   estimatedHours  Int?
@@ -226,7 +244,7 @@ model Task {
 }
 
 model TaskAssignment {
-  id        String@id @default(cuid())
+  id        String   @id @default(cuid())
   taskId    String
   userId    String
   role      String?
@@ -242,13 +260,16 @@ model TaskAssignment {
 }
 
 model QualityControl {
-  id                String         @id @default(cuid())
+  id                String            @id @default(cuid())
   taskId            String
   controllerId      String
   controlNumber     Int               @default(1)
   status            QualityStatus     @default(PENDING)
   completionRate    Int               @default(0)
-  notes             String?            issuesFound       String?            correctionsNeeded String?            controlDate       DateTime          @default(now())
+  notes             String?           @db.Text
+  issuesFound       String?           @db.Text
+  correctionsNeeded String?           @db.Text
+  controlDate       DateTime          @default(now())
   recontrolDate     DateTime?
   issueType         QualityIssueType?
   isActive          Boolean           @default(true)
@@ -264,7 +285,7 @@ model QualityControl {
 }
 
 model MaterialCategory {
-  id          String  @id @default(cuid())
+  id          String     @id @default(cuid())
   name        String
   description String?
   isActive    Boolean    @default(true)
@@ -277,13 +298,14 @@ model MaterialCategory {
 }
 
 model Material {
-  id            String @id @default(cuid())
+  id            String              @id @default(cuid())
   name          String
   categoryId    String
   unit          String
   price         Decimal?            @db.Decimal(10, 2)
   supplier      String?
-  description   String?              imageUrl      String?
+  description   String?             @db.Text
+  imageUrl      String?
   stockLevel    Int                 @default(0)
   minStock      Int                 @default(0)
   isActive      Boolean             @default(true)
@@ -299,12 +321,13 @@ model Material {
 }
 
 model MaterialOrder {
-  id          String    @id @default(cuid())
+  id          String                 @id @default(cuid())
   projectId   String
   orderedById String
   status      material_orders_status @default(NEW)
   totalAmount Decimal?               @db.Decimal(10, 2)
-  notes       String?                 orderDate   DateTime               @default(now())
+  notes       String?                @db.Text
+  orderDate   DateTime               @default(now())
   neededDate  DateTime?
   isActive    Boolean                @default(true)
   createdAt   DateTime               @default(now())
@@ -320,7 +343,7 @@ model MaterialOrder {
 }
 
 model MaterialOrderItem {
-  id         String     @id @default(cuid())
+  id         String        @id @default(cuid())
   orderId    String
   materialId String
   quantity   Int
@@ -335,7 +358,7 @@ model MaterialOrderItem {
 }
 
 model EquipmentCategory {
-  id          String   @id @default(cuid())
+  id          String      @id @default(cuid())
   name        String
   description String?
   isActive    Boolean     @default(true)
@@ -348,7 +371,7 @@ model EquipmentCategory {
 }
 
 model Equipment {
-  id            String   @id @default(cuid())
+  id            String                @id @default(cuid())
   name          String
   categoryId    String
   serialNumber  String?
@@ -356,7 +379,8 @@ model Equipment {
   purchasePrice Decimal?              @db.Decimal(10, 2)
   status        EquipmentStatus       @default(AVAILABLE)
   condition     String?
-  description   String?                imageUrl      String?
+  description   String?               @db.Text
+  imageUrl      String?
   isActive      Boolean               @default(true)
   createdAt     DateTime              @default(now())
   updatedAt     DateTime              @updatedAt
@@ -370,7 +394,7 @@ model Equipment {
 }
 
 model EquipmentAssignment {
-  id           String @id @default(cuid())
+  id           String    @id @default(cuid())
   equipmentId  String
   userId       String
   assignedDate DateTime  @default(now())
@@ -388,11 +412,12 @@ model EquipmentAssignment {
 }
 
 model EquipmentHistory {
-  id          String    @id @default(cuid())
+  id          String                 @id @default(cuid())
   equipmentId String
   action      EquipmentHistoryAction
   userId      String?
-  description String?                 actionDate  DateTime               @default(now())
+  description String?                @db.Text
+  actionDate  DateTime               @default(now())
   isActive    Boolean                @default(true)
   createdAt   DateTime               @default(now())
   equipment   Equipment              @relation(fields: [equipmentId], references: [id])
@@ -402,7 +427,7 @@ model EquipmentHistory {
 }
 
 model Delivery {
-  id           String         @id @default(cuid())
+  id           String            @id @default(cuid())
   projectId    String
   supplierName String
   deliveryDate DateTime          @default(now())
@@ -410,7 +435,8 @@ model Delivery {
   status       deliveries_status @default(PENDING)
   deliveryType String
   totalWeight  Decimal?          @db.Decimal(8, 2)
-  notes        String?            documentUrl  String?
+  notes        String?           @db.Text
+  documentUrl  String?
   isActive     Boolean           @default(true)
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
@@ -425,7 +451,7 @@ model Delivery {
 }
 
 model DeliveryItem {
-  id                String@id @default(cuid())
+  id                String   @id @default(cuid())
   deliveryId        String
   materialId        String
   orderedQuantity   Int
@@ -441,11 +467,11 @@ model DeliveryItem {
 }
 
 model Vehicle {
-  id               String  @id @default(cuid())
+  id               String               @id @default(cuid())
   make             String
   model            String
   year             Int
-  licensePlate     String  @unique
+  licensePlate     String               @unique
   vin              String?
   insuranceExpiry  DateTime?
   inspectionExpiry DateTime?
@@ -464,7 +490,7 @@ model Vehicle {
 }
 
 model VehicleAssignment {
-  id        String @id @default(cuid())
+  id        String    @id @default(cuid())
   vehicleId String
   userId    String
   startDate DateTime  @default(now())
@@ -481,10 +507,11 @@ model VehicleAssignment {
 }
 
 model VehicleMaintenance {
-  id              String       @id @default(cuid())
+  id              String          @id @default(cuid())
   vehicleId       String
   type            MaintenanceType
-  description     String         cost            Decimal         @db.Decimal(10, 2)
+  description     String          @db.Text
+  cost            Decimal         @db.Decimal(10, 2)
   serviceDate     DateTime
   nextDueDate     DateTime?
   mileage         Int?
@@ -501,7 +528,7 @@ model VehicleMaintenance {
 }
 
 model VehicleReminder {
-  id          String    @id @default(cuid())
+  id          String       @id @default(cuid())
   vehicleId   String
   type        ReminderType
   dueDate     DateTime
@@ -518,7 +545,7 @@ model VehicleReminder {
 }
 
 model Photo {
-  id          String @id @default(cuid())
+  id          String    @id @default(cuid())
   url         String
   description String?
   type        PhotoType
@@ -532,8 +559,9 @@ model Photo {
 }
 
 model Comment {
-  id         String@id @default(cuid())
-  content    String  authorId   String
+  id         String   @id @default(cuid())
+  content    String   @db.Text
+  authorId   String
   entityType String
   entityId   String
   isActive   Boolean  @default(true)
@@ -546,7 +574,7 @@ model Comment {
 }
 
 model PaymentCalculation {
-  id             String @id @default(cuid())
+  id             String    @id @default(cuid())
   taskId         String
   area           Decimal   @db.Decimal(8, 2)
   rate           Decimal   @db.Decimal(10, 2)
@@ -562,6 +590,226 @@ model PaymentCalculation {
 
   @@index([taskId], map: "payment_calculations_taskId_fkey")
   @@map("payment_calculations")
+}
+
+model ProjectAssignment {
+  id             String    @id @default(cuid())
+  userId         String
+  projectId      String
+  assignedDate   DateTime  @default(now())
+  unassignedDate DateTime?
+  role           String?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  user           User      @relation(fields: [userId], references: [id])
+  project        Project   @relation(fields: [projectId], references: [id])
+
+  @@unique([userId, projectId, assignedDate])
+  @@index([userId], map: "project_assignments_userId_fkey")
+  @@index([projectId], map: "project_assignments_projectId_fkey")
+  @@map("project_assignments")
+}
+
+model Attendance {
+  id            String    @id @default(cuid())
+  userId        String
+  projectId     String
+  date          DateTime
+  checkIn       DateTime?
+  checkOut      DateTime?
+  hoursWorked   Decimal?  @db.Decimal(4, 2)
+  overtimeHours Decimal?  @db.Decimal(4, 2)
+  status        String?
+  notes         String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  user          User      @relation(fields: [userId], references: [id])
+  project       Project   @relation(fields: [projectId], references: [id])
+
+  @@unique([userId, projectId, date])
+  @@index([userId], map: "attendance_userId_fkey")
+  @@index([projectId], map: "attendance_projectId_fkey")
+  @@map("attendance")
+}
+
+model LeaveRequest {
+  id           String      @id @default(cuid())
+  userId       String
+  type         LeaveType
+  startDate    DateTime
+  endDate      DateTime
+  reason       String?     @db.Text
+  status       LeaveStatus @default(PENDING)
+  approvedById String?
+  approvedDate DateTime?
+  notes        String?
+  isActive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  user         User        @relation(fields: [userId], references: [id])
+  approvedBy   User?       @relation("LeaveApprovals", fields: [approvedById], references: [id])
+
+  @@index([userId], map: "leave_requests_userId_fkey")
+  @@index([approvedById], map: "leave_requests_approvedById_fkey")
+  @@map("leave_requests")
+}
+
+model Payroll {
+  id              String        @id @default(cuid())
+  userId          String
+  projectId       String?
+  payPeriodStart  DateTime
+  payPeriodEnd    DateTime
+  hoursWorked     Decimal       @db.Decimal(6, 2)
+  overtimeHours   Decimal       @db.Decimal(6, 2) @default(0)
+  hourlyRate      Decimal       @db.Decimal(10, 2)
+  overtimeRate    Decimal       @db.Decimal(10, 2)
+  baseAmount      Decimal       @db.Decimal(10, 2)
+  overtimeAmount  Decimal       @db.Decimal(10, 2) @default(0)
+  bonusAmount     Decimal       @db.Decimal(10, 2) @default(0)
+  deductionAmount Decimal       @db.Decimal(10, 2) @default(0)
+  totalAmount     Decimal       @db.Decimal(10, 2)
+  status          PaymentStatus @default(PENDING)
+  paymentMethod   PaymentMethod?
+  paymentDate     DateTime?
+  notes           String?       @db.Text
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  user            User          @relation(fields: [userId], references: [id])
+  project         Project?      @relation(fields: [projectId], references: [id])
+  bonuses         Bonus[]
+  deductions      Deduction[]
+
+  @@index([userId], map: "payroll_userId_fkey")
+  @@index([projectId], map: "payroll_projectId_fkey")
+  @@map("payroll")
+}
+
+model Bonus {
+  id          String    @id @default(cuid())
+  userId      String
+  payrollId   String?
+  type        BonusType
+  amount      Decimal   @db.Decimal(10, 2)
+  description String?
+  date        DateTime  @default(now())
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id])
+  payroll     Payroll?  @relation(fields: [payrollId], references: [id])
+
+  @@index([userId], map: "bonuses_userId_fkey")
+  @@index([payrollId], map: "bonuses_payrollId_fkey")
+  @@map("bonuses")
+}
+
+model Deduction {
+  id          String        @id @default(cuid())
+  userId      String
+  payrollId   String?
+  type        DeductionType
+  amount      Decimal       @db.Decimal(10, 2)
+  description String?
+  date        DateTime      @default(now())
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  user        User          @relation(fields: [userId], references: [id])
+  payroll     Payroll?      @relation(fields: [payrollId], references: [id])
+
+  @@index([userId], map: "deductions_userId_fkey")
+  @@index([payrollId], map: "deductions_payrollId_fkey")
+  @@map("deductions")
+}
+
+model PushToken {
+  id          String   @id @default(cuid())
+  userId      String
+  token       String   @unique
+  platform    Platform
+  deviceId    String
+  deviceName  String?
+  appVersion  String?
+  osVersion   String?
+  isActive    Boolean  @default(true)
+  lastUsedAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, deviceId])
+  @@index([userId])
+  @@index([token])
+  @@map("push_tokens")
+}
+
+model SyncQueue {
+  id          String     @id @default(cuid())
+  userId      String
+  entityType  String     // 'project', 'task', etc.
+  entityId    String
+  operation   SyncOperation
+  payload     Json
+  retryCount  Int        @default(0)
+  status      SyncStatus @default(PENDING)
+  error       String?
+  syncedAt    DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  user        User       @relation(fields: [userId], references: [id])
+  
+  @@index([userId, status])
+  @@index([createdAt])
+  @@map("sync_queue")
+}
+
+model NotificationSchedule {
+  id            String   @id @default(cuid())
+  userId        String?  // null for broadcast
+  title         String
+  body          String
+  data          Json?
+  scheduledFor  DateTime
+  status        NotificationStatus @default(PENDING)
+  sentAt        DateTime?
+  error         String?
+  retryCount    Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User?    @relation(fields: [userId], references: [id])
+  
+  @@index([scheduledFor, status])
+  @@index([userId])
+  @@map("notification_schedules")
+}
+
+enum Platform {
+  IOS
+  ANDROID
+}
+
+enum SyncOperation {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+enum SyncStatus {
+  PENDING
+  SYNCING
+  COMPLETED
+  FAILED
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  CANCELLED
 }
 
 enum Role {
@@ -667,4 +915,60 @@ enum deliveries_status {
   QUALITY_CHECK
   ACCEPTED
   REJECTED
+}
+
+enum LeaveType {
+  SICK
+  VACATION
+  PERSONAL
+  MATERNITY
+  PATERNITY
+  UNPAID
+  BEREAVEMENT
+  EMERGENCY
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CHECK
+  CREDIT_CARD
+  DIGITAL_WALLET
+}
+
+enum BonusType {
+  PERFORMANCE
+  PROJECT_COMPLETION
+  OVERTIME
+  HOLIDAY
+  REFERRAL
+  RETENTION
+  SAFETY
+  QUALITY
+}
+
+enum DeductionType {
+  TAX
+  INSURANCE
+  LOAN
+  ADVANCE
+  DISCIPLINARY
+  EQUIPMENT_DAMAGE
+  UNIFORM
+  OTHER
 }

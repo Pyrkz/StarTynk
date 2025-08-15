@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authenticateRequest } from '@/lib/auth/middleware';
-import { detectClientType } from '@/lib/auth/unified-auth';
+import { authenticateRequest, getSanitizedUser, getCorsHeaders } from '@repo/auth';
 import type { SessionResponse } from '@repo/shared/types';
 
 export async function GET(request: NextRequest) {
   try {
-    // Detect client type
-    const clientType = detectClientType(request);
+    // Authenticate request
+    const authResult = await authenticateRequest(request);
     
-    // Get current user
-    const user = await authenticateRequest(request);
-    
-    if (!user) {
+    if (!authResult.authenticated || !authResult.user) {
       const response: SessionResponse = {
         success: true,
         user: null,
@@ -20,16 +16,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(response);
     }
     
-    // Prepare user DTO
-    const userDTO = {
-      id: user.id,
-      email: user.email || undefined,
-      phone: user.phone || undefined,
-      name: user.name || undefined,
-      role: user.role,
-      emailVerified: !!user.emailVerified,
-      phoneVerified: !!user.phoneVerified,
-    };
+    // Get sanitized user data
+    const userDTO = getSanitizedUser(authResult.user);
     
     const response: SessionResponse = {
       success: true,
@@ -52,12 +40,14 @@ export async function GET(request: NextRequest) {
 
 // OPTIONS method for CORS
 export async function OPTIONS(request: NextRequest) {
+  const origin = request.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+  
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      ...corsHeaders,
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Type',
     },
   });
 }

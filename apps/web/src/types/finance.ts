@@ -1,7 +1,7 @@
 // Global Finance Dashboard Types
 // Comprehensive financial data types for company-wide financial management
 
-import { Decimal } from '@prisma/client/runtime/library';
+import { Decimal } from '@repo/database';
 
 // ========== Core Financial Metrics ==========
 

@@ -1,7 +1,7 @@
 // Financial Calculations Utility Library
 // Core financial calculation functions for company-wide financial analysis
 
-import { Decimal } from '@prisma/client/runtime/library';
+import { Decimal } from '@repo/database';
 import type {
   FinancialOverview,
   ProjectFinancialSummary,

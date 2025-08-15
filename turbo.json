@@ -1,76 +1,120 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": ["**/.env"],
+  "globalDependencies": [
+    "**/.env.*",
+    ".env"
+  ],
   "globalEnv": [
     "NODE_ENV",
     "DATABASE_URL",
+    "DATABASE_URL_DIRECT",
     "JWT_SECRET",
-    "API_URL"
+    "JWT_REFRESH_SECRET",
+    "NEXTAUTH_SECRET",
+    "NEXTAUTH_URL",
+    "PORT",
+    "API_VERSION",
+    "LOG_LEVEL"
   ],
-  "pipeline": {
+  "tasks": {
     "build": {
       "dependsOn": ["^build", "db:generate"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
-      "env": ["NODE_ENV", "DATABASE_URL"]
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        "dist/**",
+        ".expo/**"
+      ],
+      "cache": true,
+      "env": [
+        "NODE_ENV",
+        "NEXT_PUBLIC_*",
+        "EXPO_PUBLIC_*"
+      ]
     },
+    
     "dev": {
       "cache": false,
       "persistent": true,
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build", "db:generate"]
     },
-    "type-check": {
-      "dependsOn": ["^build"]
-    },
-    "lint": {
-      "dependsOn": ["^build"]
-    },
-    "db:generate": {
-      "cache": false,
-      "inputs": ["./packages/database/prisma/schema.prisma"],
-      "outputs": ["./packages/database/node_modules/.prisma/**"]
-    },
-    "db:push": {
-      "cache": false,
-      "dependsOn": ["db:generate"]
-    },
-    "db:migrate": {
-      "cache": false,
-      "inputs": ["./packages/database/prisma/schema.prisma"],
-      "outputs": ["./packages/database/prisma/migrations/**"]
-    },
-    "db:studio": {
-      "cache": false,
-      "persistent": true
-    },
-    "db:seed": {
-      "cache": false,
-      "dependsOn": ["db:generate"]
-    },
-    "clean": {
-      "cache": false
-    },
+    
     "test": {
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"],
-      "env": ["NODE_ENV", "DATABASE_URL", "JWT_SECRET"]
+      "cache": true,
+      "env": ["NODE_ENV", "DATABASE_URL"]
     },
+    
     "test:unit": {
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"],
-      "env": ["NODE_ENV"]
+      "cache": true
     },
+    
     "test:integration": {
       "dependsOn": ["^build", "db:push"],
       "outputs": ["coverage/**"],
-      "env": ["NODE_ENV", "DATABASE_URL", "JWT_SECRET"]
+      "cache": false,
+      "env": ["DATABASE_URL"]
     },
+    
     "test:e2e": {
       "dependsOn": ["^build"],
+      "cache": false,
       "env": ["NODE_ENV", "PLAYWRIGHT_BASE_URL"]
     },
-    "test:coverage": {
+    
+    "lint": {
+      "outputs": [],
+      "cache": true
+    },
+    
+    "type-check": {
       "dependsOn": ["^build"],
-      "outputs": ["coverage/**"]
+      "outputs": [],
+      "cache": true
+    },
+    
+    "db:generate": {
+      "cache": true,
+      "inputs": ["prisma/schema.prisma"],
+      "outputs": ["node_modules/.prisma/**", "src/generated/**"]
+    },
+    
+    "db:push": {
+      "cache": false,
+      "dependsOn": ["db:generate"],
+      "env": ["DATABASE_URL"]
+    },
+    
+    "db:migrate": {
+      "cache": false,
+      "inputs": ["prisma/schema.prisma"],
+      "outputs": ["prisma/migrations/**"],
+      "env": ["DATABASE_URL"]
+    },
+    
+    "db:seed": {
+      "cache": false,
+      "dependsOn": ["db:generate"],
+      "env": ["DATABASE_URL"]
+    },
+    
+    "db:studio": {
+      "cache": false,
+      "persistent": true,
+      "env": ["DATABASE_URL"]
+    },
+    
+    "clean": {
+      "cache": false
+    },
+    
+    "deploy": {
+      "dependsOn": ["build", "test", "lint", "type-check"],
+      "outputs": [],
+      "cache": false
     }
   }
 }

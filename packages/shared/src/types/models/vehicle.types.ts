@@ -1,84 +1,105 @@
-import { VehicleStatus, MaintenanceType, ReminderType } from '../enums';
-import { User } from './user.types';
+import type { 
+  VehicleStatus,
+  MaintenanceType,
+  ReminderType
+} from '@repo/database';
 
 /**
- * Vehicle model representing company vehicles
+ * Vehicle model
  */
 export interface Vehicle {
+  /** Unique identifier */
   id: string;
+  
+  /** Vehicle make */
   make: string;
+  
+  /** Vehicle model */
   model: string;
+  
+  /** Vehicle year */
   year: number;
+  
+  /** License plate number */
   licensePlate: string;
+  
+  /** VIN number */
   vin: string | null;
-  insuranceExpiry: Date | string | null;
-  inspectionExpiry: Date | string | null;
-  purchaseDate: Date | string | null;
-  purchasePrice: number | string | null; // Decimal as string for precision
+  
+  /** Insurance expiry date */
+  insuranceExpiry: Date | null;
+  
+  /** Inspection expiry date */
+  inspectionExpiry: Date | null;
+  
+  /** Purchase date */
+  purchaseDate: Date | null;
+  
+  /** Purchase price */
+  purchasePrice: number | null;
+  
+  /** Current vehicle status */
   status: VehicleStatus;
+  
+  /** Whether the vehicle is active */
   isActive: boolean;
-  createdAt: Date | string;
-  updatedAt: Date | string;
-  deletedAt: Date | string | null;
-  // Relations
-  assignments?: VehicleAssignment[];
-  maintenances?: VehicleMaintenance[];
-  reminders?: VehicleReminder[];
+  
+  /** ISO 8601 timestamp of creation */
+  createdAt: Date;
+  
+  /** ISO 8601 timestamp of last update */
+  updatedAt: Date;
+  
+  /** Soft delete timestamp */
+  deletedAt: Date | null;
 }
 
 /**
- * Vehicle assignment to users
+ * Vehicle assignment model
  */
 export interface VehicleAssignment {
   id: string;
   vehicleId: string;
   userId: string;
-  startDate: Date | string;
-  endDate: Date | string | null;
+  startDate: Date;
+  endDate: Date | null;
   isActive: boolean;
-  createdAt: Date | string;
-  updatedAt: Date | string;
-  // Relations
-  vehicle?: Vehicle;
-  user?: User;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 /**
- * Vehicle maintenance records
+ * Vehicle maintenance model
  */
 export interface VehicleMaintenance {
   id: string;
   vehicleId: string;
   type: MaintenanceType;
   description: string;
-  cost: number | string; // Decimal as string for precision
-  serviceDate: Date | string;
-  nextDueDate: Date | string | null;
+  cost: number;
+  serviceDate: Date;
+  nextDueDate: Date | null;
   mileage: number | null;
   serviceProvider: string | null;
   invoiceUrl: string | null;
   isActive: boolean;
-  createdAt: Date | string;
-  updatedAt: Date | string;
-  deletedAt: Date | string | null;
-  // Relations
-  vehicle?: Vehicle;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
 }
 
 /**
- * Vehicle reminder for maintenance and inspections
+ * Vehicle reminder model
  */
 export interface VehicleReminder {
   id: string;
   vehicleId: string;
   type: ReminderType;
-  dueDate: Date | string;
+  dueDate: Date;
   description: string;
   daysBefore: number;
   isCompleted: boolean;
   isActive: boolean;
-  createdAt: Date | string;
-  updatedAt: Date | string;
-  // Relations
-  vehicle?: Vehicle;
+  createdAt: Date;
+  updatedAt: Date;
 }

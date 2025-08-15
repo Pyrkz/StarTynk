@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@repo/database';
-import { z } from 'zod';
 import { 
   detectClientType, 
   validateCredentials, 
-  generateAuthResponse 
-} from '@/lib/auth/unified-auth';
+  generateAuthResponse,
+  createSecurityContext,
+  extractDeviceId,
+  getCorsHeaders
+} from '@repo/auth';
 import { unifiedLoginRequestSchema } from '@repo/shared/types';
 import { ApiResponse } from '@/lib/api/api-response';
-import { logUserActivity } from '@/features/auth/utils/activity-logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,21 +32,7 @@ export async function POST(request: NextRequest) {
     // Validate credentials
     const { user, loginMethod } = await validateCredentials(identifier, password);
     
-    if (!user) {
-      // Log failed attempt
-      await logUserActivity({
-        userId: null,
-        action: 'LOGIN_FAILED',
-        details: JSON.stringify({ 
-          identifier, 
-          loginMethod,
-          clientType,
-          reason: 'Invalid credentials' 
-        }),
-        ipAddress: request.headers.get('X-Forwarded-For') || request.headers.get('X-Real-IP') || undefined,
-        userAgent: request.headers.get('User-Agent') || undefined,
-      });
-      
+    if (!user || loginMethod === 'invalid') {
       return ApiResponse.unauthorized('Invalid email/phone or password');
     }
     
@@ -64,26 +50,19 @@ export async function POST(request: NextRequest) {
       return ApiResponse.forbidden('Please verify your phone number first');
     }
     
-    // Log successful login
-    await logUserActivity({
-      userId: user.id,
-      action: 'LOGIN_SUCCESS',
-      details: JSON.stringify({ 
-        loginMethod,
-        clientType,
-        deviceId 
-      }),
-      ipAddress: request.headers.get('X-Forwarded-For') || request.headers.get('X-Real-IP') || undefined,
-      userAgent: request.headers.get('User-Agent') || undefined,
-    });
+    // Create security context
+    const securityContext = createSecurityContext({
+      'user-agent': request.headers.get('user-agent') || undefined,
+      'x-forwarded-for': request.headers.get('x-forwarded-for') || undefined,
+      'x-real-ip': request.headers.get('x-real-ip') || undefined,
+    }, deviceId || extractDeviceId(request), loginMethod);
     
     // Generate auth response
     const authResponse = await generateAuthResponse(
       user, 
       clientType, 
       loginMethod, 
-      deviceId,
-      request
+      securityContext
     );
     
     return NextResponse.json(authResponse);
@@ -96,12 +75,14 @@ export async function POST(request: NextRequest) {
 
 // OPTIONS method for CORS
 export async function OPTIONS(request: NextRequest) {
+  const origin = request.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+  
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      ...corsHeaders,
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Type',
     },
   });
 }

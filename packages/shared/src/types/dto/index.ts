@@ -1,18 +1,9 @@
-/**
- * Data Transfer Objects (DTOs)
- * Export all DTOs from a single entry point
- */
+export * from './user.dto';
+export * from './project.dto';
 
-// Common DTOs
-export * from './common';
-
-// Domain-specific DTOs
+// Export all DTOs from subdirectories
 export * from './auth';
-export * from './user';
+export * from './common';
 export * from './project';
-
-// Additional DTOs can be added here as needed:
-// export * from './material';
-// export * from './equipment';
-// export * from './vehicle';
-// export * from './delivery';
+export * from './user';
+export * from './mobile';

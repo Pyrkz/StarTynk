@@ -1,27 +1,62 @@
-import { Role } from '../enums';
+import type { Role } from '@repo/database';
 
 /**
  * User model representing system users
+ * Based on Prisma User model but with proper typing
  */
 export interface User {
+  /** Unique identifier */
   id: string;
+  
+  /** User's full name */
   name: string | null;
+  
+  /** User's email address - unique */
   email: string;
-  emailVerified: Date | string | null;
+  
+  /** Email verification timestamp */
+  emailVerified: Date | null;
+  
+  /** Profile image URL */
   image: string | null;
-  password?: string; // Optional, not sent to client
+  
+  /** User's role in the system */
   role: Role;
+  
+  /** Whether the user account is active */
   isActive: boolean;
-  createdAt: Date | string;
-  updatedAt: Date | string;
+  
+  /** ISO 8601 timestamp of account creation */
+  createdAt: Date;
+  
+  /** ISO 8601 timestamp of last update */
+  updatedAt: Date;
+  
+  /** ID of user who invited this user */
   invitedBy: string | null;
-  deletedAt: Date | string | null;
+  
+  /** Soft delete timestamp */
+  deletedAt: Date | null;
+  
+  /** Department the user belongs to */
   department: string | null;
-  employmentEndDate: Date | string | null;
-  employmentStartDate: Date | string | null;
-  lastLoginAt: Date | string | null;
+  
+  /** Employment end date */
+  employmentEndDate: Date | null;
+  
+  /** Employment start date */
+  employmentStartDate: Date | null;
+  
+  /** Last login timestamp */
+  lastLoginAt: Date | null;
+  
+  /** Number of times user has logged in */
   loginCount: number;
+  
+  /** User's phone number */
   phone: string | null;
+  
+  /** User's position/job title */
   position: string | null;
 }
 
@@ -50,7 +85,7 @@ export interface Session {
   id: string;
   sessionToken: string;
   userId: string;
-  expires: Date | string;
+  expires: Date;
 }
 
 /**
@@ -59,7 +94,7 @@ export interface Session {
 export interface VerificationToken {
   identifier: string;
   token: string;
-  expires: Date | string;
+  expires: Date;
 }
 
 /**
@@ -69,11 +104,11 @@ export interface InvitationCode {
   id: string;
   code: string;
   email: string;
-  usedAt: Date | string | null;
-  expiresAt: Date | string;
-  createdAt: Date | string;
+  usedAt: Date | null;
+  expiresAt: Date;
+  createdAt: Date;
   invitedBy: string;
-  lastSentAt: Date | string;
+  lastSentAt: Date;
   message: string | null;
   resendCount: number;
   role: Role;
@@ -90,6 +125,21 @@ export interface UserActivityLog {
   details: string | null;
   ipAddress: string | null;
   userAgent: string | null;
-  createdAt: Date | string;
+  createdAt: Date;
   user?: User;
+}
+
+/**
+ * Refresh token for authentication
+ */
+export interface RefreshToken {
+  id: string;
+  token: string;
+  userId: string;
+  expiresAt: Date;
+  createdAt: Date;
+  deviceId: string | null;
+  userAgent: string | null;
+  ip: string | null;
+  loginMethod: string | null;
 }

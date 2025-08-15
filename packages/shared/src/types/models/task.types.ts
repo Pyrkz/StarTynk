@@ -1,92 +1,105 @@
-import { TaskStatus, TaskPriority, QualityStatus, QualityIssueType } from '../enums';
-import { User } from './user.types';
-import { Project, Apartment } from './project.types';
+import type { 
+  LeaveType,
+  LeaveStatus,
+  PaymentStatus,
+  PaymentMethod,
+  BonusType,
+  DeductionType
+} from '@repo/database';
 
 /**
- * Task model representing work tasks
+ * Attendance record model
  */
-export interface Task {
+export interface Attendance {
   id: string;
-  projectId: string;
-  apartmentId: string | null;
-  title: string;
-  description: string | null;
-  area: number | string; // Decimal as string for precision
-  rate: number | string; // Decimal as string for precision
-  status: TaskStatus;
-  estimatedHours: number | null;
-  actualHours: number | null;
-  priority: TaskPriority;
-  dueDate: Date | string | null;
-  isActive: boolean;
-  createdAt: Date | string;
-  updatedAt: Date | string;
-  deletedAt: Date | string | null;
-  // Relations
-  project?: Project;
-  apartment?: Apartment;
-  assignments?: TaskAssignment[];
-  qualityControls?: QualityControl[];
-  payments?: PaymentCalculation[];
-}
-
-/**
- * Task assignment linking users to tasks
- */
-export interface TaskAssignment {
-  id: string;
-  taskId: string;
   userId: string;
-  role: string | null;
+  projectId: string;
+  date: Date;
+  checkIn: Date | null;
+  checkOut: Date | null;
+  hoursWorked: number | null;
+  overtimeHours: number | null;
+  status: string | null;
+  notes: string | null;
   isActive: boolean;
-  createdAt: Date | string;
-  updatedAt: Date | string;
-  // Relations
-  task?: Task;
-  user?: User;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 /**
- * Quality control for tasks
+ * Leave request model
  */
-export interface QualityControl {
+export interface LeaveRequest {
   id: string;
-  taskId: string;
-  controllerId: string;
-  controlNumber: number;
-  status: QualityStatus;
-  completionRate: number;
+  userId: string;
+  type: LeaveType;
+  startDate: Date;
+  endDate: Date;
+  reason: string | null;
+  status: LeaveStatus;
+  approvedById: string | null;
+  approvedDate: Date | null;
   notes: string | null;
-  issuesFound: string | null;
-  correctionsNeeded: string | null;
-  controlDate: Date | string;
-  recontrolDate: Date | string | null;
-  issueType: QualityIssueType | null;
   isActive: boolean;
-  createdAt: Date | string;
-  updatedAt: Date | string;
-  deletedAt: Date | string | null;
-  // Relations
-  task?: Task;
-  controller?: User;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 /**
- * Payment calculation for tasks
+ * Payroll record model
  */
-export interface PaymentCalculation {
+export interface Payroll {
   id: string;
-  taskId: string;
-  area: number | string; // Decimal as string for precision
-  rate: number | string; // Decimal as string for precision
-  completionRate: number;
-  amount: number | string; // Decimal as string for precision
-  isPaid: boolean;
-  paidAt: Date | string | null;
+  userId: string;
+  projectId: string | null;
+  payPeriodStart: Date;
+  payPeriodEnd: Date;
+  hoursWorked: number;
+  overtimeHours: number;
+  hourlyRate: number;
+  overtimeRate: number;
+  baseAmount: number;
+  overtimeAmount: number;
+  bonusAmount: number;
+  deductionAmount: number;
+  totalAmount: number;
+  status: PaymentStatus;
+  paymentMethod: PaymentMethod | null;
+  paymentDate: Date | null;
   notes: string | null;
   isActive: boolean;
-  createdAt: Date | string;
-  updatedAt: Date | string;
-  // Relations
-  task?: Task;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Bonus model
+ */
+export interface Bonus {
+  id: string;
+  userId: string;
+  payrollId: string | null;
+  type: BonusType;
+  amount: number;
+  description: string | null;
+  date: Date;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Deduction model
+ */
+export interface Deduction {
+  id: string;
+  userId: string;
+  payrollId: string | null;
+  type: DeductionType;
+  amount: number;
+  description: string | null;
+  date: Date;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }

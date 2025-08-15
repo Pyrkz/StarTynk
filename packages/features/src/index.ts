@@ -1,3 +1,10 @@
+// Core infrastructure
+export * from './repositories';
+export * from './services';
+export * from './errors';
+export * from './events';
+export * from './transactions';
+
 // Auth feature
 export * from './auth';
 
@@ -9,3 +16,8 @@ export * from './projects';
 
 // Shared utilities and hooks
 export * from './shared';
+
+// Re-export types and utilities
+export type { FindManyOptions, PaginationOptions, SearchOptions } from './repositories/base';
+export type { EventName, EventPayload } from './events';
+export type { TransactionOptions } from './transactions';

@@ -30,7 +30,7 @@ npm install -D @types/bcryptjs @types/jsonwebtoken
 4. **Przykład API Route** (`app/api/auth/login/route.ts`):
 ```typescript
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@repo/database';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
 // server.ts
 import express from 'express';
 import cors from 'cors';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@repo/database';
 import authRoutes from './routes/auth';
 
 const app = express();

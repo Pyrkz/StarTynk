@@ -1,65 +1,85 @@
-import { EquipmentStatus, EquipmentHistoryAction } from '../enums';
-import { User } from './user.types';
+import type { 
+  EquipmentStatus,
+  EquipmentHistoryAction
+} from '@repo/database';
 
 /**
- * Equipment category for organizing equipment
+ * Equipment category model
  */
 export interface EquipmentCategory {
   id: string;
   name: string;
   description: string | null;
   isActive: boolean;
-  createdAt: Date | string;
-  updatedAt: Date | string;
-  deletedAt: Date | string | null;
-  // Relations
-  equipment?: Equipment[];
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
 }
 
 /**
- * Equipment model representing tools and machinery
+ * Equipment model
  */
 export interface Equipment {
+  /** Unique identifier */
   id: string;
+  
+  /** Equipment name */
   name: string;
+  
+  /** Category ID */
   categoryId: string;
+  
+  /** Serial number */
   serialNumber: string | null;
-  purchaseDate: Date | string | null;
-  purchasePrice: number | string | null; // Decimal as string for precision
+  
+  /** Purchase date */
+  purchaseDate: Date | null;
+  
+  /** Purchase price */
+  purchasePrice: number | null;
+  
+  /** Current equipment status */
   status: EquipmentStatus;
+  
+  /** Equipment condition */
   condition: string | null;
+  
+  /** Equipment description */
   description: string | null;
+  
+  /** Image URL */
   imageUrl: string | null;
+  
+  /** Whether the equipment is active */
   isActive: boolean;
-  createdAt: Date | string;
-  updatedAt: Date | string;
-  deletedAt: Date | string | null;
-  // Relations
-  category?: EquipmentCategory;
-  assignments?: EquipmentAssignment[];
-  history?: EquipmentHistory[];
+  
+  /** ISO 8601 timestamp of creation */
+  createdAt: Date;
+  
+  /** ISO 8601 timestamp of last update */
+  updatedAt: Date;
+  
+  /** Soft delete timestamp */
+  deletedAt: Date | null;
 }
 
 /**
- * Equipment assignment to users
+ * Equipment assignment model
  */
 export interface EquipmentAssignment {
   id: string;
   equipmentId: string;
   userId: string;
-  assignedDate: Date | string;
-  returnDate: Date | string | null;
+  assignedDate: Date;
+  returnDate: Date | null;
   notes: string | null;
   isActive: boolean;
-  createdAt: Date | string;
-  updatedAt: Date | string;
-  // Relations
-  equipment?: Equipment;
-  user?: User;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 /**
- * Equipment history tracking
+ * Equipment history model
  */
 export interface EquipmentHistory {
   id: string;
@@ -67,9 +87,7 @@ export interface EquipmentHistory {
   action: EquipmentHistoryAction;
   userId: string | null;
   description: string | null;
-  actionDate: Date | string;
+  actionDate: Date;
   isActive: boolean;
-  createdAt: Date | string;
-  // Relations
-  equipment?: Equipment;
+  createdAt: Date;
 }
