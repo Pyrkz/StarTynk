@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "dom"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noEmit": true,
+    "incremental": true,
+    "paths": {
+      "@repo/shared": ["./packages/shared/src"],
+      "@repo/shared/*": ["./packages/shared/src/*"],
+      "@repo/ui": ["./packages/ui/src"],
+      "@repo/ui/*": ["./packages/ui/src/*"]
+    }
+  },
+  "exclude": ["node_modules"]
+}

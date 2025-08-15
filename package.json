@@ -1,0 +1,27 @@
+{
+  "name": "@repo/root",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "packages/config/*"
+  ],
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "type-check": "turbo type-check",
+    "clean": "turbo clean",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+  },
+  "devDependencies": {
+    "turbo": "^2.4.4",
+    "prettier": "^3.4.6",
+    "pnpm": "^10.14.0"
+  },
+  "packageManager": "pnpm@10.14.0",
+  "engines": {
+    "node": ">=18.17.0"
+  }
+}
