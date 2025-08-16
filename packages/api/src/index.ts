@@ -18,3 +18,6 @@ export * from './utils';
 
 // Types
 export * from './types';
+
+// Client module
+export * from './client';

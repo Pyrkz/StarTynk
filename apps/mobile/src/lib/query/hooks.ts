@@ -1,6 +1,7 @@
 import { useMutation, useQuery, UseQueryOptions, UseMutationOptions } from '@tanstack/react-query';
 import { useNetInfo } from '@react-native-community/netinfo';
-import { apiClient } from '../api/http-client';
+// TODO: Replace with @repo/shared after consolidation
+// import { apiClient } from '../api/http-client';
 import { queryClient } from './query-client';
 
 /**

@@ -6,7 +6,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Input } from '@/components/ui/Input'
 import { Lock, Eye, EyeOff, AlertCircle } from 'lucide-react'
 import { loginSchema, registerWithInviteSchema } from '@/features/auth/schemas/auth.schema'
-import { AUTH_ERRORS } from '@/features/auth/types/auth.types'
+// TODO: Replace with @repo/shared after consolidation
+// import { AUTH_ERRORS } from '@/features/auth/types/auth.types'
 
 function LoginForm() {
   const [email, setEmail] = useState('')

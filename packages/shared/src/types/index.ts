@@ -10,6 +10,9 @@ export * from './dto';
 // Export type guards
 export * from './guards';
 
+// Export auth types (new unified types)
+export * from './auth';
+
 // Re-export commonly used database types and enums for convenience
 export type {
   User,

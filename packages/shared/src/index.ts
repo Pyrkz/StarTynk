@@ -10,6 +10,9 @@ export * from './constants';
 // Export all utils
 export * from './utils';
 
+// Export storage
+export * from './storage';
+
 // Re-export commonly used database types for convenience
 export type {
   User,

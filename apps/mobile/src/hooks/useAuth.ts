@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import authService, { LoginData, RegisterData } from '../services/auth';
-import storageService from '../services/storage';
+// TODO: Replace with @repo/shared after consolidation
+// import storageService from '../services/storage';
 import { User } from '@repo/shared/types';
 
 interface UseAuthReturn {

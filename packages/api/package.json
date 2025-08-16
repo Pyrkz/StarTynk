@@ -18,6 +18,18 @@
     "lru-cache": "^10.4.3",
     "date-fns": "^4.1.0"
   },
+  "peerDependencies": {
+    "axios": "^1.6.0",
+    "react-native-mmkv": "^2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "axios": {
+      "optional": true
+    },
+    "react-native-mmkv": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@types/node": "^20",
     "tsup": "^8.3.5",

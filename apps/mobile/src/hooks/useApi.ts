@@ -1,5 +1,6 @@
 import { useQuery, useMutation, UseQueryOptions, UseMutationOptions } from '@tanstack/react-query';
-import { api, ApiError } from '../lib/api-client';
+// TODO: Replace with @repo/shared after consolidation
+// import { api, ApiError } from '../lib/api-client';
 
 interface UseApiQueryOptions<TData> extends Omit<UseQueryOptions<TData, ApiError>, 'queryKey' | 'queryFn'> {
   url: string;

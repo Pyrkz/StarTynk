@@ -4,7 +4,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
 import { LoginScreen } from '@/features/auth/screens/LoginScreen';
 import { authService } from '@/services/auth.service';
-import { tokenStorage } from '@/lib/storage/token-storage';
+// TODO: Replace with @repo/shared after consolidation
+// import { tokenStorage } from '@/lib/storage/token-storage';
 
 // Mock dependencies
 jest.mock('expo-secure-store');

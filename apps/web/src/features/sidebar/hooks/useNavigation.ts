@@ -10,6 +10,7 @@ import {
   findActiveItem,
   hasActiveChild 
 } from '../components/Sidebar/navigation.config'
+import { storage } from '@repo/shared/storage'
 
 export function useNavigation() {
   const pathname = usePathname()
@@ -57,22 +58,37 @@ export function useNavigation() {
     }
   }, [pathname, navigation])
 
-  // Załaduj zapisany stan z localStorage
+  // Załaduj zapisany stan z unified storage
   useEffect(() => {
     if (typeof window === 'undefined') return
     
-    const savedExpanded = localStorage.getItem('sidebar-expanded')
-    
-    if (savedExpanded) {
-      setExpandedItems(new Set(JSON.parse(savedExpanded)))
+    const loadExpandedItems = async () => {
+      try {
+        const savedExpanded = await storage.getObject<string[]>('sidebar-expanded')
+        if (savedExpanded) {
+          setExpandedItems(new Set(savedExpanded))
+        }
+      } catch (error) {
+        console.error('Failed to load sidebar expanded state:', error)
+      }
     }
+    
+    loadExpandedItems()
   }, [])
 
-  // Zapisz stan do localStorage
+  // Zapisz stan do unified storage
   useEffect(() => {
     if (typeof window === 'undefined') return
     
-    localStorage.setItem('sidebar-expanded', JSON.stringify(Array.from(expandedItems)))
+    const saveExpandedItems = async () => {
+      try {
+        await storage.setObject('sidebar-expanded', Array.from(expandedItems))
+      } catch (error) {
+        console.error('Failed to save sidebar expanded state:', error)
+      }
+    }
+    
+    saveExpandedItems()
   }, [expandedItems])
 
 

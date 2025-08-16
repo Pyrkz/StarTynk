@@ -1,4 +1,5 @@
-import { LoginMethod } from '../types';
+// TODO: Replace with @repo/shared after consolidation
+// import { LoginMethod } from '../types';
 
 interface ValidationResult {
   isValid: boolean;

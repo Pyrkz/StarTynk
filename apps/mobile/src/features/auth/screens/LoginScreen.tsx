@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Logo, Button, TextInput, Checkbox } from '@/src/shared/components';
 import { validateLoginForm } from '../utils/validation';
-import authService from '../services/authService';
+import { authService } from '@repo/auth';
 import { useAuth } from '../context';
 import type { LoginFormData, LoginMethod } from '../types';
 

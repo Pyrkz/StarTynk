@@ -14,12 +14,13 @@ import {
   NotFoundError,
   ForbiddenError,
 } from '../../utils/errors';
-import {
-  AuthTokens,
-  AuthResponse,
-  JwtPayload,
-  RefreshTokenPayload,
-} from './auth.types';
+// TODO: Replace with @repo/shared after consolidation
+// import {
+//   AuthTokens,
+//   AuthResponse,
+//   JwtPayload,
+//   RefreshTokenPayload,
+// } from './auth.types';
 
 export class AuthService {
   private readonly JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';

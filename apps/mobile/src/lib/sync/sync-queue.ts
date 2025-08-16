@@ -3,7 +3,8 @@ import NetInfo from '@react-native-community/netinfo';
 import { EventEmitter } from 'events';
 import * as BackgroundFetch from 'expo-background-fetch';
 import * as TaskManager from 'expo-task-manager';
-import { apiClient } from '../api/http-client';
+// TODO: Replace with @repo/shared after consolidation
+// import { apiClient } from '../api/http-client';
 import { secureStorage } from '../storage/secure-storage';
 
 export interface SyncItem {

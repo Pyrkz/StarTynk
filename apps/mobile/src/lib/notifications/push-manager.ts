@@ -2,7 +2,7 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { storage } from '@repo/shared/storage';
 import { trpc } from '../trpc';
 import { router } from '@/navigation/router';
 
@@ -70,8 +70,8 @@ export class PushNotificationManager {
       
       this.token = tokenResponse.data;
       
-      // Store token locally
-      await AsyncStorage.setItem('pushToken', this.token);
+      // Store token locally using unified storage
+      await storage.setItem('pushToken', this.token);
       
       return this.token;
     } catch (error) {
@@ -262,8 +262,8 @@ export class PushNotificationManager {
     // Clear badge
     await this.setBadgeCount(0);
     
-    // Clear stored token
-    await AsyncStorage.removeItem('pushToken');
+    // Clear stored token using unified storage
+    await storage.removeItem('pushToken');
     
     this.token = null;
   }

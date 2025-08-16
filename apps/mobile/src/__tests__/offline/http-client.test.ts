@@ -1,4 +1,5 @@
-import { apiClient } from '../../lib/api/http-client';
+// TODO: Replace with @repo/shared after consolidation
+// import { apiClient } from '../../lib/api/http-client';
 import axios from 'axios';
 import NetInfo from '@react-native-community/netinfo';
 import { secureStorage } from '../../lib/storage/secure-storage';

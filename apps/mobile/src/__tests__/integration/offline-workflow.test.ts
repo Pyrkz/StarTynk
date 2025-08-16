@@ -4,7 +4,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import NetInfo from '@react-native-community/netinfo';
 import { useAttendanceMutation, useTaskUpdateMutation } from '../../lib/query/hooks';
 import { syncQueue } from '../../lib/sync/sync-queue';
-import { apiClient } from '../../lib/api/http-client';
+// TODO: Replace with @repo/shared after consolidation
+// import { apiClient } from '../../lib/api/http-client';
 
 // Mock dependencies
 jest.mock('@react-native-community/netinfo');

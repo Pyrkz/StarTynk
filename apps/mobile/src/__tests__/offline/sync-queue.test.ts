@@ -1,5 +1,6 @@
 import { syncQueue, SyncItem } from '../../lib/sync/sync-queue';
-import { apiClient } from '../../lib/api/http-client';
+// TODO: Replace with @repo/shared after consolidation
+// import { apiClient } from '../../lib/api/http-client';
 import NetInfo from '@react-native-community/netinfo';
 
 // Mock dependencies

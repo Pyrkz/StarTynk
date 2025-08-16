@@ -1,5 +1,6 @@
 import { HEADER_CONSTANTS } from './constants'
 import type { Notification, RecentSearch } from '../types'
+import { createWebStorage } from '@repo/shared/storage'
 
 /**
  * Sanitize HTML to prevent XSS attacks
@@ -78,14 +79,27 @@ export function getNotificationIcon(type: Notification['type']) {
   }
 }
 
+// Create a storage instance for recent searches
+const recentSearchesStorage = createWebStorage<RecentSearch[]>({
+  key: HEADER_CONSTANTS.STORAGE.RECENT_SEARCHES,
+  defaultValue: [],
+  // Custom deserializer to convert timestamp strings back to Date objects
+  deserialize: (value: string) => {
+    const searches = JSON.parse(value)
+    return searches.map((s: any) => ({
+      ...s,
+      timestamp: new Date(s.timestamp)
+    }))
+  }
+})
+
 /**
- * Save recent searches to localStorage
+ * Save recent searches using unified storage
  */
-export function saveRecentSearches(searches: RecentSearch[]) {
+export async function saveRecentSearches(searches: RecentSearch[]) {
   try {
-    localStorage.setItem(
-      HEADER_CONSTANTS.STORAGE.RECENT_SEARCHES,
-      JSON.stringify(searches.slice(0, HEADER_CONSTANTS.LIMITS.MAX_RECENT_SEARCHES))
+    await recentSearchesStorage.set(
+      searches.slice(0, HEADER_CONSTANTS.LIMITS.MAX_RECENT_SEARCHES)
     )
   } catch (error) {
     console.error('Failed to save recent searches:', error)
@@ -93,22 +107,15 @@ export function saveRecentSearches(searches: RecentSearch[]) {
 }
 
 /**
- * Load recent searches from localStorage
+ * Load recent searches using unified storage
  */
 export function loadRecentSearches(): RecentSearch[] {
   try {
-    const stored = localStorage.getItem(HEADER_CONSTANTS.STORAGE.RECENT_SEARCHES)
-    if (stored) {
-      const searches = JSON.parse(stored)
-      return searches.map((s: any) => ({
-        ...s,
-        timestamp: new Date(s.timestamp)
-      }))
-    }
+    return recentSearchesStorage.get()
   } catch (error) {
     console.error('Failed to load recent searches:', error)
+    return []
   }
-  return []
 }
 
 /**

@@ -1,6 +1,7 @@
 import { SIDEBAR_CONSTANTS } from './constants'
 import type { NavigationItem, NavigationGroup, SidebarState } from '../types'
 import type { Role } from '@repo/database'
+import { storage } from '@repo/shared/storage'
 
 /**
  * Check if user has required role for navigation item
@@ -101,38 +102,33 @@ export function isItemActive(
 }
 
 /**
- * Save sidebar state to localStorage
+ * Save sidebar state to unified storage
  */
-export function saveSidebarState(state: Partial<SidebarState>): void {
+export async function saveSidebarState(state: Partial<SidebarState>): Promise<void> {
   if (typeof window === 'undefined') return
   
   try {
-    const currentState = loadSidebarState()
+    const currentState = await loadSidebarState()
     const newState = { ...currentState, ...state }
-    localStorage.setItem(
-      SIDEBAR_CONSTANTS.STORAGE.STATE_KEY,
-      JSON.stringify(newState)
-    )
+    await storage.setObject(SIDEBAR_CONSTANTS.STORAGE.STATE_KEY, newState)
   } catch (error) {
     console.error('Failed to save sidebar state:', error)
   }
 }
 
 /**
- * Load sidebar state from localStorage
+ * Load sidebar state from unified storage
  */
-export function loadSidebarState(): Partial<SidebarState> {
+export async function loadSidebarState(): Promise<Partial<SidebarState>> {
   if (typeof window === 'undefined') return {}
   
   try {
-    const stored = localStorage.getItem(SIDEBAR_CONSTANTS.STORAGE.STATE_KEY)
-    if (stored) {
-      return JSON.parse(stored)
-    }
+    const state = await storage.getObject<Partial<SidebarState>>(SIDEBAR_CONSTANTS.STORAGE.STATE_KEY)
+    return state || {}
   } catch (error) {
     console.error('Failed to load sidebar state:', error)
+    return {}
   }
-  return {}
 }
 
 /**

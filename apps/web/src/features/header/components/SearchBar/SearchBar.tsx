@@ -89,7 +89,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         ].slice(0, HEADER_CONSTANTS.LIMITS.MAX_RECENT_SEARCHES)
         
         setRecentSearches(updated)
-        saveRecentSearches(updated)
+        // Save asynchronously without blocking the UI
+        saveRecentSearches(updated).catch(console.error)
       }
       
       if (onSearch) {

@@ -27,6 +27,14 @@
     "date-fns": "^4.1.0",
     "next": "^14.0.0"
   },
+  "peerDependencies": {
+    "expo-secure-store": "*"
+  },
+  "peerDependenciesMeta": {
+    "expo-secure-store": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",

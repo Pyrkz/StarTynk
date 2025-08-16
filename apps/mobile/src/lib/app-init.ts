@@ -1,6 +1,8 @@
-import { apiClient } from './api-client';
+// TODO: Replace with @repo/shared after consolidation
+// import { apiClient } from './api-client';
 import { networkMonitor } from './network-monitor';
-import { tokenStorage } from './storage/token-storage';
+// TODO: Replace with @repo/shared after consolidation
+// import { tokenStorage } from './storage/token-storage';
 import { authService } from '../services/auth.service';
 
 export async function initializeApp(): Promise<void> {

@@ -19,12 +19,23 @@
     "@repo/auth": "workspace:*",
     "@tanstack/react-query": "^5.32.0",
     "zustand": "^4.5.2",
+    "immer": "^10.0.0",
     "axios": "^1.7.2",
     "expo-server-sdk": "^3.10.0",
     "node-cron": "^3.0.0"
   },
   "peerDependencies": {
-    "react": ">=18.0.0"
+    "react": ">=18.0.0",
+    "next-auth": "*",
+    "@react-native-community/netinfo": "*"
+  },
+  "peerDependenciesMeta": {
+    "next-auth": {
+      "optional": true
+    },
+    "@react-native-community/netinfo": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@repo/config-typescript": "workspace:*",
