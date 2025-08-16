@@ -1,1 +1,1 @@
-// Project schemas will be added here
+export * from './project.schema';

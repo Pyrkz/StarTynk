@@ -6,16 +6,40 @@
   "exports": {
     ".": "./src/index.ts",
     "./schemas": "./src/schemas/index.ts",
-    "./validators": "./src/validators/index.ts"
+    "./validators": "./src/validators/index.ts",
+    "./errors": "./src/errors/index.ts",
+    "./sanitizers": "./src/sanitizers/index.ts",
+    "./rate-limit": "./src/rate-limit/index.ts",
+    "./middleware": "./src/middleware/index.ts",
+    "./mobile": "./src/mobile/index.ts",
+    "./trpc": "./src/trpc/index.ts",
+    "./constants": "./src/constants/index.ts"
   },
   "dependencies": {
     "@repo/database": "workspace:*",
     "@repo/shared": "workspace:*",
+    "@trpc/server": "^10.0.0",
     "zod": "^3.22.0",
-    "libphonenumber-js": "^1.10.0"
+    "libphonenumber-js": "^1.10.0",
+    "isomorphic-dompurify": "^2.12.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "typescript": "^5.0.0"
+    "@types/react": "^18.0.0",
+    "@types/react-native": "^0.73.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-native": {
+      "optional": true
+    }
   }
 }

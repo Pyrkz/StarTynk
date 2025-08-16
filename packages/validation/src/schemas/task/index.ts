@@ -1,1 +1,1 @@
-// Task schemas will be added here
+export * from './task.schema';

@@ -1,0 +1,70 @@
+{
+  "name": "@repo/trpc",
+  "version": "0.1.0",
+  "private": true,
+  "description": "tRPC server configuration and routers for StarTynk monorepo",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "clean": "rm -rf dist",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "generate:types": "tsx scripts/generate-types.ts",
+    "generate:docs": "tsx scripts/generate-types.ts",
+    "postbuild": "npm run generate:types"
+  },
+  "dependencies": {
+    "@trpc/server": "^10.45.2",
+    "@trpc/client": "^10.45.2",
+    "@trpc/react-query": "^10.45.2",
+    "@trpc/next": "^10.45.2",
+    "superjson": "^2.2.1",
+    "zod": "^3.22.4",
+    "@tanstack/react-query": "^5.17.1",
+    "@repo/database": "workspace:*",
+    "@repo/shared": "workspace:*",
+    "@repo/auth": "workspace:*",
+    "@repo/utils": "workspace:*",
+    "@repo/validation": "workspace:*"
+  },
+  "devDependencies": {
+    "@repo/config": "workspace:*",
+    "@types/node": "^20.10.6",
+    "typescript": "^5.3.3",
+    "tsup": "^8.0.1",
+    "tsx": "^4.7.0",
+    "eslint": "^8.56.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "default": "./dist/server.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "default": "./dist/client.js"
+    },
+    "./routers": {
+      "types": "./dist/routers/index.d.ts",
+      "default": "./dist/routers/index.js"
+    },
+    "./context": {
+      "types": "./dist/context.d.ts",
+      "default": "./dist/context.js"
+    },
+    "./middleware": {
+      "types": "./dist/middleware/index.d.ts",
+      "default": "./dist/middleware/index.js"
+    }
+  },
+  "files": [
+    "dist/**/*"
+  ]
+}

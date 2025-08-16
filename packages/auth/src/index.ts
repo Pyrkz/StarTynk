@@ -18,6 +18,7 @@ export * from './middleware';
 
 // Jobs
 export * from './jobs/cleanup.job';
+export * from './jobs/token-cleanup.job';
 
 // Re-export commonly used functions for convenience
 export {

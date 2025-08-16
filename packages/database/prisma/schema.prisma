@@ -83,7 +83,11 @@ model User {
   deductions           Deduction[]
   pushTokens           PushToken[]
   syncQueue            SyncQueue[]
+  conflictLogs         ConflictLog[]
+  idMappings           IdMapping[]
   notificationSchedules NotificationSchedule[]
+  notificationLogs     NotificationLog[]
+  syncLogs             SyncLog[]
 
   @@index([invitedBy], map: "users_invitedBy_fkey")
   @@map("users")
@@ -132,19 +136,44 @@ model UserActivityLog {
 
 model RefreshToken {
   id          String   @id @default(cuid())
-  token       String   @unique
+  token       String   @unique @db.VarChar(500)
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt   DateTime
-  createdAt   DateTime @default(now())
-  deviceId    String?
-  userAgent   String?
+  deviceId    String   // Required unique device identifier
+  deviceName  String?  // Human readable device name "iPhone 14", "Chrome/Windows"
+  userAgent   String?  @db.Text
   ip          String?
-  loginMethod String?
+  issuedAt    DateTime @default(now())
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  isRevoked   Boolean  @default(false)
+  replacedBy  String?  // New token ID after rotation for token family tracking
+  loginMethod String   // "email" or "phone" 
+  jti         String   @unique // JWT ID for tracking
   
   @@index([userId])
   @@index([deviceId])
+  @@index([expiresAt])
+  @@index([jti])
+  @@index([isRevoked])
   @@map("refresh_tokens")
+}
+
+model LoginAttempt {
+  id         String   @id @default(cuid())
+  identifier String   // email or phone number
+  ip         String
+  userAgent  String?  @db.Text
+  success    Boolean
+  reason     String?  // "invalid_password", "account_locked", "invalid_credentials", etc
+  deviceId   String?  // Optional device identifier
+  createdAt  DateTime @default(now())
+  
+  @@index([identifier])
+  @@index([ip])
+  @@index([createdAt])
+  @@index([success])
+  @@map("login_attempts")
 }
 
 model Developer {
@@ -727,44 +756,100 @@ model Deduction {
 }
 
 model PushToken {
-  id          String   @id @default(cuid())
-  userId      String
-  token       String   @unique
-  platform    Platform
-  deviceId    String
-  deviceName  String?
-  appVersion  String?
-  osVersion   String?
-  isActive    Boolean  @default(true)
-  lastUsedAt  DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String    @id @default(cuid())
+  userId        String
+  token         String    @unique @db.VarChar(255)
+  platform      Platform
+  deviceId      String
+  deviceName    String?
+  deviceModel   String?
+  osVersion     String?
+  appVersion    String?
+  locale        String?   @default("en")
+  timezone      String?
+  isActive      Boolean   @default(true)
+  isSandbox     Boolean   @default(false)
+  lastUsedAt    DateTime  @default(now())
+  failureCount  Int       @default(0)
+  lastError     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@unique([userId, deviceId])
-  @@index([userId])
+  @@index([userId, isActive])
   @@index([token])
+  @@index([platform])
   @@map("push_tokens")
 }
 
 model SyncQueue {
-  id          String     @id @default(cuid())
-  userId      String
-  entityType  String     // 'project', 'task', etc.
-  entityId    String
-  operation   SyncOperation
-  payload     Json
-  retryCount  Int        @default(0)
-  status      SyncStatus @default(PENDING)
-  error       String?
-  syncedAt    DateTime?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  user        User       @relation(fields: [userId], references: [id])
+  id            String    @id @default(cuid())
+  userId        String
+  deviceId      String
+  entityType    String    // 'attendance', 'task', 'material', etc.
+  entityId      String?   // Local ID before server assigns real ID
+  serverId      String?   // Server-assigned ID after sync
+  operation     SyncOperation
+  payload       Json
+  checksum      String    // For data integrity
+  priority      Int       @default(5) // 1-10, 1 being highest
+  retryCount    Int       @default(0)
+  maxRetries    Int       @default(3)
+  status        SyncStatus @default(PENDING)
+  error         String?   @db.Text
+  syncedAt      DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  scheduledFor  DateTime? // For delayed sync
+  batchId       String?   // For batch operations
   
-  @@index([userId, status])
+  user          User      @relation(fields: [userId], references: [id])
+  
+  @@index([userId, status, priority])
+  @@index([deviceId, status])
+  @@index([batchId])
+  @@index([scheduledFor])
   @@index([createdAt])
   @@map("sync_queue")
+}
+
+model ConflictLog {
+  id           String           @id @default(cuid())
+  userId       String
+  deviceId     String
+  entityType   String
+  entityId     String
+  clientData   Json
+  serverData   Json
+  resolution   String           // CLIENT_WINS, SERVER_WINS, MERGE, MANUAL_RESOLVE
+  resolvedData Json?
+  syncQueueId  String?          // Reference to sync queue item
+  createdAt    DateTime         @default(now())
+  user         User             @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([deviceId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("conflict_logs")
+}
+
+model IdMapping {
+  id          String   @id @default(cuid())
+  userId      String
+  deviceId    String
+  entityType  String
+  tempId      String   // Temporary/local ID
+  serverId    String   // Server-assigned ID
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+  
+  @@unique([tempId, entityType])
+  @@index([userId])
+  @@index([deviceId])
+  @@index([serverId, entityType])
+  @@map("id_mappings")
 }
 
 model NotificationSchedule {
@@ -787,6 +872,70 @@ model NotificationSchedule {
   @@map("notification_schedules")
 }
 
+model NotificationLog {
+  id            String    @id @default(cuid())
+  userId        String?   // null for broadcast
+  title         String
+  body          String    @db.Text
+  data          Json?
+  type          NotificationType
+  priority      NotificationPriority
+  channel       String    @default("default")
+  status        NotificationStatus @default(PENDING)
+  sentAt        DateTime?
+  deliveredAt   DateTime?
+  readAt        DateTime?
+  error         String?
+  retryCount    Int       @default(0)
+  pushTokenId   String?
+  createdAt     DateTime  @default(now())
+  
+  user          User?     @relation(fields: [userId], references: [id])
+  
+  @@index([userId, status])
+  @@index([type])
+  @@index([createdAt])
+  @@map("notification_logs")
+}
+
+model CachePolicy {
+  id            String    @id @default(cuid())
+  entityType    String    @unique
+  ttl           Int       // seconds
+  staleTime     Int       // seconds
+  cacheTime     Int       // seconds
+  maxAge        Int       // seconds
+  strategy      CacheStrategy // NETWORK_FIRST, CACHE_FIRST, etc.
+  priority      Int       @default(5)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@map("cache_policies")
+}
+
+model SyncLog {
+  id            String    @id @default(cuid())
+  userId        String
+  deviceId      String
+  syncType      String    // FULL, PARTIAL, DELTA
+  direction     String    // UPLOAD, DOWNLOAD, BIDIRECTIONAL
+  entityCounts  Json      // { attendance: 5, tasks: 10 }
+  startedAt     DateTime
+  completedAt   DateTime?
+  duration      Int?      // milliseconds
+  status        SyncStatus
+  error         String?
+  metadata      Json?
+  
+  user          User      @relation(fields: [userId], references: [id])
+  
+  @@index([userId, status])
+  @@index([deviceId])
+  @@index([startedAt])
+  @@map("sync_logs")
+}
+
 enum Platform {
   IOS
   ANDROID
@@ -796,20 +945,51 @@ enum SyncOperation {
   CREATE
   UPDATE
   DELETE
+  BATCH
 }
 
 enum SyncStatus {
   PENDING
+  QUEUED
   SYNCING
-  COMPLETED
+  SUCCESS
   FAILED
+  CANCELLED
+  CONFLICT
+}
+
+enum NotificationType {
+  TASK_ASSIGNED
+  ATTENDANCE_REMINDER
+  PAYMENT_PROCESSED
+  SYSTEM_ALERT
+  CHAT_MESSAGE
+  SCHEDULE_CHANGE
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
 }
 
 enum NotificationStatus {
   PENDING
   SENT
+  DELIVERED
+  READ
   FAILED
-  CANCELLED
+  EXPIRED
+}
+
+enum CacheStrategy {
+  NETWORK_FIRST
+  CACHE_FIRST
+  NETWORK_ONLY
+  CACHE_ONLY
+  CACHE_AND_NETWORK
+  STALE_WHILE_REVALIDATE
 }
 
 enum Role {
