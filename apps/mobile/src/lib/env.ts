@@ -45,7 +45,7 @@ export const env: MobileEnv = {
   ENVIRONMENT: process.env.EXPO_PUBLIC_ENVIRONMENT || (__DEV__ ? 'development' : 'production'),
   IS_DEV: __DEV__,
   IS_PREVIEW: Constants.appOwnership === 'expo',
-  IS_PRODUCTION: !__DEV__ && Constants.appOwnership === 'standalone',
+  IS_PRODUCTION: !__DEV__ && Constants.appOwnership === ('standalone' as any),
   IS_STAGING: process.env.EXPO_PUBLIC_ENVIRONMENT === 'staging',
   // API Configuration
   API_TIMEOUT: 30000, // 30 seconds

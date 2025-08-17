@@ -1,54 +1,86 @@
-import { useFonts, Inter_800ExtraBold } from '@expo-google-fonts/inter';
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
-import 'react-native-reanimated';
-import '../src/styles/global.css';
-import { AuthProvider } from '@/src/features/auth';
-import { initializeApp } from '@/src/lib/app-init';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Platform } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
+import { AuthProvider } from '@/features/auth';
+import { setMobileStorage } from '@repo/features/auth/stores/auth.store.mobile';
+import { mmkvStorageAdapter } from '@/core/storage/mmkv-storage';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 3,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes
-    },
-    mutations: {
-      retry: 1,
-    },
-  },
-});
+// Prevent the splash screen from auto-hiding
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [loaded] = useFonts({
-    Inter_800ExtraBold,
-  });
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [isStorageInitialized, setIsStorageInitialized] = useState(false);
 
   useEffect(() => {
-    initializeApp()
-      .then(() => setIsInitialized(true))
-      .catch(console.error);
+    const initializeApp = async () => {
+      try {
+        // Initialize mobile storage for auth store
+        console.log('🔧 Initializing mobile storage...');
+        setMobileStorage(mmkvStorageAdapter);
+        setIsStorageInitialized(true);
+        
+        // Hide splash screen after initialization
+        await SplashScreen.hideAsync();
+        console.log('✅ App initialization complete');
+      } catch (error) {
+        console.error('❌ App initialization failed:', error);
+        // Still hide splash screen and mark as initialized to prevent blocking
+        await SplashScreen.hideAsync();
+        setIsStorageInitialized(true);
+      }
+    };
+
+    initializeApp();
   }, []);
 
-  if (!loaded || !isInitialized) {
+  // Don't render anything until storage is initialized
+  if (!isStorageInitialized) {
     return null;
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="login" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-        <StatusBar style="auto" />
-      </AuthProvider>
-    </QueryClientProvider>
+    <AuthProvider>
+      <Stack
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: '#1a1a1a',
+          },
+          headerTintColor: '#FEAD00',
+          headerTitleStyle: {
+            fontWeight: '600',
+          },
+          contentStyle: {
+            backgroundColor: '#ffffff',
+          },
+        }}
+      >
+        <Stack.Screen 
+          name="index" 
+          options={{ 
+            headerShown: false 
+          }} 
+        />
+        <Stack.Screen 
+          name="login" 
+          options={{ 
+            title: 'Logowanie',
+            headerShown: false 
+          }} 
+        />
+        <Stack.Screen 
+          name="(tabs)" 
+          options={{ 
+            headerShown: false 
+          }} 
+        />
+        <Stack.Screen 
+          name="test" 
+          options={{ 
+            title: 'Test' 
+          }} 
+        />
+      </Stack>
+    </AuthProvider>
   );
 }

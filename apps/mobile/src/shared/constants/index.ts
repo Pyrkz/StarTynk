@@ -1,4 +1,6 @@
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.startynk.com';
+import { env } from '../../config/environment';
+
+export const API_BASE_URL = env.current.apiUrl;
 
 export const STORAGE_KEYS = {
   AUTH_TOKEN: '@startynk/auth_token',

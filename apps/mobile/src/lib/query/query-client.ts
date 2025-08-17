@@ -96,7 +96,7 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       // Aggressive caching for offline capability
-      cacheTime: 1000 * 60 * 60 * 24 * 7, // 7 days
+      gcTime: 1000 * 60 * 60 * 24 * 7, // 7 days
       staleTime: 1000 * 60 * 5, // 5 minutes (data considered fresh for 5 min)
       
       // Retry configuration with network awareness
@@ -112,7 +112,7 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false, // Not relevant for mobile
       
       // Error handling
-      useErrorBoundary: false, // Handle errors manually for better UX
+      throwOnError: false, // Handle errors manually for better UX
       
       // Background updates
       refetchInterval: false, // Disable automatic background refetch
@@ -128,7 +128,7 @@ export const queryClient = new QueryClient({
       retryDelay,
       
       // Error handling
-      useErrorBoundary: false,
+      throwOnError: false,
     },
   },
 });
@@ -147,7 +147,7 @@ persistQueryClient({
     // Handle version mismatches gracefully
     defaultOptions: {
       queries: {
-        cacheTime: 1000 * 60 * 60 * 24 * 7,
+        gcTime: 1000 * 60 * 60 * 24 * 7,
         networkMode: 'offlineFirst',
       },
     },
@@ -162,7 +162,7 @@ persistQueryClient({
       if (state.error) return false;
       
       // Don't persist queries that are currently fetching
-      if (state.isFetching) return false;
+      if (state.fetchStatus === 'fetching') return false;
       
       // Only persist queries with successful data
       return state.status === 'success' && state.data != null;
@@ -230,7 +230,7 @@ export class NetworkManager {
   private handleGoOffline(): void {
     // Pause all outgoing mutations
     this.queryClient.getQueryCache().findAll().forEach((query) => {
-      if (query.state.isFetching) {
+      if (query.state.fetchStatus === 'fetching') {
         query.cancel();
       }
     });

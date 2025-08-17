@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Text } from 'react-native';
 
 interface BadgeProps {
-  text: string;
+  text?: string;
+  children?: React.ReactNode;
   variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'neutral';
   size?: 'small' | 'medium';
   className?: string;
@@ -10,6 +11,7 @@ interface BadgeProps {
 
 export function Badge({
   text,
+  children,
   variant = 'primary',
   size = 'medium',
   className = '',
@@ -49,7 +51,7 @@ export function Badge({
       <Text
         className={`font-medium ${textSizeClasses[size]} ${textColorClasses[variant]}`}
       >
-        {text}
+        {children || text}
       </Text>
     </View>
   );

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, UseQueryOptions, UseMutationOptions } from '@tanstack/react-query';
-// TODO: Replace with @repo/shared after consolidation
-// import { api, ApiError } from '../lib/api-client';
+import { createMobileAPIClient } from '@repo/api/mobile';
+import { ApiError } from '@repo/api';
 
 interface UseApiQueryOptions<TData> extends Omit<UseQueryOptions<TData, ApiError>, 'queryKey' | 'queryFn'> {
   url: string;
@@ -15,7 +15,10 @@ export function useApiQuery<TData = unknown>(
 
   return useQuery<TData, ApiError>({
     queryKey: Array.isArray(key) ? [...key, params] : [key, params],
-    queryFn: () => api.get<TData>(url, { params }),
+    queryFn: async () => {
+      const api = await createMobileAPIClient();
+      return api.get<TData>(url, params ? { headers: { 'X-Query-Params': JSON.stringify(params) } } : {});
+    },
     ...queryOptions,
   });
 }
@@ -23,7 +26,7 @@ export function useApiQuery<TData = unknown>(
 interface UseApiMutationOptions<TData, TVariables> 
   extends Omit<UseMutationOptions<TData, ApiError, TVariables>, 'mutationFn'> {
   url: string;
-  method?: 'post' | 'put' | 'patch' | 'delete';
+  method?: 'post' | 'put' | 'delete';
 }
 
 export function useApiMutation<TData = unknown, TVariables = unknown>(
@@ -32,14 +35,13 @@ export function useApiMutation<TData = unknown, TVariables = unknown>(
   const { url, method = 'post', ...mutationOptions } = options;
 
   return useMutation<TData, ApiError, TVariables>({
-    mutationFn: (variables) => {
+    mutationFn: async (variables) => {
+      const api = await createMobileAPIClient();
       switch (method) {
         case 'put':
           return api.put<TData>(url, variables);
-        case 'patch':
-          return api.patch<TData>(url, variables);
         case 'delete':
-          return api.delete<TData>(url);
+          return api.delete(url) as Promise<TData>;
         default:
           return api.post<TData>(url, variables);
       }

@@ -2,7 +2,7 @@
  * Type definitions for auth hooks
  */
 import type { UnifiedUser, UnifiedAuthResponse, Role } from '@repo/shared/types';
-import type { AuthState, AuthActions } from '../store/auth.store';
+import type { AuthState, AuthActions } from '@repo/features/auth/store/auth.store';
 
 /**
  * Complete auth hook return type

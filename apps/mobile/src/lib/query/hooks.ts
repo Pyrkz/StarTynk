@@ -3,6 +3,8 @@ import { useNetInfo } from '@react-native-community/netinfo';
 // TODO: Replace with @repo/shared after consolidation
 // import { apiClient } from '../api/http-client';
 import { queryClient } from './query-client';
+import { apiClient } from '../api/temp-api-client';
+import type { SyncItem } from '../sync/sync-queue';
 
 /**
  * Enhanced query hook with offline support
@@ -35,12 +37,9 @@ export function useOfflineQuery<TData = unknown, TError = unknown>(
     
     // Optimize for offline scenarios
     staleTime: options?.staleTime ?? (netInfo.isConnected ? 1000 * 60 * 5 : Infinity),
-    cacheTime: options?.cacheTime ?? 1000 * 60 * 60 * 24, // 24 hours
+    gcTime: options?.gcTime ?? 1000 * 60 * 60 * 24, // 24 hours
     
-    onError: (error) => {
-      console.error(`Query error for ${queryKey.join('.')}:`, error);
-      options?.onError?.(error);
-    },
+    // onError removed in React Query v5 - handle errors in component
   });
 }
 
@@ -117,13 +116,15 @@ export function useOfflineMutation<TData = unknown, TError = unknown, TVariables
         const { syncQueue } = await import('../sync/sync-queue');
         
         await syncQueue.add({
+          id: `temp-${Date.now()}`,
           type: options?.operationType || 'UPDATE',
           entity: options?.entityType || 'unknown',
           payload: variables,
           timestamp: Date.now(),
           priority: options?.syncPriority || 'medium',
           retryCount: 1,
-        });
+          status: 'PENDING',
+        } as SyncItem);
         
         // Don't propagate network errors to UI if queued successfully
         return;
@@ -161,11 +162,15 @@ export function useAttendanceMutation() {
       entityType: 'attendance',
       syncPriority: 'high',
       optimisticResponse: (variables) => ({
-        id: `temp-${Date.now()}`,
-        ...variables,
-        timestamp: new Date().toISOString(),
-        synced: false,
-      }),
+        success: true,
+        message: 'Queued for sync',
+        data: {
+          id: `temp-${Date.now()}`,
+          ...variables,
+          timestamp: new Date().toISOString(),
+          synced: false,
+        },
+      }) as any,
     }
   );
 }
@@ -183,10 +188,14 @@ export function useTaskUpdateMutation() {
       entityType: 'tasks',
       syncPriority: 'high',
       optimisticResponse: (variables) => ({
-        ...variables,
-        updatedAt: new Date().toISOString(),
-        synced: false,
-      }),
+        success: true,
+        message: 'Queued for sync',
+        data: {
+          ...variables,
+          updatedAt: new Date().toISOString(),
+          synced: false,
+        },
+      }) as any,
     }
   );
 }
@@ -204,12 +213,16 @@ export function useMaterialRequestMutation() {
       entityType: 'material-requests',
       syncPriority: 'medium',
       optimisticResponse: (variables) => ({
-        id: `temp-${Date.now()}`,
-        ...variables,
-        status: 'pending',
-        createdAt: new Date().toISOString(),
-        synced: false,
-      }),
+        success: true,
+        message: 'Queued for sync',
+        data: {
+          id: `temp-${Date.now()}`,
+          ...variables,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+          synced: false,
+        },
+      }) as any,
     }
   );
 }
@@ -223,7 +236,7 @@ export function useUser() {
     () => apiClient.get('/api/auth/me'),
     {
       staleTime: 1000 * 60 * 30, // 30 minutes
-      cacheTime: 1000 * 60 * 60 * 24, // 24 hours
+      gcTime: 1000 * 60 * 60 * 24, // 24 hours
     }
   );
 }
@@ -237,7 +250,7 @@ export function useProjects() {
     () => apiClient.get('/api/projects'),
     {
       staleTime: 1000 * 60 * 15, // 15 minutes
-      cacheTime: 1000 * 60 * 60 * 12, // 12 hours
+      gcTime: 1000 * 60 * 60 * 12, // 12 hours
     }
   );
 }
@@ -252,7 +265,7 @@ export function useProject(projectId: string) {
     {
       enabled: !!projectId,
       staleTime: 1000 * 60 * 10, // 10 minutes
-      cacheTime: 1000 * 60 * 60 * 6, // 6 hours
+      gcTime: 1000 * 60 * 60 * 6, // 6 hours
     }
   );
 }
@@ -266,7 +279,7 @@ export function useTasks(projectId?: string) {
     () => apiClient.get(`/api/tasks${projectId ? `?projectId=${projectId}` : ''}`),
     {
       staleTime: 1000 * 60 * 5, // 5 minutes
-      cacheTime: 1000 * 60 * 60 * 4, // 4 hours
+      gcTime: 1000 * 60 * 60 * 4, // 4 hours
     }
   );
 }
@@ -285,7 +298,7 @@ export function useAttendance(userId?: string, projectId?: string) {
     },
     {
       staleTime: 1000 * 60 * 10, // 10 minutes
-      cacheTime: 1000 * 60 * 60 * 8, // 8 hours
+      gcTime: 1000 * 60 * 60 * 8, // 8 hours
     }
   );
 }
@@ -299,7 +312,7 @@ export function useMaterials() {
     () => apiClient.get('/api/materials'),
     {
       staleTime: 1000 * 60 * 60, // 1 hour (materials don't change often)
-      cacheTime: 1000 * 60 * 60 * 24 * 7, // 7 days
+      gcTime: 1000 * 60 * 60 * 24 * 7, // 7 days
     }
   );
 }
@@ -313,7 +326,7 @@ export function useNotifications() {
     () => apiClient.get('/api/notifications'),
     {
       staleTime: 1000 * 60 * 2, // 2 minutes
-      cacheTime: 1000 * 60 * 60 * 2, // 2 hours
+      gcTime: 1000 * 60 * 60 * 2, // 2 hours
     }
   );
 }

@@ -4,7 +4,8 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
-import { trpc, createMobileTRPCClient } from '../lib/trpc';
+import { trpc } from '../lib/trpc-types';
+import { createMobileTRPCClient } from '../lib/trpc';
 
 interface TRPCProviderProps {
   children: React.ReactNode;
@@ -92,13 +93,13 @@ function createMobileQueryClient() {
 
 export function TRPCProvider({ children }: TRPCProviderProps) {
   const [queryClient] = useState(createMobileQueryClient);
-  const [trpcClient] = useState(createMobileTRPCClient);
+  const [trpcClient] = useState(() => createMobileTRPCClient());
   const [isOnline, setIsOnline] = useState(true);
 
   // Monitor network status
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener(state => {
-      const online = state.isConnected && state.isInternetReachable;
+      const online = !!(state.isConnected && state.isInternetReachable);
       setIsOnline(online);
       
       // Resume paused queries when coming back online
@@ -119,7 +120,7 @@ export function TRPCProvider({ children }: TRPCProviderProps) {
         queryClient.invalidateQueries({
           predicate: (query) => {
             // Only invalidate if data is older than 5 minutes
-            return Date.now() - (query.dataUpdatedAt || 0) > 5 * 60 * 1000;
+            return Date.now() - (query.state.dataUpdatedAt || 0) > 5 * 60 * 1000;
           },
         });
       }
@@ -169,4 +170,4 @@ function OfflineIndicator() {
 }
 
 // Export the trpc instance for use in components
-export { trpc };
+export { trpc } from '../lib/trpc-types';

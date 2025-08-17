@@ -1,5 +1,5 @@
-// TODO: Replace with @repo/shared after consolidation
-// import { LoginMethod } from '../types';
+// Remove unused LoginMethod import
+// import { LoginMethod } from '@repo/shared/types';
 
 interface ValidationResult {
   isValid: boolean;
@@ -46,7 +46,7 @@ export const validateEmail = (email: string): string | null => {
 };
 
 export const validateLoginForm = (
-  loginMethod: LoginMethod,
+  loginMethod: 'email' | 'phone',
   phoneNumber: string, 
   email: string,
   password: string

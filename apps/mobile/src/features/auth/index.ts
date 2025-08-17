@@ -1,6 +1,8 @@
+// Auth feature public API
 export { LoginScreen } from './screens/LoginScreen';
-// TODO: Replace with @repo/shared after consolidation
-// export * from './types';
-export * from './context';
-// TODO: Replace with @repo/shared after consolidation
-// export { default as authService } from './services/authService';
+export { useAuth } from './hooks/useAuth';
+export { AuthProvider } from './provider/AuthProvider';
+export * from './types';
+
+// API exports
+export * from './api/auth.service';

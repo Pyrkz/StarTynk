@@ -10,6 +10,7 @@ interface ButtonProps {
   disabled?: boolean;
   className?: string;
   textClassName?: string;
+  icon?: React.ReactNode;
 }
 
 export function Button({
@@ -21,6 +22,7 @@ export function Button({
   disabled = false,
   className = '',
   textClassName = '',
+  icon,
 }: ButtonProps) {
   const baseClasses = 'flex-row items-center justify-center rounded-2xl';
   
@@ -64,11 +66,14 @@ export function Button({
           color={variant === 'primary' || variant === 'secondary' ? 'white' : '#FEAD00'}
         />
       ) : (
-        <Text
-          className={`font-semibold ${textSizeClasses[size]} ${textColorClasses[variant]} ${textClassName}`}
-        >
-          {title}
-        </Text>
+        <View className="flex-row items-center">
+          {icon && <View className="mr-2">{icon}</View>}
+          <Text
+            className={`font-semibold ${textSizeClasses[size]} ${textColorClasses[variant]} ${textClassName}`}
+          >
+            {title}
+          </Text>
+        </View>
       )}
     </Pressable>
   );

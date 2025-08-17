@@ -1,3 +1,5 @@
-import { LoginScreen } from '@/src/features/auth';
+import { LoginScreen as CompleteLoginScreen } from '@/features/auth';
 
-export default LoginScreen;
+export default function LoginScreen() {
+  return <CompleteLoginScreen />;
+}

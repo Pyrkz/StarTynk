@@ -3,8 +3,8 @@ import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { storage } from '@repo/shared/storage';
-import { trpc } from '../trpc';
-import { router } from '@/navigation/router';
+import { trpcClient } from '../trpc-client';
+import { router } from 'expo-router';
 
 // Configure notification handler
 Notifications.setNotificationHandler({
@@ -12,6 +12,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
@@ -82,10 +84,10 @@ export class PushNotificationManager {
   
   private async registerToken(token: string): Promise<void> {
     try {
-      await trpc.notification.registerPushToken.mutate({
+      await trpcClient.notification.registerPushToken.mutate({
         token,
         platform: Platform.OS.toUpperCase() as 'IOS' | 'ANDROID',
-        deviceId: Device.deviceId || 'unknown',
+        deviceId: Device.modelId || 'unknown',
         deviceName: Device.deviceName || undefined,
         deviceModel: Device.modelName || undefined,
         osVersion: Device.osVersion || undefined,
@@ -130,34 +132,47 @@ export class PushNotificationManager {
     if (!data) return;
     
     // Navigate based on notification type
+    // TODO: Implement these routes as needed
     switch (data.type) {
       case 'TASK_ASSIGNED':
-        if (data.taskId) {
-          router.push(`/tasks/${data.taskId}`);
-        }
+        // TODO: Implement task detail screen
+        // if (data.taskId) {
+        //   router.push(`/tasks/${data.taskId}`);
+        // }
+        router.push('/(tabs)');
         break;
         
       case 'ATTENDANCE_REMINDER':
-        router.push('/attendance');
+        // TODO: Implement attendance screen
+        // router.push('/attendance');
+        router.push('/(tabs)');
         break;
         
       case 'PAYMENT_PROCESSED':
-        router.push('/payroll');
+        // TODO: Implement payroll screen
+        // router.push('/payroll');
+        router.push('/(tabs)');
         break;
         
       case 'CHAT_MESSAGE':
-        if (data.chatId) {
-          router.push(`/chats/${data.chatId}`);
-        }
+        // TODO: Implement chat screen
+        // if (data.chatId) {
+        //   router.push(`/chats/${data.chatId}`);
+        // }
+        router.push('/(tabs)');
         break;
         
       case 'SCHEDULE_CHANGE':
-        router.push('/schedule');
+        // TODO: Implement schedule screen
+        // router.push('/schedule');
+        router.push('/(tabs)');
         break;
         
       default:
-        // Navigate to notifications list
-        router.push('/notifications');
+        // Navigate to home for now
+        // TODO: Implement notifications list
+        // router.push('/notifications');
+        router.push('/(tabs)');
     }
   }
   
@@ -174,7 +189,7 @@ export class PushNotificationManager {
   async scheduleLocalNotification(
     title: string,
     body: string,
-    trigger: Date | { seconds: number },
+    trigger: any,
     data?: any
   ): Promise<string> {
     return await Notifications.scheduleNotificationAsync({
@@ -212,7 +227,7 @@ export class PushNotificationManager {
   async updateBadgeCount(): Promise<void> {
     try {
       // Get unread notification count from server
-      const unreadCount = await trpc.notification.getUnreadCount.query();
+      const unreadCount = await trpcClient.notification.getUnreadCount.query();
       await this.setBadgeCount(unreadCount);
     } catch (error) {
       console.error('Failed to update badge count:', error);
@@ -222,7 +237,7 @@ export class PushNotificationManager {
   // Mark notification as read
   async markAsRead(notificationId: string): Promise<void> {
     try {
-      await trpc.notification.markAsRead.mutate({ notificationId });
+      await trpcClient.notification.markAsRead.mutate({ notificationId });
       await this.updateBadgeCount();
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
@@ -273,7 +288,7 @@ export class PushNotificationManager {
     return await this.scheduleLocalNotification(
       'Check-In Reminder',
       `Don't forget to check in at ${projectName}`,
-      time,
+      time as any,
       { type: 'ATTENDANCE_REMINDER' }
     );
   }
@@ -286,7 +301,7 @@ export class PushNotificationManager {
     return await this.scheduleLocalNotification(
       'Task Due Soon',
       `Task "${taskTitle}" is due in 1 hour`,
-      reminderTime,
+      reminderTime as any,
       { type: 'TASK_REMINDER' }
     );
   }

@@ -9,16 +9,21 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { Logo, Button, TextInput, Checkbox } from '@/src/shared/components';
+import { Ionicons } from '@expo/vector-icons';
+import { Logo, Button, TextInput, Checkbox } from '@/shared/components';
 import { validateLoginForm } from '../utils/validation';
-import { authService } from '@repo/auth';
-import { useAuth } from '../context';
-import type { LoginFormData, LoginMethod } from '../types';
+import { useAuth } from '../hooks/useAuth';
+import type { LoginFormData } from '../types';
+import { LoginMethod } from '@repo/shared/types';
 
 export function LoginScreen() {
-  const router = useRouter();
-  const { login } = useAuth();
+  const { 
+    login, 
+    biometricLogin, 
+    canUseBiometrics, 
+    biometricInfo,
+    isLoading 
+  } = useAuth();
   const [formData, setFormData] = useState<LoginFormData>({
     loginMethod: 'phone',
     phoneNumber: '',
@@ -27,23 +32,15 @@ export function LoginScreen() {
     rememberMe: false,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [isFormLoading, setIsFormLoading] = useState(false);
 
-  // Check for remembered credentials on mount
-  useEffect(() => {
-    const loadRememberedCredentials = async () => {
-      const remembered = await authService.getRememberedCredentials();
-      if (remembered) {
-        setFormData(prev => ({
-          ...prev,
-          loginMethod: remembered.loginMethod,
-          [remembered.loginMethod === 'phone' ? 'phoneNumber' : 'email']: remembered.identifier,
-          rememberMe: true,
-        }));
-      }
-    };
-    loadRememberedCredentials();
-  }, []);
+  // TODO: Implement remember me functionality with SecureStore
+  // useEffect(() => {
+  //   const loadRememberedCredentials = async () => {
+  //     // Load from SecureStore
+  //   };
+  //   loadRememberedCredentials();
+  // }, []);
 
   const handleInputChange = useCallback((field: keyof LoginFormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -60,7 +57,7 @@ export function LoginScreen() {
   const handleLogin = useCallback(async () => {
     // Validate form
     const validation = validateLoginForm(
-      formData.loginMethod,
+      formData.loginMethod as 'email' | 'phone',
       formData.phoneNumber,
       formData.email,
       formData.password
@@ -71,18 +68,19 @@ export function LoginScreen() {
       return;
     }
 
-    setIsLoading(true);
+    setIsFormLoading(true);
     try {
-      await login(formData);
+      const identifier = formData.loginMethod === 'phone' ? formData.phoneNumber : formData.email;
+      await login(identifier, formData.password, formData.loginMethod as LoginMethod);
       
-      // Navigation will be handled by the auth state change in index.tsx
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Nie udało się zalogować. Spróbuj ponownie.';
+      // Navigation will be handled by the auth state change
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Nie udało się zalogować. Spróbuj ponownie.';
       Alert.alert('Błąd', errorMessage);
     } finally {
-      setIsLoading(false);
+      setIsFormLoading(false);
     }
-  }, [formData, router]);
+  }, [formData, login]);
 
   const handleRegister = useCallback(() => {
     // TODO: Implement register screen
@@ -93,6 +91,16 @@ export function LoginScreen() {
     // TODO: Implement forgot password screen
     Alert.alert('Info', 'Resetowanie hasła będzie dostępne wkrótce');
   }, []);
+
+  const handleBiometricLogin = useCallback(async () => {
+    try {
+      await biometricLogin();
+    } catch (error) {
+      console.error('Biometric login failed:', error);
+    }
+  }, [biometricLogin]);
+
+  const isAnyLoading = isLoading || isFormLoading;
 
   return (
     <SafeAreaView className="flex-1 bg-app-background">
@@ -155,7 +163,7 @@ export function LoginScreen() {
                 <TextInput
                   placeholder="Numer telefonu"
                   value={formData.phoneNumber}
-                  onChangeText={(value) => handleInputChange('phoneNumber', value)}
+                  onChangeText={(value: string) => handleInputChange('phoneNumber', value)}
                   keyboardType="phone-pad"
                   autoCapitalize="none"
                   error={errors.phoneNumber}
@@ -166,7 +174,7 @@ export function LoginScreen() {
                 <TextInput
                   placeholder="Email"
                   value={formData.email}
-                  onChangeText={(value) => handleInputChange('email', value)}
+                  onChangeText={(value: string) => handleInputChange('email', value)}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   error={errors.email}
@@ -178,7 +186,7 @@ export function LoginScreen() {
               <TextInput
                 placeholder="Hasło"
                 value={formData.password}
-                onChangeText={(value) => handleInputChange('password', value)}
+                onChangeText={(value: string) => handleInputChange('password', value)}
                 secureTextEntry
                 autoCapitalize="none"
                 error={errors.password}
@@ -205,10 +213,31 @@ export function LoginScreen() {
                 onPress={handleLogin}
                 variant="primary"
                 size="large"
-                loading={isLoading}
-                disabled={isLoading}
+                loading={isAnyLoading}
+                disabled={isAnyLoading}
                 className="mb-4"
               />
+
+              {/* Biometric login button */}
+              {canUseBiometrics && (
+                <Pressable
+                  onPress={handleBiometricLogin}
+                  disabled={isAnyLoading}
+                  className={`flex-row items-center justify-center bg-transparent border border-foreground rounded-lg py-3 px-4 mb-4 ${
+                    isAnyLoading ? 'opacity-50' : ''
+                  }`}
+                >
+                  <Ionicons 
+                    name={Platform.OS === 'ios' ? 'finger-print' : 'finger-print'} 
+                    size={20} 
+                    color="#FEAD00" 
+                    style={{ marginRight: 8 }}
+                  />
+                  <Text className="text-foreground text-base font-semibold">
+                    Zaloguj się biometrycznie
+                  </Text>
+                </Pressable>
+              )}
 
               {/* Or divider */}
               <Text className="text-center text-text-tertiary text-base my-4">
@@ -220,7 +249,7 @@ export function LoginScreen() {
                 <Text className="text-text-secondary text-base">
                   Nie posiadasz konta?{' '}
                 </Text>
-                <Pressable onPress={handleRegister} disabled={isLoading}>
+                <Pressable onPress={handleRegister} disabled={isAnyLoading}>
                   <Text className="text-foreground text-base font-semibold">
                     Zarejestruj się
                   </Text>

@@ -26,15 +26,19 @@ module.exports = function (api) {
           ],
           alias: {
             '@': './src',
-            '@components': './src/components',
-            '@features': './src/features',
-            '@lib': './src/lib',
-            '@utils': './src/utils',
-            '@hooks': './src/hooks',
-            '@assets': './assets',
-            '@repo/api': '../../packages/api/src',
-            '@repo/database': '../../packages/database/src',
-            '@repo/shared': '../../packages/shared/src'
+            '@/components': './src/components',
+            '@/features': './src/features',
+            '@/lib': './src/lib',
+            '@/utils': './src/utils',
+            '@/hooks': './src/hooks',
+            '@/shared': './src/shared',
+            '@/providers': './src/providers',
+            '@/services': './src/services',
+            '@/screens': './src/screens',
+            '@/navigation': './src/navigation',
+            '@/config': './src/config',
+            '@/styles': './src/styles',
+            '@/assets': './assets'
           }
         }
       ],

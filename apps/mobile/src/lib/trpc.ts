@@ -1,25 +1,22 @@
-import { createTRPCReact } from '@trpc/react-query';
 import { httpBatchLink, httpLink, loggerLink, splitLink } from '@trpc/client';
-import type { AppRouter } from '@repo/trpc';
 import superjson from 'superjson';
 import * as SecureStore from 'expo-secure-store';
 import NetInfo from '@react-native-community/netinfo';
 import { Platform } from 'react-native';
+import { env } from '../config/environment';
+import { trpc, type AppRouter, type RouterInputs, type RouterOutputs } from './trpc-types';
 
-/**
- * Create tRPC React hooks for mobile
- */
-export const trpc = createTRPCReact<AppRouter>();
+// Re-export trpc from trpc-types
+export { trpc } from './trpc-types';
 
 /**
  * Get API base URL from environment
  */
 function getApiUrl() {
-  const url = process.env.EXPO_PUBLIC_API_URL;
-  if (!url) {
-    throw new Error('EXPO_PUBLIC_API_URL environment variable is not set');
-  }
-  return url.endsWith('/') ? `${url}api/trpc` : `${url}/api/trpc`;
+  const url = env.current.apiUrl;
+  // Remove any trailing /api/v1 from the URL and add /api/trpc
+  const baseUrl = url.replace(/\/api\/v\d+\/?$/, '');
+  return baseUrl.endsWith('/') ? `${baseUrl}api/trpc` : `${baseUrl}/api/trpc`;
 }
 
 /**
@@ -39,7 +36,7 @@ async function getAuthToken(): Promise<string | null> {
  */
 async function isNetworkAvailable(): Promise<boolean> {
   const netInfo = await NetInfo.fetch();
-  return netInfo.isConnected && netInfo.isInternetReachable;
+  return !!(netInfo.isConnected && netInfo.isInternetReachable);
 }
 
 /**
@@ -47,7 +44,6 @@ async function isNetworkAvailable(): Promise<boolean> {
  */
 export function createMobileTRPCClient() {
   return trpc.createClient({
-    transformer: superjson,
     links: [
       loggerLink({
         enabled: () => __DEV__,
@@ -59,8 +55,9 @@ export function createMobileTRPCClient() {
         },
         true: httpBatchLink({
           url: getApiUrl(),
-          maxBatchSize: 5, // Smaller batches for mobile
-          maxBatchTime: 100, // Faster batching for mobile responsiveness
+          transformer: superjson,
+          // maxBatchSize: 5, // Smaller batches for mobile
+          // maxBatchTime: 100, // Faster batching for mobile responsiveness
           async headers() {
             const token = await getAuthToken();
             return {
@@ -94,6 +91,7 @@ export function createMobileTRPCClient() {
         }),
         false: httpLink({
           url: getApiUrl(),
+          transformer: superjson,
           async headers() {
             const token = await getAuthToken();
             return {
@@ -176,7 +174,12 @@ export function createRetryLink() {
 }
 
 /**
- * Type helpers for router inputs and outputs
+ * Default tRPC client instance for convenience
  */
-export type RouterInputs = typeof trpc extends createTRPCReact<infer T> ? T : never;
-export type RouterOutputs = typeof trpc extends createTRPCReact<infer T> ? T : never;
+export const trpcClient = createMobileTRPCClient();
+
+/**
+ * Re-export type helpers for convenience
+ */
+// Re-export types
+export type { RouterInputs, RouterOutputs } from './trpc-types';
