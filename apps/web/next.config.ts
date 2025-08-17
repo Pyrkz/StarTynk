@@ -11,11 +11,11 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   
+  // Transpile packages that need it
+  transpilePackages: ['@repo/api', '@repo/auth', '@repo/shared', '@repo/features', '@repo/database'],
+  
   // Enable React strict mode
   reactStrictMode: true,
-  
-  // Enable SWC minification for better performance
-  swcMinify: true,
   
   // Optimize production builds
   compiler: {
@@ -24,7 +24,6 @@ const nextConfig: NextConfig = {
   
   // Experimental features for optimization
   experimental: {
-    optimizeCss: true,
     optimizePackageImports: [
       '@repo/shared',
       '@repo/features',
@@ -51,6 +50,35 @@ const nextConfig: NextConfig = {
 
   // Advanced webpack configuration
   webpack: (config: any, { dev, isServer }) => {
+    // Configure module resolution
+    config.resolve = config.resolve || {};
+    config.resolve.alias = config.resolve.alias || {};
+    
+    // Alias React Native and Expo modules to empty modules
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'expo-secure-store': false,
+      'react-native-mmkv': false,
+      '@react-native-community/netinfo': false,
+      'expo-device': false,
+      'expo-constants': false,
+    };
+    
+    // Alias React Native to react-native-web for web compatibility
+    if (!isServer) {
+      config.resolve.alias['react-native$'] = 'react-native-web';
+    }
+    
+    // Configure fallbacks for Node.js modules not available in browser
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      path: false,
+      crypto: false,
+      stream: false,
+      buffer: false,
+    };
+    
     // Production optimizations
     if (!dev && !isServer) {
       // Enable tree shaking

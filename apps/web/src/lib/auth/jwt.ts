@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { Role } from '@shared/types';
+import { Role } from '@repo/shared';
 
 export interface JWTPayload {
   userId: string;

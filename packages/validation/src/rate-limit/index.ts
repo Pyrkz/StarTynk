@@ -66,11 +66,17 @@ export class MemoryRateLimitStore implements RateLimitStore {
   // Cleanup expired entries
   cleanup(): void {
     const now = Date.now();
-    for (const [key, item] of this.store.entries()) {
+    const keysToDelete: string[] = [];
+    
+    this.store.forEach((item, key) => {
       if (now > item.expiresAt) {
-        this.store.delete(key);
+        keysToDelete.push(key);
       }
-    }
+    });
+    
+    keysToDelete.forEach(key => {
+      this.store.delete(key);
+    });
   }
 }
 
@@ -210,7 +216,12 @@ export class RateLimiter {
       }
     } else {
       // Reset all limits for the key
-      for (const [name, config] of this.configs) {
+      const configEntries: Array<[string, RateLimitConfig]> = [];
+      this.configs.forEach((config, name) => {
+        configEntries.push([name, config]);
+      });
+      
+      for (const [name, config] of configEntries) {
         const fullKey = `${config.keyPrefix || 'ratelimit'}:${name}:${key}`;
         await this.store.delete(fullKey);
         await this.store.delete(`${fullKey}:blocked`);
@@ -251,8 +262,8 @@ export function createRateLimitMiddleware(
   }
 ) {
   const {
-    keyGenerator = (req) => req.user?.id || req.ip,
-    configSelector = (req) => {
+    keyGenerator = (req: any) => req.user?.id || req.ip,
+    configSelector = (req: any) => {
       const method = req.method.toLowerCase();
       const path = req.path;
       

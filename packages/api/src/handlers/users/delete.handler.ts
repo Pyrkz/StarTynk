@@ -1,7 +1,7 @@
-import { prisma } from '@repo/database';
+import { prisma, ProjectStatus } from '@repo/database';
 import { ApiResponse } from '../../responses';
 import { ApiError, UserNotFoundError } from '../../errors';
-import { DeleteUserInput } from '../../validators';
+import type { DeleteUserInput } from '../../validators';
 import { logger } from '../../middleware';
 
 export async function deleteUserHandler(input: DeleteUserInput): Promise<Response> {
@@ -10,30 +10,30 @@ export async function deleteUserHandler(input: DeleteUserInput): Promise<Respons
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
-      where: { id },
-      include: {
-        developedProjects: { where: { status: { in: ['PLANNING', 'IN_PROGRESS'] } } },
-        coordinatedProjects: { where: { status: { in: ['PLANNING', 'IN_PROGRESS'] } } }
-      }
+      where: { id }
     });
 
     if (!existingUser) {
       throw new UserNotFoundError(id);
     }
 
-    // Check if user has active projects
-    const hasActiveProjects = existingUser.developedProjects.length > 0 || 
-                             existingUser.coordinatedProjects.length > 0;
+    // Check if user has active projects (simplified for now)
+    const activeProjects = await prisma.project.findMany({
+      where: {
+        AND: [
+          { coordinatorId: id },
+          { status: { in: [ProjectStatus.PLANNING, ProjectStatus.ACTIVE] } }
+        ]
+      }
+    });
 
-    if (hasActiveProjects) {
+    if (activeProjects.length > 0) {
       throw new ApiError(
         'Cannot delete user with active projects. Please reassign or complete projects first.',
         'USER_HAS_ACTIVE_PROJECTS',
         409,
         {
-          activeProjectsCount: existingUser.developedProjects.length + existingUser.coordinatedProjects.length,
-          developedProjects: existingUser.developedProjects.length,
-          coordinatedProjects: existingUser.coordinatedProjects.length
+          activeProjectsCount: activeProjects.length
         }
       );
     }
@@ -52,8 +52,7 @@ export async function deleteUserHandler(input: DeleteUserInput): Promise<Respons
       select: {
         id: true,
         email: true,
-        firstName: true,
-        lastName: true,
+        name: true,
         role: true,
         isActive: true,
         deletedAt: true

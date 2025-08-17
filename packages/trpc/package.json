@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsup",
+    "build": "npx tsup",
     "dev": "tsup --watch",
     "clean": "rm -rf dist",
     "type-check": "tsc --noEmit",
@@ -17,16 +17,17 @@
     "postbuild": "npm run generate:types"
   },
   "dependencies": {
-    "@trpc/server": "^10.45.2",
-    "@trpc/client": "^10.45.2",
-    "@trpc/react-query": "^10.45.2",
-    "@trpc/next": "^10.45.2",
+    "@trpc/server": "^11.4.4",
+    "@trpc/client": "^11.4.4",
+    "@trpc/react-query": "^11.4.4",
+    "@trpc/next": "^11.4.4",
     "superjson": "^2.2.1",
     "zod": "^3.22.4",
-    "@tanstack/react-query": "^5.17.1",
+    "@tanstack/react-query": "^5.85.3",
     "@repo/database": "workspace:*",
     "@repo/shared": "workspace:*",
     "@repo/auth": "workspace:*",
+    "@repo/features": "workspace:*",
     "@repo/utils": "workspace:*",
     "@repo/validation": "workspace:*"
   },

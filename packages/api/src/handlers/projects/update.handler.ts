@@ -1,7 +1,7 @@
 import { prisma } from '@repo/database';
 import { ApiResponse } from '../../responses';
 import { ApiError, ProjectNotFoundError, UserNotFoundError } from '../../errors';
-import { UpdateProjectInput } from '../../validators';
+import type { UpdateProjectInput } from '../../validators';
 import { logger } from '../../middleware';
 
 export async function updateProjectHandler(
@@ -39,8 +39,8 @@ export async function updateProjectHandler(
     // Validate status transitions
     if (status && status !== existingProject.status) {
       const validTransitions: Record<string, string[]> = {
-        'PLANNING': ['IN_PROGRESS', 'CANCELLED'],
-        'IN_PROGRESS': ['COMPLETED', 'CANCELLED'],
+        'PLANNING': ['ACTIVE', 'CANCELLED'],
+        'ACTIVE': ['COMPLETED', 'CANCELLED'],
         'COMPLETED': [], // Completed projects cannot be changed
         'CANCELLED': ['PLANNING'] // Can restart cancelled projects
       };
@@ -110,34 +110,38 @@ export async function updateProjectHandler(
     }
 
     // Update project
+    const updateData: any = {
+      ...(title && { name: title }),
+      ...(description !== undefined && { description }),
+      ...(address && { address }),
+      ...(coordinatorId !== undefined && { coordinatorId: coordinatorId || null }),
+      ...(startDate && { startDate: new Date(startDate) }),
+      ...(endDate !== undefined && { endDate: endDate ? new Date(endDate) : null }),
+      ...(budget !== undefined && { budget }),
+      ...(status && { status }),
+      updatedAt: new Date()
+    };
+
+    // Handle developerId separately to avoid type issues
+    if (developerId !== undefined) {
+      updateData.userDeveloperId = developerId;
+    }
+
     const updatedProject = await prisma.project.update({
       where: { id: projectId },
-      data: {
-        ...(title && { title }),
-        ...(description !== undefined && { description }),
-        ...(address && { address }),
-        ...(developerId && { developerId }),
-        ...(coordinatorId && { coordinatorId }),
-        ...(startDate && { startDate: new Date(startDate) }),
-        ...(endDate !== undefined && { endDate: endDate ? new Date(endDate) : null }),
-        ...(budget !== undefined && { budget }),
-        ...(status && { status }),
-        updatedAt: new Date()
-      },
+      data: updateData,
       include: {
         developer: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
+            name: true,
             email: true
           }
         },
         coordinator: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
+            name: true,
             email: true
           }
         }

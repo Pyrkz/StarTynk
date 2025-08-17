@@ -1,8 +1,8 @@
-import { EnvLoader } from '../env';
+import { getExtendedEnv } from '../env';
 import type { DatabaseConfig } from '../types';
 
 export function getDatabaseConfig(): DatabaseConfig {
-  const env = EnvLoader.get();
+  const env = getExtendedEnv();
   
   return {
     url: env.DATABASE_URL,
@@ -16,7 +16,7 @@ export function getDatabaseConfig(): DatabaseConfig {
 
 export function getPrismaConfig() {
   const dbConfig = getDatabaseConfig();
-  const env = EnvLoader.get();
+  const env = getExtendedEnv();
   
   return {
     datasource: {

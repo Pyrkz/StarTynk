@@ -1,7 +1,7 @@
 // Global Finance Dashboard Types
 // Comprehensive financial data types for company-wide financial management
 
-import { Decimal } from '@repo/database';
+import { Decimal } from '@repo/database/client-types';
 
 // ========== Core Financial Metrics ==========
 

@@ -1,11 +1,6 @@
-/**
- * Base pagination parameters
- */
-export interface PaginationParams {
-  page?: number;
-  limit?: number;
-  cursor?: string;
-}
+// Import pagination from dedicated file to avoid duplicates
+import type { PaginationParams } from './pagination.types';
+export type { PaginationParams } from './pagination.types';
 
 /**
  * Base sorting parameters

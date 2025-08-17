@@ -17,10 +17,7 @@ export async function logoutHandler(request: Request): Promise<Response> {
     try {
       await prisma.refreshToken.deleteMany({
         where: {
-          OR: [
-            { token },
-            { accessToken: token }
-          ]
+          token // Remove accessToken reference as it doesn't exist in schema
         }
       });
     } catch (error) {

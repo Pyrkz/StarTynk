@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 import type { Role } from '@repo/database'
+import { cacheMiddleware } from './middleware/cache.middleware'
 
 // Konfiguracja tras
 const protectedRoutes = [
@@ -39,12 +40,29 @@ export async function middleware(request: NextRequest) {
   if (
     pathname.startsWith('/api/') && 
     !pathname.startsWith('/api/v') &&
-    !pathname.startsWith('/api/auth/[...nextauth]')
+    !pathname.startsWith('/api/auth/')
   ) {
     const newPath = pathname.replace('/api/', '/api/v1/');
     const url = new URL(newPath, request.url);
     url.search = request.nextUrl.search;
     return NextResponse.redirect(url);
+  }
+
+  // Handle caching for API routes
+  if (pathname.startsWith('/api')) {
+    // Apply cache middleware for GET requests
+    if (request.method === 'GET' || request.method === 'HEAD') {
+      const cacheResponse = await cacheMiddleware(request, {
+        enableAnalytics: true,
+        enableCompression: true,
+        enableOptimization: true,
+      });
+      
+      // If cache middleware returns a response, use it
+      if (cacheResponse) {
+        return cacheResponse;
+      }
+    }
   }
 
   // Handle CORS for API routes
@@ -124,15 +142,17 @@ export async function middleware(request: NextRequest) {
       return new Response(null, { status: 204, headers: response.headers })
     }
     
-    // For API routes, skip the auth check below
-    if (!pathname.startsWith('/api/auth/[...nextauth]')) {
+    // For non-NextAuth API routes, skip the auth check below
+    if (!pathname.startsWith('/api/auth/')) {
       return response
     }
   }
   
-  // Sprawdź czy trasa jest publiczna
+  // Sprawdź czy trasa jest publiczna lub NextAuth
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
-  if (isPublicRoute) {
+  const isNextAuthRoute = pathname.startsWith('/api/auth/')
+  
+  if (isPublicRoute || isNextAuthRoute) {
     return NextResponse.next()
   }
   

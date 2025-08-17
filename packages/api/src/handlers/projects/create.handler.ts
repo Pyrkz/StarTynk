@@ -1,7 +1,7 @@
 import { prisma } from '@repo/database';
 import { ApiResponse } from '../../responses';
 import { ApiError, UserNotFoundError } from '../../errors';
-import { CreateProjectInput } from '../../validators';
+import type { CreateProjectInput } from '../../validators';
 import { logger } from '../../middleware';
 
 export async function createProjectHandler(input: CreateProjectInput): Promise<Response> {
@@ -38,13 +38,16 @@ export async function createProjectHandler(input: CreateProjectInput): Promise<R
       throw new UserNotFoundError(coordinatorId);
     }
 
-    // Validate roles
-    if (developer.role !== 'DEVELOPER' && developer.role !== 'PROJECT_MANAGER' && developer.role !== 'ADMIN') {
+    // Validate roles - check that developer has appropriate permissions to create projects
+    const validDeveloperRoles = ['DEVELOPER', 'PROJECT_MANAGER', 'ADMIN'] as const;
+    if (!validDeveloperRoles.includes(developer.role as any)) {
       throw new ApiError('Developer must have DEVELOPER, PROJECT_MANAGER, or ADMIN role', 'INVALID_DEVELOPER_ROLE', 400);
     }
 
-    if (coordinator.role !== 'COORDINATOR' && coordinator.role !== 'PROJECT_MANAGER' && coordinator.role !== 'ADMIN') {
-      throw new ApiError('Coordinator must have COORDINATOR, PROJECT_MANAGER, or ADMIN role', 'INVALID_COORDINATOR_ROLE', 400);
+    // Validate coordinator role - COORDINATOR and MODERATOR both have project coordination permissions  
+    const validCoordinatorRoles = ['COORDINATOR', 'MODERATOR', 'PROJECT_MANAGER', 'ADMIN'] as const;
+    if (!validCoordinatorRoles.includes(coordinator.role as any)) {
+      throw new ApiError('Coordinator must have COORDINATOR, MODERATOR, PROJECT_MANAGER, or ADMIN role', 'INVALID_COORDINATOR_ROLE', 400);
     }
 
     // Validate that users are active
@@ -61,33 +64,41 @@ export async function createProjectHandler(input: CreateProjectInput): Promise<R
       throw new ApiError('End date must be after start date', 'INVALID_DATE_RANGE', 400);
     }
 
-    // Create project
+    // Create project  
+    const projectData: any = {
+      name: title, // Use 'name' field instead of 'title'
+      description,
+      address,
+      developerId,
+      coordinatorId,
+      startDate: new Date(startDate),
+      status: status as any, // Cast to match Prisma enum
+      baseRate: budget ? Number(budget) : 0, // Required field in schema
+      createdById: developerId // Required field in schema
+    };
+
+    // Add optional fields only if they have values
+    if (endDate) {
+      projectData.endDate = new Date(endDate);
+    }
+    if (budget) {
+      projectData.budget = Number(budget);
+    }
+
     const project = await prisma.project.create({
-      data: {
-        title,
-        description,
-        address,
-        developerId,
-        coordinatorId,
-        startDate: new Date(startDate),
-        endDate: endDate ? new Date(endDate) : null,
-        budget,
-        status
-      },
+      data: projectData,
       include: {
         developer: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
+            name: true,
             email: true
           }
         },
         coordinator: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
+            name: true,
             email: true
           }
         }
@@ -96,7 +107,7 @@ export async function createProjectHandler(input: CreateProjectInput): Promise<R
 
     logger.info('Project created successfully', {
       projectId: project.id,
-      title: project.title,
+      name: project.name,
       developerId,
       coordinatorId,
       status

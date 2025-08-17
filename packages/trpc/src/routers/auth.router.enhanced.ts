@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { router, publicProcedure, protectedProcedure } from '../trpc';
+import { router, publicProcedure, protectedProcedure } from '../server';
 import { authMiddleware } from '../middleware';
 import {
   unifiedLoginRequestSchema,
@@ -14,8 +14,8 @@ import {
   type SessionResponse,
   type LogoutResponse,
   type VerifyTokenResponse,
-  LoginMethod,
   ClientType,
+  LoginMethod,
 } from '@repo/shared';
 import { isAuthenticatedContext } from '../context';
 import { TokenService } from '@repo/auth';
@@ -75,8 +75,9 @@ export const enhancedAuthRouter = router({
         }
 
         // Determine login method if not provided
-        const detectedMethod: LoginMethod = loginMethod || 
-          (identifier.includes('@') ? LoginMethod.EMAIL : LoginMethod.PHONE);
+        const detectedMethod: LoginMethod = loginMethod 
+          ? (loginMethod === 'email' ? LoginMethod.EMAIL : LoginMethod.PHONE)
+          : (identifier.includes('@') ? LoginMethod.EMAIL : LoginMethod.PHONE);
 
         // Find user by email or phone
         const whereClause = detectedMethod === LoginMethod.EMAIL 

@@ -1,8 +1,8 @@
-import { EnvLoader } from '../env';
+import { getExtendedEnv } from '../env';
 import type { ApiConfig, SecurityConfig } from '../types';
 
 export function getApiConfig(): ApiConfig {
-  const env = EnvLoader.get();
+  const env = getExtendedEnv();
   
   const baseUrl = env.NEXT_PUBLIC_API_URL || env.EXPO_PUBLIC_API_URL || `${env.APP_URL}/api/${env.API_VERSION}`;
   
@@ -15,7 +15,7 @@ export function getApiConfig(): ApiConfig {
 }
 
 export function getSecurityConfig(): SecurityConfig {
-  const env = EnvLoader.get();
+  const env = getExtendedEnv();
   
   return {
     rateLimitWindow: env.RATE_LIMIT_WINDOW,
@@ -27,7 +27,7 @@ export function getSecurityConfig(): SecurityConfig {
 
 export function getCorsConfig() {
   const securityConfig = getSecurityConfig();
-  const env = EnvLoader.get();
+  const env = getExtendedEnv();
   
   return {
     origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {

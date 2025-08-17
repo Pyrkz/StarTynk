@@ -7,13 +7,15 @@
   "exports": {
     ".": "./src/index.ts",
     "./middleware": "./src/middleware/index.ts",
+    "./middleware/client-detector": "./src/middleware/client-detector.ts",
     "./providers": "./src/providers/index.ts",
     "./services": "./src/services/index.ts",
+    "./services/unified-auth.service": "./src/services/unified-auth.service.ts",
     "./utils": "./src/utils/index.ts",
     "./types": "./src/types/index.ts"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "npx tsc",
     "dev": "tsc --watch",
     "lint": "eslint src --ext .ts,.tsx",
     "type-check": "tsc --noEmit"
@@ -21,8 +23,10 @@
   "dependencies": {
     "@repo/database": "workspace:*",
     "@repo/shared": "workspace:*",
+    "@next-auth/prisma-adapter": "^1.0.7",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
+    "jose": "^5.2.0",
     "next-auth": "^4.24.11",
     "date-fns": "^4.1.0",
     "next": "^14.0.0"

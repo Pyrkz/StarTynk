@@ -5,7 +5,7 @@ import { UpdateUserDTO } from '@/features/users/types'
 import { authenticateToken, hasRequiredRole } from '@/lib/auth/middleware'
 import { ApiResponse } from '@/lib/api/response'
 import { sanitizeUser } from '@/lib/api/validators'
-import { Role } from '@shared/types'
+import { Role } from '@repo/shared/types'
 
 interface RouteParams {
   params: Promise<{

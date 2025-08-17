@@ -1,11 +1,10 @@
-import { LoginRequestDTO, UserDTO, ApiResponse } from '@repo/shared/types';
+import type { 
+  UnifiedLoginRequest,
+  UnifiedUserDTO,
+  ApiResponse,
+  UnifiedAuthResponse
+} from '@repo/shared/types';
 import { tokenService } from './token.service';
-
-interface AuthResponse {
-  user: UserDTO;
-  accessToken?: string;
-  refreshToken?: string;
-}
 
 class AuthService {
   private baseURL: string;
@@ -15,9 +14,11 @@ class AuthService {
     this.baseURL = process.env.NEXT_PUBLIC_API_URL || 
                    process.env.EXPO_PUBLIC_API_URL || 
                    '/api/v1';
+    
+    console.log('🔵 AuthService - baseURL:', this.baseURL);
   }
 
-  async login(credentials: LoginRequestDTO): Promise<AuthResponse> {
+  async login(credentials: UnifiedLoginRequest): Promise<UnifiedAuthResponse> {
     const response = await fetch(`${this.baseURL}/auth/unified-login`, {
       method: 'POST',
       headers: {
@@ -28,10 +29,10 @@ class AuthService {
       credentials: 'include',
     });
 
-    const data: ApiResponse<AuthResponse> = await response.json();
+    const data: ApiResponse<UnifiedAuthResponse> = await response.json();
     
     if (!response.ok || !data.success) {
-      throw new Error(data.error?.message || 'Login failed');
+      throw new Error(data.message || 'Login failed');
     }
 
     // Store tokens if mobile
@@ -57,7 +58,7 @@ class AuthService {
     }
   }
 
-  async getCurrentUser(): Promise<UserDTO | null> {
+  async getCurrentUser(): Promise<UnifiedUserDTO | null> {
     try {
       const response = await fetch(`${this.baseURL}/auth/me`, {
         headers: {
@@ -68,7 +69,7 @@ class AuthService {
 
       if (!response.ok) return null;
       
-      const data: ApiResponse<{ user: UserDTO }> = await response.json();
+      const data: ApiResponse<{ user: UnifiedUserDTO }> = await response.json();
       return data.success ? data.data.user : null;
     } catch {
       return null;

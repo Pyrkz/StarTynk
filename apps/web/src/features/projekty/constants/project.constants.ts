@@ -1,4 +1,4 @@
-import { ProjectStatus } from '@repo/database'
+import { ProjectStatus } from '@repo/database/client-types'
 
 export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   PLANNING: 'Planowanie',

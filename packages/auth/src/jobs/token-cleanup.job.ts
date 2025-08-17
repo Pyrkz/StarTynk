@@ -1,11 +1,12 @@
 import { tokenService } from '../services/jwt.service';
 import { getAuthConfig } from '../config';
+import type { PlatformInterval } from '@repo/shared/types';
 
 /**
  * Scheduled job to clean up expired tokens and maintain database health
  */
 export class TokenCleanupJob {
-  private intervalId: NodeJS.Timeout | null = null;
+  private intervalId: PlatformInterval | null = null;
 
   /**
    * Start the cleanup job with configurable interval

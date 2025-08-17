@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Logger } from '@repo/utils/logger';
+import { Logger } from '@repo/utils';
 
 const logger = new Logger('MobileAPI');
 

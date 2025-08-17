@@ -1,4 +1,4 @@
-import { createWebAPIClient } from '@repo/api/client';
+import { createWebAPIClient } from '@repo/api/web';
 import { authService } from '@repo/auth';
 
 /**

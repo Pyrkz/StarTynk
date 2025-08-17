@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import type { ClientType, ClientDetectionOptions } from '../types';
+import { ClientType, type ClientDetectionOptions } from '../types';
 import { getAuthConfig } from '../config';
 import { isMobileApp } from '../utils';
 
@@ -27,24 +27,24 @@ export function detectClientType(input: NextRequest | ClientDetectionOptions): C
   
   // Check explicit header first
   if (clientTypeHeader === 'mobile' || clientTypeHeader === 'web') {
-    return clientTypeHeader;
+    return clientTypeHeader === 'mobile' ? ClientType.MOBILE : ClientType.WEB;
   }
   
   // Check for Bearer token (mobile)
   if (authHeader?.startsWith('Bearer ')) {
-    return 'mobile';
+    return ClientType.MOBILE;
   }
   
   // Check user agent for mobile app
   if (userAgent) {
     const config = getAuthConfig();
     if (isMobileApp(userAgent, config.mobileAppIdentifier)) {
-      return 'mobile';
+      return ClientType.MOBILE;
     }
   }
   
   // Default to web
-  return 'web';
+  return ClientType.WEB;
 }
 
 /**
@@ -76,12 +76,12 @@ export function extractDeviceId(request: NextRequest): string | undefined {
  * Check if request is from mobile client
  */
 export function isMobileClient(request: NextRequest): boolean {
-  return detectClientType(request) === 'mobile';
+  return detectClientType(request) === ClientType.MOBILE;
 }
 
 /**
  * Check if request is from web client
  */
 export function isWebClient(request: NextRequest): boolean {
-  return detectClientType(request) === 'web';
+  return detectClientType(request) === ClientType.WEB;
 }

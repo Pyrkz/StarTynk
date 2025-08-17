@@ -1,6 +1,7 @@
 import { prisma } from '@repo/database';
-import { Logger } from '@repo/utils/logger';
-import { SyncRequestDTO, SyncResponseDTO, SyncChangeDTO } from '@repo/shared/types/dto/mobile';
+import { Logger } from '@repo/utils';
+import { sha256 } from '@repo/utils';
+import type { SyncRequestDTO, SyncResponseDTO, SyncChangeDTO } from '@repo/shared';
 
 export class SyncService {
   private logger = new Logger('SyncService');
@@ -49,13 +50,14 @@ export class SyncService {
   
   async pushChanges(
     userId: string,
-    changes: SyncChangeDTO[]
+    changes: SyncChangeDTO[],
+    deviceId: string
   ): Promise<{ success: boolean; conflicts: any[] }> {
     const conflicts = [];
     
     for (const change of changes) {
       try {
-        await this.applySyncChange(userId, change);
+        await this.applySyncChange(userId, change, deviceId);
       } catch (error) {
         if (this.isConflict(error)) {
           conflicts.push({
@@ -74,17 +76,22 @@ export class SyncService {
     };
   }
   
-  private async applySyncChange(userId: string, change: SyncChangeDTO) {
+  private async applySyncChange(userId: string, change: SyncChangeDTO, deviceId: string) {
     const { entityType, entityId, operation, payload, clientTimestamp } = change;
+    
+    // Calculate checksum for data integrity
+    const checksum = this.calculateChecksum(payload);
     
     // Add to sync queue for processing
     await prisma.syncQueue.create({
       data: {
         userId,
+        deviceId,
         entityType,
         entityId,
         operation,
         payload,
+        checksum,
         status: 'PENDING',
       },
     });
@@ -111,7 +118,7 @@ export class SyncService {
         status: 'PENDING',
       },
       data: {
-        status: 'COMPLETED',
+        status: 'SUCCESS',
         syncedAt: new Date(),
       },
     });
@@ -364,6 +371,12 @@ export class SyncService {
     return model.findUnique({
       where: { id: change.entityId },
     });
+  }
+  
+  private calculateChecksum(payload: any): string {
+    // Create a deterministic string representation of the payload
+    const dataString = JSON.stringify(payload, Object.keys(payload).sort());
+    return sha256(dataString);
   }
 }
 

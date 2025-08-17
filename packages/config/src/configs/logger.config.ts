@@ -1,9 +1,9 @@
-import { EnvLoader } from '../env';
+import { getExtendedEnv } from '../env';
 import type { LoggerConfig } from '../types';
-import path from 'path';
+import * as path from 'path';
 
 export function getLoggerConfig(): LoggerConfig {
-  const env = EnvLoader.get();
+  const env = getExtendedEnv();
   
   return {
     level: env.LOG_LEVEL,
@@ -15,7 +15,7 @@ export function getLoggerConfig(): LoggerConfig {
 
 export function getWinstonConfig() {
   const loggerConfig = getLoggerConfig();
-  const env = EnvLoader.get();
+  const env = getExtendedEnv();
   
   const transports: any[] = [];
   

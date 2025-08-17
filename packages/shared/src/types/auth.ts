@@ -1,92 +1,28 @@
 import { Role } from '@repo/database';
+import type { 
+  UnifiedUserDTO,
+  UnifiedAuthResponse,
+  UnifiedLoginRequest,
+  UnifiedRegisterRequest
+} from './dto/auth/unified-auth.dto';
+import type { TokenPayloadDTO } from './dto/auth/token.dto';
 
-/**
- * Unified user interface for both web and mobile platforms
- * Consolidates all user-related fields from previous implementations
- */
-export interface UnifiedUser {
-  id: string;
-  email?: string | null;
-  phone?: string | null;
-  name?: string | null;
-  role: Role;
-  emailVerified: boolean;
-  phoneVerified: boolean;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  // Mobile-specific fields (optional for backward compatibility)
-  firstName?: string;  // Derived from name for mobile
-  lastName?: string;   // Derived from name for mobile
-  avatar?: string | null;
-  // Web-specific fields
-  image?: string | null; // NextAuth compatibility
-  // Additional fields from database
-  position?: string | null;
-  department?: string | null;
-  lastLoginAt?: string | null;
-  loginCount?: number;
-}
+// UnifiedAuthResponse is now imported from DTOs
 
-/**
- * Unified authentication response for login/register
- * Works for both session-based (web) and JWT-based (mobile) auth
- */
-export interface UnifiedAuthResponse {
-  success: boolean;
-  user?: UnifiedUser;
-  // JWT fields (mobile)
-  accessToken?: string;
-  refreshToken?: string;
-  expiresIn?: number;
-  // Session fields (web)  
-  sessionId?: string;
-  redirectUrl?: string;
-  // Error handling
-  error?: string;
-  message?: string;
-}
+// Use UnifiedLoginRequest from DTOs
+export type LoginRequest = UnifiedLoginRequest;
 
-/**
- * Unified login request interface
- * Supports both email and phone authentication
- */
-export interface LoginRequest {
-  identifier: string; // email or phone number
-  password: string;
-  loginMethod: 'email' | 'phone';
-  deviceId?: string;    // Required for mobile
-  rememberMe?: boolean;
-  // Platform detection
-  clientType?: 'web' | 'mobile';
-}
+// Use UnifiedRegisterRequest from DTOs
+export type RegisterRequest = UnifiedRegisterRequest;
 
-/**
- * Registration request interface
- */
-export interface RegisterRequest {
-  email?: string;
-  phone?: string;
-  password: string;
-  name: string;
-  loginMethod: 'email' | 'phone';
-  deviceId?: string;
-  clientType?: 'web' | 'mobile';
-}
-
-/**
- * Token refresh request (mobile only)
- */
-export interface RefreshTokenRequest {
-  refreshToken: string;
-  deviceId?: string;
-}
+// RefreshTokenRequest is now defined in dto/auth/unified-auth.dto.ts
+// with Zod validation schema and is imported via dto exports
 
 /**
  * Auth state interface for state management
  */
 export interface AuthState {
-  user: UnifiedUser | null;
+  user: UnifiedUserDTO | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
@@ -131,21 +67,37 @@ export interface AuthContextType {
   isLoading: boolean;
 }
 
-// Additional auth types not covered by DTOs
-export interface AuthTokenPayload {
-  sub: string;
-  email?: string;
-  phone?: string;
-  role: Role;
-  iat: number;
-  exp: number;
-}
 
 // Re-export for convenience and backward compatibility
-export type AuthUser = UnifiedUser;
+export type AuthUser = UnifiedUserDTO;
 export type AuthResponse = UnifiedAuthResponse;
 export type LoginResponse = UnifiedAuthResponse;
-export type LoginMethod = 'email' | 'phone';
+export type AuthTokenPayload = TokenPayloadDTO;
+
+// Re-export commonly used types from DTOs
+export type { 
+  RefreshTokenResponse,
+  SessionResponse,
+  LogoutResponse,
+  VerifyTokenResponse,
+  UnifiedUserDTO,
+  UnifiedLoginRequest,
+  UnifiedLoginRequestOptional,
+  UnifiedRegisterRequest,
+  UnifiedAuthResponse
+} from './dto/auth/unified-auth.dto';
+
+export type {
+  LoginRequestDTO,
+  LoginRequestDTOWithDefaults
+} from './dto/auth/login.dto';
+
+export type {
+  TokenPayloadDTO,
+  AuthTokensDTO
+} from './dto/auth/token.dto';
+
+// LoginMethod is exported from enums/auth.enums.ts via dto/index.ts
 
 // Legacy type aliases (temporary backward compatibility)
 // These are now in dto/auth files to avoid conflicts

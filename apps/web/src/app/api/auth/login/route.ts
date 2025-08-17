@@ -6,7 +6,7 @@ import { publicRoute } from '@/lib/api/protected-route';
 import { validateRequestBody, sanitizeUser } from '@/lib/api/validators';
 import { validateUserCredentials, updateLastLogin } from '@/lib/auth/providers';
 import { generateTokenPair } from '@/lib/auth/jwt';
-import { LoginDTO } from '@shared/types';
+import { LoginRequest } from '@repo/shared/types';
 import { createUserActivityLog } from '@/features/auth/utils/activity-logger';
 import { rateLimit, createRateLimitResponse, addRateLimitHeaders } from '@/lib/rate-limit';
 

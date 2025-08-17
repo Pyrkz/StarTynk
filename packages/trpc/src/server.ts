@@ -17,7 +17,7 @@ const t = initTRPC.context<Context>().create({
           error.cause instanceof ZodError
             ? error.cause.flatten()
             : null,
-        requestId: shape.data?.requestId,
+        requestId: (shape.data as any)?.requestId,
         timestamp: new Date().toISOString(),
       },
     };

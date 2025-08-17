@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useEffect } from 'react'
-import type { Role } from '@repo/database'
+import type { Role } from '@repo/database/client-types'
 import { roleHierarchy } from '@/features/auth/lib/role-utils'
 
 interface AuthGuardProps {

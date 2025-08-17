@@ -4,6 +4,16 @@
   "private": true,
   "main": "./src/index.ts",
   "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "require": "./src/index.ts"
+    },
+    "./client-types": {
+      "import": "./src/client-types.ts",
+      "require": "./src/client-types.ts"
+    }
+  },
   "scripts": {
     "generate": "prisma generate && npm run generate:types",
     "generate:types": "node scripts/generate-types.js",
@@ -12,12 +22,13 @@
     "db:migrate:prod": "prisma migrate deploy",
     "studio": "prisma studio",
     "db:seed": "tsx src/seed.ts",
+    "build": "tsc",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf node_modules .turbo"
   },
   "dependencies": {
-    "@prisma/client": "^5.x.x",
-    "prisma": "^5.x.x"
+    "@prisma/client": "^5.22.0",
+    "prisma": "^5.22.0"
   },
   "devDependencies": {
     "@repo/config-typescript": "workspace:*",

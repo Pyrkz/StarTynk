@@ -8,8 +8,17 @@ import { createUserActivityLog } from '../utils/activity-logger'
 import { handleRegistrationWithInvite } from './registration'
 import type { User, Role } from '@repo/database'
 
+// Validate required environment variables
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error('NEXTAUTH_SECRET is required')
+}
+
+if (!process.env.NEXTAUTH_URL) {
+  console.warn('NEXTAUTH_URL is not set, using default')
+}
+
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as any,
+  adapter: PrismaAdapter(prisma),
   
   providers: [
     CredentialsProvider({
@@ -166,6 +175,7 @@ export const authOptions: NextAuthOptions = {
           })
           
           if (!dbUser || !dbUser.isActive) {
+            console.log('User token invalid or inactive:', token.id)
             return {}
           }
           
@@ -176,6 +186,8 @@ export const authOptions: NextAuthOptions = {
         }
       } catch (error) {
         console.error('JWT callback error:', error)
+        // Return empty token to force re-authentication
+        return {}
       }
       
       return token
@@ -212,4 +224,18 @@ export const authOptions: NextAuthOptions = {
   },
   
   debug: process.env.NODE_ENV === 'development',
+  
+  logger: {
+    error(code, metadata) {
+      console.error('NextAuth Error:', { code, metadata })
+    },
+    warn(code) {
+      console.warn('NextAuth Warning:', code)
+    },
+    debug(code, metadata) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('NextAuth Debug:', { code, metadata })
+      }
+    }
+  },
 }

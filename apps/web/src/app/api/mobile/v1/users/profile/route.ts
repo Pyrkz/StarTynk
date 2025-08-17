@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateRequest } from '@repo/auth';
-import { ApiResponse } from '@repo/api/responses';
+import { ApiResponse } from '@repo/api/web';
 import { MobileUserDTO } from '@repo/shared/types/dto/mobile';
-import { Logger } from '@repo/utils/logger';
+import { Logger } from '@repo/utils';
 
 const logger = new Logger('MobileUserProfile');
 

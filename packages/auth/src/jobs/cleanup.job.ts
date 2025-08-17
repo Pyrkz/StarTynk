@@ -4,7 +4,7 @@ import { cleanupExpiredTokens } from '../services/refresh.service';
  * Setup periodic cleanup of expired tokens
  */
 export function setupTokenCleanup(): void {
-  let intervalId: NodeJS.Timeout;
+  let intervalId: ReturnType<typeof setInterval>;
   
   const runCleanup = async () => {
     try {

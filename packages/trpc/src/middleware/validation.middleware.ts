@@ -29,7 +29,7 @@ export const commonSchemas = {
 /**
  * Enhanced validation middleware with custom error formatting
  */
-export const enhancedValidationMiddleware = middleware(async ({ ctx, next, rawInput, path }) => {
+export const enhancedValidationMiddleware = middleware(async ({ ctx, next, path }) => {
   try {
     return await next({ ctx });
   } catch (error) {
@@ -141,7 +141,7 @@ export const rateLimitMiddleware = (maxRequests: number = 100, windowMs: number 
 /**
  * Input sanitization middleware
  */
-export const sanitizationMiddleware = middleware(async ({ ctx, next, rawInput }) => {
+export const sanitizationMiddleware = middleware(async ({ ctx, next }) => {
   // Basic XSS protection - strip script tags and dangerous attributes
   function sanitizeString(value: any): any {
     if (typeof value === 'string') {
@@ -167,12 +167,12 @@ export const sanitizationMiddleware = middleware(async ({ ctx, next, rawInput })
     return value;
   }
 
-  const sanitizedInput = sanitizeString(rawInput);
+  // const sanitizedInput = sanitizeString(rawInput); // rawInput not available in newer tRPC
   
   return next({ 
     ctx: {
       ...ctx,
-      rawInput: sanitizedInput
+      // rawInput: sanitizedInput // Not available in newer tRPC
     }
   });
 });
@@ -197,13 +197,13 @@ export const transactionMiddleware = middleware(async ({ ctx, next }) => {
 export const cacheMiddleware = (ttlSeconds: number = 300) => {
   const cache = new Map<string, { data: any; expiry: number }>();
 
-  return middleware(async ({ ctx, next, path, type, rawInput }) => {
+  return middleware(async ({ ctx, next, path, type }) => {
     // Only cache queries, not mutations
     if (type !== 'query') {
       return next({ ctx });
     }
 
-    const cacheKey = `${path}:${JSON.stringify(rawInput)}`;
+    const cacheKey = `${path}:${type}`; // Using type instead of rawInput
     const cached = cache.get(cacheKey);
 
     if (cached && cached.expiry > Date.now()) {

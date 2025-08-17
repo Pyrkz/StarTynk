@@ -10,6 +10,7 @@ import type {
   MaintenanceType,
   ReminderType
 } from './fleet'
+import { z } from 'zod'
 
 // Re-export types
 export type { 

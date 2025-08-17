@@ -105,6 +105,3 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
     </trpc.Provider>
   );
 }
-
-// Export the trpc instance for use in components
-export { trpc };

@@ -2,10 +2,30 @@
   "name": "@repo/api",
   "version": "1.0.0",
   "private": true,
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./src/web.ts",
+  "types": "./src/web.ts",
+  "exports": {
+    ".": {
+      "react-native": "./src/mobile.ts",
+      "default": "./src/web.ts"
+    },
+    "./web": "./src/web.ts",
+    "./mobile": "./src/mobile.ts",
+    "./client": {
+      "react-native": "./src/client/mobile.ts",
+      "default": "./src/client/web.ts"
+    },
+    "./client/web": "./src/client/web.ts",
+    "./client/mobile": "./src/client/mobile.ts",
+    "./services": "./src/services/index.ts",
+    "./services/*": "./src/services/*",
+    "./services/*.ts": "./src/services/*.ts",
+    "./config/*": "./src/config/*",
+    "./config/*.ts": "./src/config/*.ts",
+    "./responses": "./src/responses/index.ts"
+  },
   "scripts": {
-    "build": "tsup",
+    "build": "npx tsup",
     "dev": "tsup --watch",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist node_modules .turbo"
@@ -14,13 +34,20 @@
     "@repo/database": "workspace:*",
     "@repo/auth": "workspace:*",
     "@repo/shared": "workspace:*",
+    "@repo/validation": "workspace:*",
     "zod": "^3.23.8",
     "lru-cache": "^10.4.3",
-    "date-fns": "^4.1.0"
+    "date-fns": "^4.1.0",
+    "uuid": "^9.0.0",
+    "pako": "^2.1.0"
   },
   "peerDependencies": {
     "axios": "^1.6.0",
-    "react-native-mmkv": "^2.0.0"
+    "react-native-mmkv": "^2.0.0",
+    "@react-native-community/netinfo": "^11.0.0",
+    "react-native": "*",
+    "expo-device": "*",
+    "expo-constants": "*"
   },
   "peerDependenciesMeta": {
     "axios": {
@@ -28,10 +55,24 @@
     },
     "react-native-mmkv": {
       "optional": true
+    },
+    "@react-native-community/netinfo": {
+      "optional": true
+    },
+    "react-native": {
+      "optional": true
+    },
+    "expo-device": {
+      "optional": true
+    },
+    "expo-constants": {
+      "optional": true
     }
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/uuid": "^9.0.0",
+    "@types/pako": "^2.0.0",
     "tsup": "^8.3.5",
     "typescript": "^5"
   }

@@ -1,88 +1,90 @@
 import React from 'react';
-import { View, Text, Platform } from 'react-native';
+import { View, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
-import { useFonts, Inter_800ExtraBold } from '@expo-google-fonts/inter';
 
 interface LogoProps {
-  size?: 'small' | 'medium' | 'large';
+  size?: 'small' | 'medium' | 'large' | 'xlarge';
   className?: string;
 }
 
-export function Logo({ size = 'medium', className = '' }: LogoProps) {
-  const [fontsLoaded] = useFonts({
-    Inter_800ExtraBold,
-  });
+export default function Logo({ size = 'medium', className }: LogoProps) {
+  const fontSize = {
+    small: 24,
+    medium: 36,
+    large: 48,
+    xlarge: 64,
+  }[size];
 
-  if (!fontsLoaded) {
-    return null;
-  }
+  // Oblicz szerokość "Star" - zwiększona dla pełnej widoczności
+  const starWidth = fontSize * 2.0; // Zwiększona szerokość dla kompletnego słowa "Star"
 
-  const sizeClasses = {
-    small: {
-      text: 'text-2xl',
-      width: 'w-[70px]',
-      height: 'h-[29px]',
-    },
-    medium: {
-      text: 'text-4xl',
-      width: 'w-[105px]',
-      height: 'h-[43px]',
-    },
-    large: {
-      text: 'text-6xl',
-      width: 'w-[175px]',
-      height: 'h-[72px]',
-    },
-  };
-
-  const isWeb = Platform.OS === 'web';
-  const currentSize = sizeClasses[size];
+  // Wspólna wysokość dla obu elementów
+  const containerHeight = fontSize * 1.2;
 
   return (
-    <View className={`flex-row items-center ${className}`}>
-      {isWeb || !MaskedView ? (
-        // Fallback for web and platforms without MaskedView support
-        <Text
-          className={`${currentSize.text} font-extrabold text-primary-500`}
-          style={{
-            fontFamily: 'Inter_800ExtraBold',
-            // Web gradient text effect - nie da się tego zrobić w NativeWind
-            backgroundImage: 'linear-gradient(90deg, #FEAD00 0%, #D75200 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-          } as any}
-        >
-          Star
-        </Text>
-      ) : (
-        // Native implementation with MaskedView
-        <MaskedView
-          maskElement={
+    <View 
+      className={`flex-row ${className || ''}`} 
+      style={{ 
+        alignItems: 'center',
+        height: containerHeight,
+      }}
+    >
+      <MaskedView
+        style={{ 
+          height: containerHeight, 
+          width: starWidth,
+        }}
+        maskElement={
+          <View style={{
+            width: starWidth,
+            height: containerHeight,
+            justifyContent: 'center',
+            alignItems: 'flex-start',
+          }}>
             <Text
-              className={`${currentSize.text} font-extrabold`}
-              style={{ fontFamily: 'Inter_800ExtraBold' }}
+              style={{
+                fontSize,
+                fontWeight: 'bold',
+                letterSpacing: -1,
+                backgroundColor: 'transparent',
+                textAlign: 'left',
+                includeFontPadding: false,
+              }}
             >
               Star
             </Text>
-          }
-          className={`${currentSize.height} ${currentSize.width}`}
-        >
-          <LinearGradient
-            colors={['#FEAD00', '#D75200']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            className="flex-1"
-          />
-        </MaskedView>
-      )}
-      <Text
-        className={`${currentSize.text} font-extrabold text-black`}
-        style={{ fontFamily: 'Inter_800ExtraBold' }}
+          </View>
+        }
       >
-        Tynk
-      </Text>
+        <LinearGradient
+          colors={['#FEAD00', '#D75200']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={{ flex: 1, height: containerHeight }}
+        />
+      </MaskedView>
+      <View
+        style={{
+          height: containerHeight,
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginLeft: -8, // Zbliż słowa do siebie
+        }}
+      >
+        <Text 
+          style={{ 
+            fontSize,
+            fontWeight: 'bold',
+            letterSpacing: -1,
+            color: '#000000',
+            lineHeight: fontSize * 1.2,
+            includeFontPadding: false,
+          }}
+        >
+          Tynk
+        </Text>
+      </View>
     </View>
   );
 }

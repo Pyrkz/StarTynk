@@ -1,73 +1,110 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createAuthService } from '@repo/auth';
-import { detectClient, createUnifiedResponse, createErrorResponse } from '@/middleware/client-detection';
+import { unifiedAuthService, detectClientType, ClientType } from '@repo/auth';
 
 // Validation schema
 const refreshSchema = z.object({
-  refreshToken: z.string().min(1, 'Refresh token is required'),
-  deviceId: z.string().optional(),
+  refreshToken: z.string().optional(), // For mobile
+  deviceId: z.string().optional() // For mobile
 });
 
 /**
- * Unified token refresh endpoint (primarily for mobile)
- * POST /api/v1/auth/unified-refresh - Refresh access token
+ * Unified token/session refresh endpoint
+ * POST /api/v1/auth/unified-refresh
  */
 export async function POST(request: NextRequest) {
-  const clientInfo = detectClient(request);
-  
-  // Web clients typically use session refresh, not token refresh
-  if (clientInfo.type === 'web') {
-    return createErrorResponse(
-      'Token refresh not supported for web clients',
-      clientInfo,
-      400
-    );
-  }
-  
   try {
-    // Parse and validate request body
-    const body = await request.json();
-    const validatedData = refreshSchema.parse(body);
-    
-    // Perform token refresh using unified auth service
-    const authService = createAuthService();
-    const result = await authService.refreshToken(validatedData);
-    
-    if (!result.success) {
-      return createErrorResponse(
-        result.error || 'Token refresh failed',
-        clientInfo,
-        401
+    // Detect client type
+    const clientType = detectClientType(request);
+
+    if (clientType === ClientType.MOBILE) {
+      // Parse request body for mobile
+      const body = await request.json();
+      
+      // Validate input
+      const validationResult = refreshSchema.safeParse(body);
+      if (!validationResult.success) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'Invalid request data',
+            details: validationResult.error.errors 
+          },
+          { status: 400 }
+        );
+      }
+
+      const { refreshToken, deviceId } = validationResult.data;
+
+      if (!refreshToken || !deviceId) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'Refresh token and device ID are required' 
+          },
+          { status: 400 }
+        );
+      }
+
+      // Refresh mobile tokens
+      const result = await unifiedAuthService.refreshAuth(
+        refreshToken,
+        clientType,
+        deviceId
       );
+
+      if (!result.success) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: result.message || 'Token refresh failed' 
+          },
+          { status: 401 }
+        );
+      }
+
+      // Return new tokens
+      return NextResponse.json({
+        success: true,
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+        expiresIn: result.expiresIn,
+        tokenType: 'Bearer'
+      });
+    } else {
+      // Web session refresh
+      // NextAuth handles this automatically, but we can extend the session
+      const sessionToken = request.cookies.get('next-auth.session-token')?.value ||
+                         request.cookies.get('__Secure-next-auth.session-token')?.value;
+
+      if (!sessionToken) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'No session found' 
+          },
+          { status: 401 }
+        );
+      }
+
+      const result = await unifiedAuthService.refreshAuth(
+        sessionToken,
+        clientType
+      );
+
+      return NextResponse.json({
+        success: result.success,
+        message: result.message || 'Session extended'
+      });
     }
-    
-    const responseData = {
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
-      expiresIn: result.expiresIn,
-    };
-    
-    return createUnifiedResponse(responseData, clientInfo, {
-      status: 200,
-      message: 'Token refreshed successfully',
-    });
-    
   } catch (error) {
-    console.error('Token refresh error:', error);
-    
-    if (error instanceof z.ZodError) {
-      return createErrorResponse(
-        `Validation error: ${error.errors.map(e => e.message).join(', ')}`,
-        clientInfo,
-        400
-      );
-    }
-    
-    return createErrorResponse(
-      'Internal server error',
-      clientInfo,
-      500
+    console.error('Unified refresh error:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Internal server error' 
+      },
+      { status: 500 }
     );
   }
 }

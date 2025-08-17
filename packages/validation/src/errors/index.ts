@@ -1,5 +1,7 @@
-import { BaseError, ErrorCode, ErrorContext } from './base';
-import { ZodError, ZodIssue } from 'zod';
+import { BaseError, ErrorCode } from './base';
+import type { ErrorContext } from './base';
+import { ZodError } from 'zod';
+import type { ZodIssue } from 'zod';
 
 export * from './base';
 

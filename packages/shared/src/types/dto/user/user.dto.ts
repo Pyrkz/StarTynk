@@ -15,6 +15,7 @@ export interface UserDTO {
   lastLoginAt?: string | null;
   createdAt: string;
   updatedAt: string;
+  isProfileComplete?: boolean;
 }
 
 export interface UserListItemDTO {
@@ -27,6 +28,7 @@ export interface UserListItemDTO {
   lastLoginAt?: string | null;
   position?: string | null;
   department?: string | null;
+  lastActivityAt?: Date | string;
 }
 
 export interface UserProfileDTO extends UserDTO {
@@ -34,6 +36,9 @@ export interface UserProfileDTO extends UserDTO {
   invitedBy?: string | null;
   employmentStartDate?: string | null;
   employmentEndDate?: string | null;
+  projectCount?: number;
+  taskCount?: number;
+  lastActivityAt?: Date | string;
   _count?: {
     projects?: number;
     tasks?: number;

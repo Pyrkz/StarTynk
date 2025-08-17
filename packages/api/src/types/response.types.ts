@@ -15,16 +15,8 @@ export interface ErrorResponseData {
   };
 }
 
-export interface PaginationMeta {
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrev: boolean;
-  };
-}
+// Import PaginationMeta from api-response to avoid duplication
+import type { PaginationMeta } from '../responses/api-response';
 
 export interface ListResponse<T> extends SuccessResponseData<T[]> {
   meta: PaginationMeta;

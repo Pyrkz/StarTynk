@@ -25,13 +25,25 @@ export const updateProjectSchema = z.object({
   status: z.enum(['PLANNING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']).optional(),
 });
 
-export const listProjectsSchema = paginationSchema.merge(searchSchema).merge(sortSchema).merge(dateRangeSchema).merge(z.object({
+const baseDateRange = z.object({
+  startDate: z.coerce.date().optional(),
+  endDate: z.coerce.date().optional(),
+});
+
+export const listProjectsSchema = paginationSchema.merge(searchSchema).merge(sortSchema).merge(baseDateRange).merge(z.object({
   status: z.enum(['PLANNING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']).optional(),
   developerId: idSchema.optional(),
   coordinatorId: idSchema.optional(),
   minBudget: z.coerce.number().positive().optional(),
   maxBudget: z.coerce.number().positive().optional(),
-}));
+})).refine(data => {
+  if (data.startDate && data.endDate) {
+    return data.startDate <= data.endDate;
+  }
+  return true;
+}, {
+  message: 'Start date must be before end date',
+});
 
 export const getProjectSchema = z.object({
   id: idSchema,

@@ -5,7 +5,7 @@ import { authenticateToken, hasRequiredRole } from '@/lib/auth/middleware'
 import { ApiResponse } from '@/lib/api/response'
 import { parseQueryParams, listQuerySchema, sanitizeUser } from '@/lib/api/validators'
 import { z } from 'zod'
-import { Role, ProjectStatus } from '@shared/types'
+import { Role, ProjectStatus } from '@repo/shared/types'
 import { Prisma } from '@repo/database'
 
 // Helper to check authentication

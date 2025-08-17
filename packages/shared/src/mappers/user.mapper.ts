@@ -1,10 +1,20 @@
-import type { User } from '@repo/database';
+import type { User, Role } from '@repo/database';
 import type { 
   UserDTO, 
-  UserListDTO, 
-  UserProfileDTO,
-  UserWithStatsDTO 
-} from '../types/dto/user.dto';
+  UserListItemDTO as UserListDTO, 
+  UserProfileDTO
+} from '../types/dto/user';
+
+// Temporary compatibility interface until mapper is updated
+interface UserWithStatsDTO extends UserDTO {
+  stats?: {
+    projectCount: number;
+    taskCount: number;
+    completedTasks: number;
+    hoursWorked: number;
+    averageRating: number;
+  };
+}
 
 /**
  * User mapper class for converting between Prisma models and DTOs
@@ -15,9 +25,15 @@ export class UserMapper {
    * Convert User model to UserDTO (excludes password and deletedAt)
    */
   static toDTO(user: User): UserDTO {
-    const { password, deletedAt, ...dto } = user;
+    const { password, deletedAt, ...rest } = user;
     return {
-      ...dto,
+      ...rest,
+      role: rest.role as Role,
+      emailVerified: !!rest.emailVerified,
+      phoneVerified: false, // Default value, should be updated based on actual data
+      lastLoginAt: rest.lastLoginAt?.toISOString() ?? null,
+      createdAt: rest.createdAt.toISOString(),
+      updatedAt: rest.updatedAt.toISOString(),
       isProfileComplete: this.isProfileComplete(user)
     };
   }
@@ -30,7 +46,7 @@ export class UserMapper {
       id: user.id,
       name: user.name,
       email: user.email,
-      role: user.role,
+      role: user.role as Role,
       isActive: user.isActive,
       position: user.position,
       department: user.department,
@@ -45,12 +61,21 @@ export class UserMapper {
     user: User, 
     stats?: { projectCount: number; taskCount: number }
   ): UserProfileDTO {
-    const { password, ...profile } = user;
+    const { password, ...rest } = user;
     return {
-      ...profile,
+      ...rest,
+      role: rest.role as Role,
+      emailVerified: !!rest.emailVerified,
+      phoneVerified: false, // Default value, should be updated based on actual data
+      loginCount: rest.loginCount ?? 0,
+      lastLoginAt: rest.lastLoginAt?.toISOString() ?? null,
+      createdAt: rest.createdAt.toISOString(),
+      updatedAt: rest.updatedAt.toISOString(),
+      employmentStartDate: rest.employmentStartDate?.toISOString() ?? null,
+      employmentEndDate: rest.employmentEndDate?.toISOString() ?? null,
       projectCount: stats?.projectCount,
       taskCount: stats?.taskCount,
-      lastActivityAt: user.lastLoginAt || user.updatedAt,
+      lastActivityAt: (rest.lastLoginAt || rest.updatedAt).toISOString(),
       isProfileComplete: this.isProfileComplete(user)
     };
   }

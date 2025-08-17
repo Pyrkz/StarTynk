@@ -7,6 +7,3 @@ export * from './password.schema';
 export * from './money.schema';
 export * from './location.schema';
 export * from './file.schema';
-
-// Re-export commonly used schemas
-export { emailSchema, phoneSchema, phoneOptionalSchema } from '../../../validators';

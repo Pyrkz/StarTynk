@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { router, protectedProcedure } from '../trpc';
+import { router, protectedProcedure } from '../server';
 import { 
   authMiddleware, 
   requireAdmin, 
@@ -45,12 +45,11 @@ const updateUserSchema = z.object({
 /**
  * User filters schema
  */
-const userFiltersSchema = z.object({
+const userFiltersSchema = searchFilterSchema.extend({
   role: z.nativeEnum(Role).optional(),
   department: z.string().optional(),
   isActive: z.boolean().optional(),
   employmentStatus: z.enum(['current', 'former', 'all']).default('current'),
-  ...searchFilterSchema.shape,
 });
 
 /**
@@ -83,11 +82,20 @@ export const userRouter = router({
         department, 
         isActive, 
         employmentStatus,
-        page, 
-        limit, 
-        sortBy = 'name', 
-        sortOrder 
+        page = 1, 
+        limit = 20, 
+        sort
       } = input;
+      
+      // Ensure page and limit are properly typed numbers
+      const pageNum = Number(page);
+      const limitNum = Number(limit);
+      
+      // Handle sort with proper typing
+      const sortField = (sort && typeof sort === 'object' && 'field' in sort && typeof sort.field === 'string') 
+        ? sort.field : 'name';
+      const sortOrder = (sort && typeof sort === 'object' && 'order' in sort && typeof sort.order === 'string') 
+        ? sort.order as 'asc' | 'desc' : 'asc';
 
       try {
         const where: any = {
@@ -99,25 +107,39 @@ export const userRouter = router({
         if (department) where.department = department;
         if (isActive !== undefined) where.isActive = isActive;
 
-        // Employment status filter
+        // Handle complex filtering with AND/OR logic
+        const andConditions: any[] = [];
+        
+        // Employment status filter  
         if (employmentStatus === 'current') {
-          where.OR = [
-            { employmentEndDate: null },
-            { employmentEndDate: { gt: new Date() } }
-          ];
+          andConditions.push({
+            OR: [
+              { employmentEndDate: null },
+              { employmentEndDate: { gt: new Date() } }
+            ]
+          });
         } else if (employmentStatus === 'former') {
-          where.employmentEndDate = { lte: new Date() };
+          andConditions.push({
+            employmentEndDate: { lte: new Date() }
+          });
         }
 
         // Search filter
         if (search) {
-          where.OR = [
-            { name: { contains: search, mode: 'insensitive' } },
-            { email: { contains: search, mode: 'insensitive' } },
-            { phone: { contains: search, mode: 'insensitive' } },
-            { department: { contains: search, mode: 'insensitive' } },
-            { position: { contains: search, mode: 'insensitive' } },
-          ];
+          andConditions.push({
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { email: { contains: search, mode: 'insensitive' } },
+              { phone: { contains: search, mode: 'insensitive' } },
+              { department: { contains: search, mode: 'insensitive' } },
+              { position: { contains: search, mode: 'insensitive' } }
+            ]
+          });
+        }
+        
+        // Apply AND conditions if any exist
+        if (andConditions.length > 0) {
+          where.AND = andConditions;
         }
 
         // Count total records
@@ -142,20 +164,20 @@ export const userRouter = router({
             createdAt: true,
             updatedAt: true,
           },
-          orderBy: { [sortBy]: sortOrder },
-          skip: (page - 1) * limit,
-          take: limit,
+          orderBy: { [sortField]: sortOrder },
+          skip: (pageNum - 1) * limitNum,
+          take: limitNum,
         });
 
         return {
           data: users,
           pagination: {
-            page,
-            limit,
+            page: pageNum,
+            limit: limitNum,
             total,
-            totalPages: Math.ceil(total / limit),
-            hasNext: page * limit < total,
-            hasPrev: page > 1,
+            totalPages: Math.ceil(total / limitNum),
+            hasNext: pageNum * limitNum < total,
+            hasPrev: pageNum > 1,
           },
         };
       } catch (error) {
@@ -184,7 +206,7 @@ export const userRouter = router({
       const { id } = input;
 
       // Users can view their own profile, others need admin/moderator role
-      if (ctx.userId !== id && ![Role.ADMIN, Role.MODERATOR].includes(ctx.user.role as Role)) {
+      if (ctx.userId !== id && !['ADMIN', 'MODERATOR'].includes(ctx.user.role)) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Access denied',
@@ -263,12 +285,14 @@ export const userRouter = router({
 
       try {
         // Check if user already exists
+        const orConditions: Array<{email: string} | {phone: string}> = [{ email: userData.email as string }];
+        if (userData.phone) {
+          orConditions.push({ phone: userData.phone as string });
+        }
+        
         const existingUser = await ctx.prisma.user.findFirst({
           where: {
-            OR: [
-              { email: userData.email },
-              userData.phone ? { phone: userData.phone } : {},
-            ].filter(condition => Object.keys(condition).length > 0),
+            OR: orConditions,
           },
         });
 
@@ -281,12 +305,23 @@ export const userRouter = router({
 
         // Hash password
         const { PasswordUtils } = await import('@repo/auth');
-        const hashedPassword = await PasswordUtils.hash(password);
+        const hashedPassword = await PasswordUtils.hash(password as string);
 
-        // Create user
+        // Create user with proper type casting
+        const validatedUserData = {
+          email: userData.email as string,
+          phone: userData.phone as string | undefined,
+          name: userData.name as string,
+          role: userData.role as Role,
+          department: userData.department as string | undefined,
+          position: userData.position as string | undefined,
+          employmentStartDate: userData.employmentStartDate as Date | undefined,
+          employmentEndDate: userData.employmentEndDate as Date | undefined,
+        };
+
         const user = await ctx.prisma.user.create({
           data: {
-            ...userData,
+            ...validatedUserData,
             password: hashedPassword,
           },
           select: {
@@ -332,9 +367,10 @@ export const userRouter = router({
       }
 
       const { id, ...updateData } = input;
+      const userId = id as string;
 
       // Users can update their own basic info, admins can update anyone
-      const isOwnProfile = ctx.userId === id;
+      const isOwnProfile = ctx.userId === userId;
       const isAdmin = ctx.user.role === Role.ADMIN;
 
       if (!isOwnProfile && !isAdmin) {
@@ -362,7 +398,7 @@ export const userRouter = router({
       try {
         // Check if user exists
         const existingUser = await ctx.prisma.user.findUnique({
-          where: { id, deletedAt: null },
+          where: { id: userId, deletedAt: null },
         });
 
         if (!existingUser) {
@@ -374,15 +410,18 @@ export const userRouter = router({
 
         // Check for email/phone conflicts if updating
         if (updateData.email || updateData.phone) {
+          const conflictOrConditions = [];
+          if (updateData.email) {
+            conflictOrConditions.push({ email: updateData.email as string });
+          }
+          if (updateData.phone) {
+            conflictOrConditions.push({ phone: updateData.phone as string });
+          }
+          
           const conflictWhere = {
             AND: [
-              { id: { not: id } },
-              {
-                OR: [
-                  updateData.email ? { email: updateData.email } : {},
-                  updateData.phone ? { phone: updateData.phone } : {},
-                ].filter(condition => Object.keys(condition).length > 0),
-              },
+              { id: { not: userId } },
+              { OR: conflictOrConditions },
             ],
           };
 
@@ -398,11 +437,24 @@ export const userRouter = router({
           }
         }
 
-        // Update user
+        // Update user with proper type casting
+        const validatedUpdateData: any = {};
+        
+        // Only include defined fields with proper typing
+        if (updateData.email !== undefined) validatedUpdateData.email = updateData.email as string;
+        if (updateData.phone !== undefined) validatedUpdateData.phone = updateData.phone as string;
+        if (updateData.name !== undefined) validatedUpdateData.name = updateData.name as string;
+        if (updateData.role !== undefined) validatedUpdateData.role = updateData.role;
+        if (updateData.department !== undefined) validatedUpdateData.department = updateData.department as string;
+        if (updateData.position !== undefined) validatedUpdateData.position = updateData.position as string;
+        if (updateData.employmentStartDate !== undefined) validatedUpdateData.employmentStartDate = updateData.employmentStartDate as Date;
+        if (updateData.employmentEndDate !== undefined) validatedUpdateData.employmentEndDate = updateData.employmentEndDate as Date;
+        if (updateData.isActive !== undefined) validatedUpdateData.isActive = updateData.isActive as boolean;
+        
         const updatedUser = await ctx.prisma.user.update({
-          where: { id },
+          where: { id: userId },
           data: {
-            ...updateData,
+            ...validatedUpdateData,
             updatedAt: new Date(),
           },
           select: {

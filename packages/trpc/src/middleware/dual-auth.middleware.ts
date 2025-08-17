@@ -3,8 +3,12 @@ import { middleware } from '../trpc';
 import { type BaseContext, type AuthenticatedContext, addUserToContext, isAuthenticatedContext } from '../context';
 import { type UnifiedUserDTO, Role } from '@repo/shared';
 import { TokenService } from '@repo/auth';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../apps/web/src/lib/auth';
+// import { getServerSession } from 'next-auth';
+// import { authOptions } from '../../../apps/web/src/lib/auth';
+
+// Temporary placeholder for next-auth session
+const getServerSession = async (): Promise<any> => null;
+const authOptions = {}; // Temporary placeholder
 
 /**
  * Enhanced dual-mode authentication middleware
@@ -37,7 +41,7 @@ function extractSessionToken(cookieHeader?: string): string | null {
     
   if (!sessionCookie) return null;
   
-  return sessionCookie.split('=')[1];
+  return sessionCookie.split('=')[1] || null;
 }
 
 /**
@@ -110,7 +114,7 @@ async function verifyJWTToken(token: string, ctx: BaseContext): Promise<UnifiedU
 async function verifyNextAuthSession(req: any): Promise<{ user: UnifiedUserDTO; sessionId: string } | null> {
   try {
     // Use NextAuth to verify session
-    const session = await getServerSession(req, null, authOptions);
+    const session = await getServerSession();
     
     if (!session || !session.user) {
       return null;

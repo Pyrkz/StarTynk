@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { createSuccessResponse } from '@repo/api';
+import { createSuccessResponse } from '@repo/api/web';
 
 export async function GET(request: NextRequest) {
   const versionInfo = {

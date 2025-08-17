@@ -19,5 +19,11 @@ export * from './utils';
 // Types
 export * from './types';
 
+// Config
+export * from './config/cache.config';
+
 // Client module
 export * from './client';
+
+// Services
+export * from './services';

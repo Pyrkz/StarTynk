@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { LoginMethod, ClientType } from '../../enums';
+import { LoginMethod, ClientType, Role } from '../../enums';
 
 // Unified login request schema
 export const unifiedLoginRequestSchema = z.object({
@@ -8,10 +8,20 @@ export const unifiedLoginRequestSchema = z.object({
   loginMethod: z.enum(['email', 'phone']).optional(),
   clientType: z.enum(['web', 'mobile']).optional(),
   deviceId: z.string().optional(),
-  rememberMe: z.boolean().optional().default(false),
+  rememberMe: z.boolean().default(false),
 });
 
 export type UnifiedLoginRequest = z.infer<typeof unifiedLoginRequestSchema>;
+
+// Helper type for form inputs where rememberMe is optional
+export interface UnifiedLoginRequestOptional {
+  identifier: string;
+  password: string;
+  loginMethod?: LoginMethod;
+  clientType?: ClientType;
+  deviceId?: string;
+  rememberMe?: boolean;
+}
 
 // Unified registration request schema
 export const unifiedRegisterRequestSchema = z.object({
@@ -35,7 +45,7 @@ export interface UnifiedUserDTO {
   email?: string;
   phone?: string;
   name?: string;
-  role: string;
+  role: Role;
   emailVerified: boolean;
   phoneVerified: boolean;
 }
@@ -43,8 +53,8 @@ export interface UnifiedUserDTO {
 // Unified auth response
 export interface UnifiedAuthResponse {
   success: boolean;
-  user: UnifiedUserDTO;
-  loginMethod: LoginMethod;
+  user?: UnifiedUserDTO;
+  loginMethod?: LoginMethod;
   // For mobile:
   accessToken?: string;
   refreshToken?: string;
@@ -52,6 +62,9 @@ export interface UnifiedAuthResponse {
   // For web:
   sessionId?: string;
   redirectUrl?: string;
+  // Error handling:
+  error?: string;
+  message?: string;
 }
 
 // Refresh token request

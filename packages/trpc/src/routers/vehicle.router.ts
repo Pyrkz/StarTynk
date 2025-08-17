@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { router, protectedProcedure } from '../trpc';
+import { router, protectedProcedure } from '../server';
 import { 
   authMiddleware, 
   requireCoordinatorOrAbove,
@@ -119,8 +119,7 @@ export const vehicleRouter = router({
         inspectionExpiring,
         page, 
         limit, 
-        sortBy = 'licensePlate', 
-        sortOrder 
+        sort = { field: 'licensePlate', order: 'asc' } 
       } = input;
 
       try {
@@ -241,7 +240,7 @@ export const vehicleRouter = router({
               },
             },
           },
-          orderBy: { [sortBy]: sortOrder },
+          orderBy: { [sort.field]: sort.order },
           skip: (page - 1) * limit,
           take: limit,
         });
@@ -350,7 +349,7 @@ export const vehicleRouter = router({
         if (ctx.user.role === Role.WORKER) {
           const hasAccess = vehicle.assignments.some(
             assignment => assignment.user.id === ctx.userId && 
-                          assignment.endDate === null || assignment.endDate > new Date()
+                          (assignment.endDate === null || assignment.endDate > new Date())
           );
           
           if (!hasAccess) {

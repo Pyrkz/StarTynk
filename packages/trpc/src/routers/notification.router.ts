@@ -1,8 +1,7 @@
 import { z } from 'zod';
-import { router, protectedProcedure } from '../trpc';
+import { router, protectedProcedure } from '../server';
 import { prisma } from '@repo/database';
-import { pushNotificationService } from '@repo/features/services/notification/push-notification.service';
-import { Platform } from '@repo/database';
+import { pushNotificationService } from '@repo/features/services/notifications';
 
 const RegisterPushTokenSchema = z.object({
   token: z.string(),
@@ -21,7 +20,7 @@ export const notificationRouter = router({
   registerPushToken: protectedProcedure
     .input(RegisterPushTokenSchema)
     .mutation(async ({ ctx, input }) => {
-      const { userId } = ctx;
+      const userId = ctx.user.id;
       
       // Check if token already exists
       const existing = await prisma.pushToken.findUnique({
@@ -62,7 +61,7 @@ export const notificationRouter = router({
       deviceId: z.string(),
     }))
     .mutation(async ({ ctx, input }) => {
-      const { userId } = ctx;
+      const userId = ctx.user.id;
       const { deviceId } = input;
       
       await prisma.pushToken.updateMany({
@@ -86,7 +85,7 @@ export const notificationRouter = router({
       unreadOnly: z.boolean().optional(),
     }))
     .query(async ({ ctx, input }) => {
-      const { userId } = ctx;
+      const userId = ctx.user.id;
       const { limit, cursor, unreadOnly } = input;
       
       const where: any = { userId };
@@ -116,7 +115,7 @@ export const notificationRouter = router({
   // Get unread count
   getUnreadCount: protectedProcedure
     .query(async ({ ctx }) => {
-      const { userId } = ctx;
+      const userId = ctx.user.id;
       
       const count = await prisma.notificationLog.count({
         where: {
@@ -135,7 +134,7 @@ export const notificationRouter = router({
       notificationId: z.string(),
     }))
     .mutation(async ({ ctx, input }) => {
-      const { userId } = ctx;
+      const userId = ctx.user.id;
       const { notificationId } = input;
       
       await prisma.notificationLog.updateMany({
@@ -155,7 +154,7 @@ export const notificationRouter = router({
   // Mark all as read
   markAllAsRead: protectedProcedure
     .mutation(async ({ ctx }) => {
-      const { userId } = ctx;
+      const userId = ctx.user.id;
       
       const updated = await prisma.notificationLog.updateMany({
         where: {
@@ -174,7 +173,7 @@ export const notificationRouter = router({
   // Send test notification
   sendTestNotification: protectedProcedure
     .mutation(async ({ ctx }) => {
-      const { userId } = ctx;
+      const userId = ctx.user.id;
       
       await pushNotificationService.sendToUser(userId, {
         title: 'Test Notification',
@@ -191,7 +190,7 @@ export const notificationRouter = router({
   // Get notification preferences
   getPreferences: protectedProcedure
     .query(async ({ ctx }) => {
-      const { userId } = ctx;
+      const userId = ctx.user.id;
       
       // This would fetch from a user preferences table
       // For now, return defaults
@@ -220,7 +219,7 @@ export const notificationRouter = router({
       quietHoursEnd: z.string().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
-      const { userId } = ctx;
+      const userId = ctx.user.id;
       
       // This would update a user preferences table
       // For now, just return success
@@ -236,7 +235,7 @@ export const notificationRouter = router({
       data: z.any().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
-      const { userId } = ctx;
+      const userId = ctx.user.id;
       
       const scheduled = await prisma.notificationSchedule.create({
         data: {
@@ -257,7 +256,7 @@ export const notificationRouter = router({
       scheduleId: z.string(),
     }))
     .mutation(async ({ ctx, input }) => {
-      const { userId } = ctx;
+      const userId = ctx.user.id;
       const { scheduleId } = input;
       
       await prisma.notificationSchedule.updateMany({
@@ -267,7 +266,7 @@ export const notificationRouter = router({
           status: 'PENDING',
         },
         data: {
-          status: 'CANCELLED',
+          status: 'FAILED', // Using valid enum value
         },
       });
       
@@ -277,14 +276,14 @@ export const notificationRouter = router({
   // Get device tokens
   getDeviceTokens: protectedProcedure
     .query(async ({ ctx }) => {
-      const { userId } = ctx;
+      const userId = ctx.user.id;
       
       const tokens = await prisma.pushToken.findMany({
         where: { userId },
         orderBy: { lastUsedAt: 'desc' },
       });
       
-      return tokens.map(token => ({
+      return tokens.map((token: any) => ({
         id: token.id,
         deviceId: token.deviceId,
         deviceName: token.deviceName,
@@ -301,7 +300,7 @@ export const notificationRouter = router({
       tokenId: z.string(),
     }))
     .mutation(async ({ ctx, input }) => {
-      const { userId } = ctx;
+      const userId = ctx.user.id;
       const { tokenId } = input;
       
       await prisma.pushToken.deleteMany({

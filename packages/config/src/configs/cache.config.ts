@@ -1,8 +1,8 @@
-import { EnvLoader } from '../env';
+import { getExtendedEnv } from '../env';
 import type { CacheConfig } from '../types';
 
 export function getCacheConfig(): CacheConfig {
-  const env = EnvLoader.get();
+  const env = getExtendedEnv();
   
   return {
     redisUrl: env.REDIS_URL,
@@ -13,7 +13,7 @@ export function getCacheConfig(): CacheConfig {
 
 export function getRedisConfig() {
   const cacheConfig = getCacheConfig();
-  const env = EnvLoader.get();
+  const env = getExtendedEnv();
   
   if (!cacheConfig.redisUrl) {
     return null;
@@ -44,7 +44,7 @@ export function getRedisConfig() {
 }
 
 export function getCacheStrategy() {
-  const env = EnvLoader.get();
+  const env = getExtendedEnv();
   
   return {
     // User sessions

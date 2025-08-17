@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@repo/database';
 import { authenticateRequest } from '@repo/auth';
-import { ApiResponse } from '@repo/api/responses';
-import { Logger } from '@repo/utils/logger';
+import { ApiResponse } from '@repo/api/web';
+import { Logger } from '@repo/utils';
 
 const logger = new Logger('MobileSyncStatus');
 

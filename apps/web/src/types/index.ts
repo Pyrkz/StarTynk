@@ -4,7 +4,7 @@
  */
 
 import type { ReminderType } from '@repo/shared/types';
-import type { Vehicle, VehicleAssignment, User } from '@repo/database';
+import type { Vehicle, VehicleAssignment, User } from '@repo/database/client-types';
 
 // Vehicle types with UI-specific extensions
 export type VehicleWithCurrentAssignment = Vehicle & {

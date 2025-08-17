@@ -1,6 +1,6 @@
 import { SIDEBAR_CONSTANTS } from './constants'
 import type { NavigationItem, NavigationGroup, SidebarState } from '../types'
-import type { Role } from '@repo/database'
+import type { Role } from '@repo/database/client-types'
 import { storage } from '@repo/shared/storage'
 
 /**

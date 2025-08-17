@@ -3,8 +3,8 @@ import type { CreateFastifyContextOptions } from '@trpc/server/adapters/fastify'
 import type { NodeHTTPCreateContextFnOptions } from '@trpc/server/adapters/node-http';
 import { prisma } from '@repo/database';
 import { type UnifiedUserDTO } from '@repo/shared';
-import { verifyAccessToken, getSessionFromRequest } from '@repo/auth';
-import type { NextApiRequest } from 'next';
+import { verifyAccessToken, sessionService } from '@repo/auth';
+// import type { NextApiRequest } from 'next';
 
 /**
  * Base context that's available in all procedures
@@ -18,6 +18,8 @@ export interface BaseContext {
   sessionId?: string;
   authToken?: string;
   authType?: 'session' | 'jwt';
+  req?: any; // Request object for middleware access
+  res?: any; // Response object for middleware access
 }
 
 /**
@@ -78,7 +80,7 @@ function getIpAddress(
     if (value) {
       const ip = Array.isArray(value) ? value[0] : value;
       // Take first IP if comma-separated
-      return ip.split(',')[0]?.trim();
+      return ip?.split(',')[0]?.trim();
     }
   }
 
@@ -109,20 +111,28 @@ async function authenticateRequest(req: any): Promise<{
             select: {
               id: true,
               email: true,
-              firstName: true,
-              lastName: true,
+              name: true,
               role: true,
               isActive: true,
-              avatar: true,
+              image: true,
               phone: true,
               createdAt: true,
               updatedAt: true,
+              emailVerified: true,
+              password: true,
             },
           });
           
           if (user && user.isActive) {
             return {
-              user: user as UnifiedUserDTO,
+              user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: user.role,
+                emailVerified: !!user.emailVerified,
+                phoneVerified: false,
+              } as UnifiedUserDTO,
               authToken: token,
               authType: 'jwt',
             };
@@ -135,13 +145,44 @@ async function authenticateRequest(req: any): Promise<{
 
     // Try session auth (for web clients)
     try {
-      const sessionData = await getSessionFromRequest(req);
-      if (sessionData?.user) {
-        return {
-          user: sessionData.user,
-          sessionId: sessionData.sessionId,
-          authType: 'session',
-        };
+      const headers = Object.fromEntries(
+        Object.entries(req.headers).map(([key, value]) => [
+          key,
+          Array.isArray(value) ? value[0] : value
+        ])
+      );
+      const sessionData = await sessionService.getSessionFromHeaders(headers);
+      if (sessionData?.userId) {
+        const user = await prisma.user.findUnique({
+          where: { id: sessionData.userId },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            role: true,
+            isActive: true,
+            image: true,
+            phone: true,
+            createdAt: true,
+            updatedAt: true,
+            emailVerified: true,
+            password: true,
+          },
+        });
+        if (user && user.isActive) {
+          return {
+            user: {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              role: user.role,
+              emailVerified: !!user.emailVerified,
+              phoneVerified: false,
+            } as UnifiedUserDTO,
+            sessionId: sessionData.userId, // Note: SessionPayload doesn't have sessionId, using userId as fallback
+            authType: 'session',
+          };
+        }
       }
     } catch (sessionError) {
       console.warn('Session verification failed:', sessionError);
@@ -172,6 +213,8 @@ export async function createContext(opts: CreateNextContextOptions): Promise<Bas
     requestId,
     userAgent,
     ip,
+    req,
+    res,
     ...auth,
   };
 }
@@ -191,6 +234,8 @@ export async function createFastifyContext(opts: CreateFastifyContextOptions): P
     requestId,
     userAgent,
     ip,
+    req,
+    res,
   };
 }
 
@@ -209,6 +254,8 @@ export async function createNodeContext(opts: NodeHTTPCreateContextFnOptions<any
     requestId,
     userAgent,
     ip,
+    req,
+    res,
   };
 }
 
@@ -236,6 +283,7 @@ export function addUserToContext(ctx: BaseContext, user: UnifiedUserDTO, session
     user,
     userId: user.id,
     sessionId,
+    authType: ctx.authType || 'session',
   };
 }
 

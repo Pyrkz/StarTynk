@@ -41,6 +41,8 @@ model Session {
 model User {
   id                   String                @id @default(cuid())
   name                 String?
+  firstName            String?
+  lastName             String?
   email                String                @unique
   emailVerified        DateTime?
   image                String?
@@ -66,6 +68,7 @@ model User {
   materialOrders       MaterialOrder[]
   coordinatedProjects  Project[]             @relation("ProjectCoordinator")
   createdProjects      Project[]             @relation("ProjectCreator")
+  developedProjects    Project[]             @relation("ProjectDeveloper")
   qualityControls      QualityControl[]
   sessions             Session[]
   taskAssignments      TaskAssignment[]
@@ -151,6 +154,7 @@ model RefreshToken {
   loginMethod String   // "email" or "phone" 
   jti         String   @unique // JWT ID for tracking
   
+  @@unique([userId, deviceId])
   @@index([userId])
   @@index([deviceId])
   @@index([expiresAt])
@@ -179,6 +183,8 @@ model LoginAttempt {
 model Developer {
   id        String    @id @default(cuid())
   name      String
+  firstName String?
+  lastName  String?
   address   String?
   contact   String?
   email     String?
@@ -195,11 +201,14 @@ model Developer {
 model Project {
   id                 String               @id @default(cuid())
   name               String
+  title              String?
   address            String
   developerId        String
+  userDeveloperId    String?              // User who is developer
   startDate          DateTime
-  endDate            DateTime
+  endDate            DateTime?
   baseRate           Decimal              @db.Decimal(10, 2)
+  budget             Decimal?             @db.Decimal(10, 2)
   status             ProjectStatus        @default(PLANNING)
   description        String?              @db.Text
   createdById        String
@@ -214,6 +223,7 @@ model Project {
   coordinator        User?                @relation("ProjectCoordinator", fields: [coordinatorId], references: [id])
   createdBy          User                 @relation("ProjectCreator", fields: [createdById], references: [id])
   developer          Developer            @relation(fields: [developerId], references: [id])
+  userDeveloper      User?                @relation("ProjectDeveloper", fields: [userDeveloperId], references: [id])
   tasks              Task[]
   projectAssignments ProjectAssignment[]
   attendanceRecords  Attendance[]
@@ -222,6 +232,7 @@ model Project {
   @@index([coordinatorId], map: "projects_coordinatorId_fkey")
   @@index([createdById], map: "projects_createdById_fkey")
   @@index([developerId], map: "projects_developerId_fkey")
+  @@index([userDeveloperId], map: "projects_userDeveloperId_fkey")
   @@map("projects")
 }
 
@@ -998,6 +1009,8 @@ enum Role {
   MODERATOR
   COORDINATOR
   WORKER
+  DEVELOPER
+  PROJECT_MANAGER
 }
 
 enum ProjectStatus {
@@ -1140,6 +1153,8 @@ enum BonusType {
   RETENTION
   SAFETY
   QUALITY
+  ATTENDANCE
+  OTHER
 }
 
 enum DeductionType {

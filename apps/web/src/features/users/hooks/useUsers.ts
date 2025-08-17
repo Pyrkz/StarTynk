@@ -1,6 +1,6 @@
 'use client'
 
-import { useUsers as useSharedUsers, useUpdateUser, useDeleteUser } from '@repo/features/users'
+import { useUsers as useSharedUsers, useUpdateUser, useDeleteUser } from '@repo/features'
 import { UserFilters } from '@/features/users/types'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -30,26 +30,26 @@ export function useUsers(options: UseUsersOptions = {}) {
       role: initialFilters.role === 'ALL' ? undefined : initialFilters.role,
       isActive: initialFilters.isActive === 'ALL' ? undefined : initialFilters.isActive,
     },
-    pageSize: initialFilters.pageSize || 10,
+    pageSize: initialFilters.pageSize || 20,
   })
 
   // Use shared mutations
   const updateUserMutation = useUpdateUser()
   const deleteUserMutation = useDeleteUser()
 
-  // Auto fetch on mount if needed
+  // Auto fetch on mount if needed - only in client
   useEffect(() => {
-    if (autoFetch && !users.length && !loading) {
+    if (typeof window !== 'undefined' && autoFetch && !users.length && !loading) {
       fetchUsers()
     }
-  }, [autoFetch])
+  }, [autoFetch, users.length, loading, fetchUsers])
 
-  // Handle pagination changes from filters
+  // Handle initial page setup - only once on mount in client
   useEffect(() => {
-    if (initialFilters.page && initialFilters.page !== pagination.page) {
+    if (typeof window !== 'undefined' && initialFilters.page && initialFilters.page !== pagination.page) {
       pagination.goToPage(initialFilters.page)
     }
-  }, [initialFilters.page])
+  }, []) // Empty dependency array to run only once
 
   // Web-specific update user wrapper
   const updateUser = async (userId: string, data: any) => {
@@ -84,15 +84,31 @@ export function useUsers(options: UseUsersOptions = {}) {
       pageSize: pagination.pageSize,
     },
     setFilters: (newFilters: UserFilters) => {
-      setFilters({
-        search: newFilters.search,
-        role: newFilters.role === 'ALL' ? undefined : newFilters.role,
-        isActive: newFilters.isActive === 'ALL' ? undefined : newFilters.isActive,
-      })
-      if (newFilters.page) {
+      // Only update filters if they have changed
+      const normalizedRole = newFilters.role === 'ALL' ? undefined : newFilters.role
+      const normalizedIsActive = newFilters.isActive === 'ALL' ? undefined : newFilters.isActive
+      
+      // Check if filters actually changed
+      const filtersChanged = 
+        filters.search !== newFilters.search ||
+        filters.role !== normalizedRole ||
+        filters.isActive !== normalizedIsActive
+      
+      if (filtersChanged) {
+        setFilters({
+          search: newFilters.search,
+          role: normalizedRole,
+          isActive: normalizedIsActive,
+        })
+      }
+      
+      // Only update page if it changed
+      if (newFilters.page && newFilters.page !== pagination.page) {
         pagination.goToPage(newFilters.page)
       }
-      if (newFilters.pageSize) {
+      
+      // Only update pageSize if it changed
+      if (newFilters.pageSize && newFilters.pageSize !== pagination.pageSize) {
         pagination.changePageSize(newFilters.pageSize)
       }
     },

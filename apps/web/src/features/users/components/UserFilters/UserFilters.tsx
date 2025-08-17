@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { UserFilters as UserFiltersType } from '@/features/users/types'
-import { Role } from '@repo/database'
+import { Role } from '@repo/database/client-types'
 import { SearchInput } from './SearchInput'
 import { FilterSelect } from './FilterSelect'
 import { SortSelect } from './SortSelect'

@@ -1,8 +1,8 @@
 import { TaskStatus, TaskPriority } from '../../enums';
-import { QualityControlDTO } from './quality-control.dto';
-import { PaymentCalculationDTO } from './payment.dto';
-import { PhotoDTO } from './photo.dto';
-import { CommentDTO } from './comment.dto';
+import type { QualityControlDTO } from './quality-control.dto';
+import type { PaymentCalculationDTO } from './payment.dto';
+import type { PhotoDTO } from './photo.dto';
+import type { CommentDTO } from './comment.dto';
 
 export interface TaskDTO {
   id: string;

@@ -44,6 +44,33 @@ export async function rotateRefreshToken(
 }
 
 /**
+ * Refresh access token using refresh token (wrapper for API compatibility)
+ */
+export async function refreshAccessToken(refreshToken: string): Promise<{
+  accessToken: string;
+  refreshToken: string;
+  expiresIn?: number;
+}> {
+  const securityContext = {
+    ip: '127.0.0.1', // Will be set by middleware in real usage
+    userAgent: 'API',
+    deviceId: 'api-refresh',
+  };
+
+  const result = await rotateRefreshToken(refreshToken, securityContext);
+  
+  if (!result.success || !result.accessToken || !result.refreshToken) {
+    throw new Error(result.error || 'Token refresh failed');
+  }
+
+  return {
+    accessToken: result.accessToken,
+    refreshToken: result.refreshToken,
+    expiresIn: result.expiresIn,
+  };
+}
+
+/**
  * Clean up expired refresh tokens
  */
 export async function cleanupExpiredTokens(): Promise<number> {
@@ -73,7 +100,7 @@ export async function cleanupOldDeviceTokens(
       deviceId,
     },
     orderBy: {
-      createdAt: 'desc'
+      issuedAt: 'desc'
     }
   });
   
@@ -179,11 +206,11 @@ export async function getUserActiveDevices(userId: string): Promise<Array<{
       deviceId: true,
       userAgent: true,
       ip: true,
-      createdAt: true,
+      issuedAt: true,
       loginMethod: true,
     },
     orderBy: {
-      createdAt: 'desc'
+      issuedAt: 'desc'
     }
   });
   
@@ -196,7 +223,7 @@ export async function getUserActiveDevices(userId: string): Promise<Array<{
         deviceId: token.deviceId,
         userAgent: token.userAgent,
         ip: token.ip,
-        lastUsed: token.createdAt,
+        lastUsed: token.issuedAt,
         loginMethod: token.loginMethod,
       });
     }

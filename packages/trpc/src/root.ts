@@ -1,5 +1,5 @@
 import { router, publicProcedure } from './server';
-import { authRouter, userRouter, projectRouter, taskRouter, vehicleRouter } from './routers';
+import { authRouter, userRouter, projectRouter, taskRouter, vehicleRouter, notificationRouter, syncRouter } from './routers';
 import { healthCheckMiddleware } from './middleware/performance';
 
 /**
@@ -32,6 +32,8 @@ export const appRouter = router({
   project: projectRouter,
   task: taskRouter,
   vehicle: vehicleRouter,
+  notification: notificationRouter,
+  sync: syncRouter,
 });
 
 /**

@@ -1,5 +1,5 @@
 import { prisma } from '@repo/database';
-import { Logger } from '@repo/utils/logger';
+import { Logger } from '@repo/utils';
 import { PushNotificationService } from './push.service';
 import * as cron from 'node-cron';
 

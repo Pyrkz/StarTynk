@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createAPIClient } from '@repo/api';
-import { useAuth } from '../../auth/hooks/useAuth';
+import { createWebAPIClient } from '@repo/api';
+import { useAuth } from '../../auth/hooks/useAuth.shared';
 import type { RequestConfig } from '@repo/api';
 
 /**
@@ -13,7 +13,7 @@ export function useApiQuery<T = any>(
   options?: any
 ) {
   const { authService, isAuthenticated } = useAuth();
-  const apiClient = createAPIClient(undefined, authService);
+  const apiClient = createWebAPIClient(undefined, authService as any);
 
   return useQuery({
     queryKey,
@@ -52,7 +52,7 @@ export function useUser() {
 
 export function useUserUpdate() {
   const { authService } = useAuth();
-  const apiClient = createAPIClient(undefined, authService);
+  const apiClient = createWebAPIClient(undefined, authService as any);
 
   return useApiMutation(
     async (userData: any) => apiClient.patch('/users/profile', userData),

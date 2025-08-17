@@ -1,8 +1,10 @@
-import { User, PrismaClient } from '@repo/database';
-import { CreateUserDTO, UpdateUserDTO } from '@repo/shared/types';
-import { BaseRepository, FindManyOptions } from '../base';
-import { IUserRepository } from './user.repository.interface';
-import { Logger } from '@repo/utils/logger';
+import { PrismaClient } from '@repo/database';
+import type { User } from '@repo/database';
+import type { CreateUserDTO, UpdateUserDTO } from '@repo/shared';
+import { BaseRepository } from '../base';
+import type { FindManyOptions } from '../base';
+import type { IUserRepository } from './user.repository.interface';
+import { Logger } from '@repo/utils';
 import { RepositoryError, NotFoundError, DuplicateError } from '../../errors';
 
 export class UserRepository extends BaseRepository<User, CreateUserDTO, UpdateUserDTO> 
@@ -29,7 +31,7 @@ export class UserRepository extends BaseRepository<User, CreateUserDTO, UpdateUs
   async findByPhone(phone: string): Promise<User | null> {
     try {
       this.logger.debug(`Finding user by phone: ${phone}`);
-      return await this.prisma.user.findUnique({
+      return await this.prisma.user.findFirst({
         where: { phone }
       });
     } catch (error) {
@@ -225,7 +227,7 @@ export class UserRepository extends BaseRepository<User, CreateUserDTO, UpdateUs
         }
 
         if (userData.phone) {
-          const existing = await tx.user.findUnique({
+          const existing = await tx.user.findFirst({
             where: { phone: userData.phone }
           });
           if (existing) {
@@ -233,7 +235,13 @@ export class UserRepository extends BaseRepository<User, CreateUserDTO, UpdateUs
           }
         }
 
-        const user = await tx.user.create({ data: userData });
+        // Convert string dates to Date objects for database
+        const userData_converted = {
+          ...userData,
+          employmentStartDate: userData.employmentStartDate ? new Date(userData.employmentStartDate) : undefined,
+          employmentEndDate: userData.employmentEndDate ? new Date(userData.employmentEndDate) : undefined
+        };
+        const user = await tx.user.create({ data: userData_converted });
         createdUsers.push(user);
       }
       return createdUsers;
@@ -342,7 +350,13 @@ export class UserRepository extends BaseRepository<User, CreateUserDTO, UpdateUs
       }
     }
 
-    return super.create(data);
+    // Convert string dates to Date objects for database
+    const dataConverted = {
+      ...data,
+      employmentStartDate: data.employmentStartDate ? new Date(data.employmentStartDate) : undefined,
+      employmentEndDate: data.employmentEndDate ? new Date(data.employmentEndDate) : undefined
+    };
+    return super.create(dataConverted as any);
   }
 
   async update(id: string, data: UpdateUserDTO): Promise<User> {
@@ -361,6 +375,12 @@ export class UserRepository extends BaseRepository<User, CreateUserDTO, UpdateUs
       }
     }
 
-    return super.update(id, data);
+    // Convert string dates to Date objects for database
+    const dataConverted = {
+      ...data,
+      employmentStartDate: data.employmentStartDate ? new Date(data.employmentStartDate) : undefined,
+      employmentEndDate: data.employmentEndDate ? new Date(data.employmentEndDate) : undefined
+    };
+    return super.update(id, dataConverted as any);
   }
 }

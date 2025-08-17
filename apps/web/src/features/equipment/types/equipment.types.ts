@@ -6,7 +6,7 @@ import {
   EquipmentStatus,
   EquipmentHistoryAction,
   User 
-} from '@repo/database';
+} from '@repo/database/client-types';
 
 // ============== BASE TYPES ==============
 export interface EquipmentWithRelations {

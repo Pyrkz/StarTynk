@@ -1,4 +1,4 @@
-import { ProjectDTO, PaginatedResponse, ApiResponse } from '@repo/shared/types';
+import type { ProjectDTO, PaginatedResponse, ApiResponse } from '@repo/shared';
 import { tokenService } from '../../auth/services/token.service';
 
 interface ProjectsFilters {
@@ -11,7 +11,7 @@ interface ProjectsFilters {
   sortOrder?: 'asc' | 'desc';
 }
 
-interface CreateProjectData {
+export interface CreateProjectData {
   name: string;
   description?: string;
   status: string;
@@ -22,7 +22,7 @@ interface CreateProjectData {
   clientContact?: string;
 }
 
-interface UpdateProjectData extends Partial<CreateProjectData> {
+export interface UpdateProjectData extends Partial<CreateProjectData> {
   isActive?: boolean;
 }
 
@@ -35,7 +35,7 @@ class ProjectsService {
                    '/api/v1';
   }
 
-  async getProjects(filters: ProjectsFilters = {}): Promise<PaginatedResponse<ProjectDTO>> {
+  async getProjects(filters: ProjectsFilters = {}): Promise<{ items: ProjectDTO[]; total: number }> {
     const params = new URLSearchParams();
     
     Object.entries(filters).forEach(([key, value]) => {
@@ -53,13 +53,16 @@ class ProjectsService {
       throw new Error('Failed to fetch projects');
     }
 
-    const data: ApiResponse<PaginatedResponse<ProjectDTO>> = await response.json();
+    const data: PaginatedResponse<ProjectDTO> = await response.json();
     
     if (!data.success) {
-      throw new Error(data.error?.message || 'Failed to fetch projects');
+      throw new Error(data.message || 'Failed to fetch projects');
     }
 
-    return data.data;
+    return {
+      items: data.data,
+      total: data.pagination.total
+    };
   }
 
   async getProjectById(id: string): Promise<ProjectDTO> {
@@ -75,7 +78,7 @@ class ProjectsService {
     const data: ApiResponse<{ project: ProjectDTO }> = await response.json();
     
     if (!data.success) {
-      throw new Error(data.error?.message || 'Failed to fetch project');
+      throw new Error(data.message || 'Failed to fetch project');
     }
 
     return data.data.project;
@@ -99,7 +102,7 @@ class ProjectsService {
     const data: ApiResponse<{ project: ProjectDTO }> = await response.json();
     
     if (!data.success) {
-      throw new Error(data.error?.message || 'Failed to create project');
+      throw new Error(data.message || 'Failed to create project');
     }
 
     return data.data.project;
@@ -123,7 +126,7 @@ class ProjectsService {
     const data: ApiResponse<{ project: ProjectDTO }> = await response.json();
     
     if (!data.success) {
-      throw new Error(data.error?.message || 'Failed to update project');
+      throw new Error(data.message || 'Failed to update project');
     }
 
     return data.data.project;
@@ -143,7 +146,7 @@ class ProjectsService {
     const data: ApiResponse<void> = await response.json();
     
     if (!data.success) {
-      throw new Error(data.error?.message || 'Failed to delete project');
+      throw new Error(data.message || 'Failed to delete project');
     }
   }
 
@@ -165,7 +168,7 @@ class ProjectsService {
     const data: ApiResponse<void> = await response.json();
     
     if (!data.success) {
-      throw new Error(data.error?.message || 'Failed to assign user to project');
+      throw new Error(data.message || 'Failed to assign user to project');
     }
   }
 
@@ -183,7 +186,7 @@ class ProjectsService {
     const data: ApiResponse<void> = await response.json();
     
     if (!data.success) {
-      throw new Error(data.error?.message || 'Failed to remove user from project');
+      throw new Error(data.message || 'Failed to remove user from project');
     }
   }
 

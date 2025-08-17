@@ -1,50 +1,157 @@
-# Welcome to your Expo app 👋
+# StarTynk Mobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplikacja mobilna dla systemu zarządzania projektami budowlanymi.
 
-## Get started
+## 🚀 Uruchamianie aplikacji
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
+### Metoda 1: Uruchom backend i frontend jednocześnie
 ```bash
-npm run reset-project
+npm run dev
+```
+To uruchomi:
+- Backend na http://localhost:3000
+- Expo Metro Bundler na http://localhost:8081
+
+### Metoda 2: Uruchom osobno
+
+#### Backend:
+```bash
+cd backend
+npm run dev
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+#### Frontend (w nowym terminalu):
+```bash
+npm start
+# lub
+expo start
+```
 
-## Learn more
+## 📱 Uruchamianie na urządzeniu
 
-To learn more about developing your project with Expo, look at the following resources:
+Po uruchomieniu `npm run dev` lub `npm start`:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+1. **Na telefonie z iOS:**
+   - Zainstaluj aplikację Expo Go z App Store
+   - Zeskanuj kod QR wyświetlony w terminalu
 
-## Join the community
+2. **Na telefonie z Android:**
+   - Zainstaluj aplikację Expo Go z Google Play
+   - Zeskanuj kod QR wyświetlony w terminalu
 
-Join our community of developers creating universal apps.
+3. **W symulatorze iOS:**
+   - Naciśnij `i` w terminalu
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+4. **W emulatorze Android:**
+   - Naciśnij `a` w terminalu
+
+5. **W przeglądarce:**
+   - Naciśnij `w` w terminalu
+
+## 🔐 Testowe konta
+
+| Typ konta | Email | Telefon | Hasło |
+|-----------|-------|---------|-------|
+| Admin | admin@startynk.com | +48123456789 | password123 |
+| User | user@startynk.com | +48987654321 | password123 |
+| Manager | manager@startynk.com | +48555666777 | password123 |
+
+## 🛠️ Komendy
+
+```bash
+# Instalacja zależności
+npm install
+
+# Uruchomienie dev (backend + frontend)
+npm run dev
+
+# Tylko frontend
+npm start
+
+# Tylko backend
+npm run backend
+
+# Backend bezpośrednio
+cd backend && npm run dev
+
+# Seed bazy danych
+cd backend && npm run prisma:seed
+
+# Prisma Studio (podgląd bazy)
+cd backend && npm run prisma:studio
+```
+
+## 📋 Wymagania
+
+- Node.js 18+
+- npm lub yarn
+- Expo Go app na telefonie (dla testowania na urządzeniu)
+- Xcode (dla iOS simulator) - opcjonalnie
+- Android Studio (dla Android emulator) - opcjonalnie
+
+## ⚠️ Rozwiązywanie problemów
+
+### Ostrzeżenia o wersjach pakietów
+Możesz je zignorować lub zaktualizować:
+```bash
+npm update @react-native-async-storage/async-storage react-native-reanimated react-native-safe-area-context react-native-screens
+```
+
+### Problem z Watchman
+Jeśli widzisz ostrzeżenie o Watchman:
+```bash
+watchman watch-del '/Users/marcinpyrkosz/Desktop/Aplikacje/startynk-mobile/startynk-mobile'
+watchman watch-project '/Users/marcinpyrkosz/Desktop/Aplikacje/startynk-mobile/startynk-mobile'
+```
+
+### Backend nie łączy się z bazą
+Sprawdź plik `backend/.env` i upewnij się, że DATABASE_URL jest poprawny.
+
+### Aplikacja nie łączy się z backend
+
+1. **Sprawdź czy backend działa** - powinien być dostępny na http://localhost:3000
+
+2. **Konfiguracja automatyczna** - aplikacja automatycznie wybiera odpowiedni adres:
+   - iOS Simulator: `http://localhost:3000`
+   - Android Emulator: `http://10.0.2.2:3000`
+   - Fizyczne urządzenie: `http://192.168.1.31:3000` (twój lokalny IP)
+
+3. **Jeśli używasz fizycznego urządzenia:**
+   - Znajdź swój lokalny IP: `ifconfig | grep "inet " | grep -v 127.0.0.1`
+   - Zaktualizuj `src/config/api.config.ts` - zmień IP w linii 15
+   - Upewnij się, że telefon i komputer są w tej samej sieci WiFi
+   - Sprawdź czy firewall nie blokuje portu 3000
+
+4. **Restart aplikacji** - po zmianie konfiguracji zrestartuj Expo (Ctrl+C i `npm start`)
+
+## 🏗️ Struktura projektu
+
+### Frontend (React Native + Expo)
+```
+src/
+├── features/           # Funkcjonalności aplikacji (features-based)
+├── shared/            # Współdzielone komponenty i utils
+├── navigation/        # Konfiguracja nawigacji
+├── store/            # State management (Zustand)
+└── config/           # Konfiguracja aplikacji
+```
+
+### Backend (Fastify + Prisma)
+```
+backend/src/
+├── features/          # Funkcjonalności API (features-based)
+├── shared/           # Współdzielone middleware i utils
+├── config/           # Konfiguracja serwera
+└── server.ts         # Entry point
+```
+
+## 🛡️ Technologie
+
+- **React Native 0.79.5** + **Expo SDK 53**
+- **TypeScript** - type safety
+- **NativeWind** - Tailwind CSS dla React Native
+- **React Navigation v7** - nawigacja
+- **Zustand** - state management
+- **Fastify v5** - backend framework
+- **Prisma ORM** - baza danych MySQL
+- **JWT** - autoryzacja

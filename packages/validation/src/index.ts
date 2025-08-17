@@ -19,8 +19,8 @@ export * from './rate-limit';
 // Export middleware
 export * from './middleware';
 
-// Export mobile utilities
-export * from './mobile';
-
 // Export TRPC utilities
 export * from './trpc';
+
+// Note: Mobile utilities are exported separately via './mobile' subpath export
+// to prevent React Native dependencies from being included in web builds

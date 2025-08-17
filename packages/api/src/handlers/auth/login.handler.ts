@@ -2,17 +2,20 @@ import { prisma } from '@repo/database';
 import { authenticateRequest } from '@repo/auth';
 import { ApiResponse } from '../../responses';
 import { AuthError } from '../../errors';
-import { LoginInput } from '../../validators';
+import type { LoginInput } from '../../validators';
 import { logger } from '../../middleware';
 
 export async function loginHandler(input: LoginInput): Promise<Response> {
   try {
     // Validate credentials using auth package
-    const authResult = await authenticateRequest({
-      email: input.email,
-      phone: input.phone,
-      password: input.password,
-    });
+    const credentials: any = { password: input.password };
+    if (input.loginMethod === 'email' && input.email) {
+      credentials.email = input.email;
+    } else if (input.loginMethod === 'phone' && input.phone) {
+      credentials.phone = input.phone;
+    }
+    
+    const authResult = await authenticateRequest(credentials);
 
     if (!authResult.authenticated || !authResult.user) {
       logger.warn('Login attempt failed', {
@@ -26,35 +29,38 @@ export async function loginHandler(input: LoginInput): Promise<Response> {
 
     const user = authResult.user;
 
-    // Check if user is active
-    if (!user.isActive) {
-      logger.warn('Login blocked for inactive user', { userId: user.id });
+    // Get full user data from database to check if active
+    const dbUser = await prisma.user.findUnique({
+      where: { id: user.userId }
+    });
+
+    if (!dbUser || !dbUser.isActive) {
+      logger.warn('Login blocked for inactive user', { userId: user.userId });
       throw new AuthError('Account is inactive');
     }
 
     // Update last login
     await prisma.user.update({
-      where: { id: user.id },
+      where: { id: user.userId },
       data: { lastLoginAt: new Date() }
     });
 
     // Log successful login
     logger.info('User login successful', {
-      userId: user.id,
+      userId: user.userId,
       method: input.loginMethod
     });
 
     // Return user data with tokens (tokens are handled by auth package)
     const responseData = ApiResponse.success({
       user: {
-        id: user.id,
+        id: dbUser.id,
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        name: dbUser.name || '',
         role: user.role,
-        isActive: user.isActive
+        isActive: dbUser.isActive
       },
-      tokens: authResult.tokens
+      tokens: (authResult as any).accessToken ? { accessToken: (authResult as any).accessToken, refreshToken: (authResult as any).refreshToken } : undefined
     });
 
     return new Response(JSON.stringify(responseData), {

@@ -1,4 +1,4 @@
-import { ApiSuccessResponse, ApiErrorResponse } from '../responses';
+import type { ApiSuccessResponse, ApiErrorResponse } from '../responses';
 
 export type ApiResult<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
@@ -31,11 +31,5 @@ export interface PaginatedInput {
   limit: number;
 }
 
-export interface SearchInput {
-  search?: string;
-}
-
-export interface SortInput {
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-}
+// Import from validators to avoid duplication
+export type { SearchInput, SortInput } from '../validators/common.validators';

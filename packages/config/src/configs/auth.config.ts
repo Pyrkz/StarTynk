@@ -1,8 +1,8 @@
-import { EnvLoader } from '../env';
+import { getExtendedEnv } from '../env';
 import type { AuthConfig } from '../types';
 
 export function getAuthConfig(): AuthConfig {
-  const env = EnvLoader.get();
+  const env = getExtendedEnv();
   
   return {
     jwtSecret: env.JWT_SECRET,
@@ -17,7 +17,7 @@ export function getAuthConfig(): AuthConfig {
 
 export function getNextAuthConfig() {
   const authConfig = getAuthConfig();
-  const env = EnvLoader.get();
+  const env = getExtendedEnv();
   
   return {
     secret: authConfig.nextAuthSecret,
@@ -38,7 +38,7 @@ export function getNextAuthConfig() {
       verifyRequest: '/auth/verify',
     },
     callbacks: {
-      async jwt({ token, user, account }) {
+      async jwt({ token, user, account }: { token: any; user?: any; account?: any }) {
         if (account && user) {
           token.accessToken = account.access_token;
           token.refreshToken = account.refresh_token;
@@ -46,7 +46,7 @@ export function getNextAuthConfig() {
         }
         return token;
       },
-      async session({ session, token }) {
+      async session({ session, token }: { session: any; token: any }) {
         session.accessToken = token.accessToken as string;
         session.user = token.user as any;
         return session;

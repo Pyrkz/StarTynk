@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { healthCheck } from '@/lib/startup';
-import { ApiResponse, createSuccessResponse } from '@repo/api';
+import { ApiResponse, createSuccessResponse } from '@repo/api/web';
 
 export async function GET(request: NextRequest) {
   try {

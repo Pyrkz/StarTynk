@@ -69,7 +69,7 @@ import type {
   VehicleAssignment,
   VehicleMaintenance,
   VehicleReminder
-} from '@repo/database'
+} from '@repo/database/client-types'
 
 // Extended vehicle type for UI
 export type ExtendedVehicle = Vehicle & VehicleUIExtensions

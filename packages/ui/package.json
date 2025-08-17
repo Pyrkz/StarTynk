@@ -9,22 +9,22 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "npx tsup",
     "dev": "tsup --watch",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist node_modules .turbo"
   },
   "dependencies": {
-    "react": "^19.0.0"
+    "react": "^19.1.0"
   },
   "devDependencies": {
-    "@types/react": "^19",
+    "@types/react": "^19.1.10",
     "@types/node": "^20",
     "tsup": "^8.3.5",
     "typescript": "^5"
   },
   "peerDependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
   }
 }

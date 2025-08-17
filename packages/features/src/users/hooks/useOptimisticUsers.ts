@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useOptimisticMutation } from '../../hooks/useOptimisticMutation';
-import { UserDTO, CreateUserDTO, UpdateUserDTO } from '@repo/shared/types/dto/user';
+import type { UserDTO, CreateUserDTO, UpdateUserDTO } from '@repo/shared';
 
 // Mock API - replace with actual API client
 const api = {
@@ -49,12 +49,13 @@ export function useCreateUser() {
     onOptimisticUpdate: (variables) => ({
       id: `temp-${Date.now()}`,
       email: variables.email,
-      firstName: variables.firstName,
-      lastName: variables.lastName,
-      role: variables.role,
+      name: variables.name,
+      role: variables.role || 'USER',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       isActive: true,
+      emailVerified: false,
+      phoneVerified: false,
       _optimistic: true, // Flag to identify optimistic updates
     } as UserDTO & { _optimistic: boolean }),
     relatedQueries: [['users']],

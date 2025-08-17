@@ -4,7 +4,7 @@ import { Role } from '../../enums';
  * Create user DTO
  */
 export interface CreateUserDTO {
-  email?: string;
+  email: string;
   phone?: string;
   password: string;
   name?: string;
@@ -12,6 +12,7 @@ export interface CreateUserDTO {
   position?: string;
   department?: string;
   employmentStartDate?: string;
+  employmentEndDate?: string;
   sendInvitation?: boolean;
 }
 

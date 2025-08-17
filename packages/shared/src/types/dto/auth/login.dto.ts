@@ -1,5 +1,5 @@
 import { LoginMethod, ClientType } from '../../enums';
-import { UserDTO } from '../user';
+import type { UserDTO } from '../user';
 
 /**
  * Login request DTO
@@ -11,6 +11,18 @@ export interface LoginRequestDTO {
   clientType?: ClientType;
   deviceId?: string;
   rememberMe?: boolean;
+}
+
+/**
+ * Login request type with required rememberMe for service consistency
+ */
+export interface LoginRequestDTOWithDefaults {
+  identifier: string;
+  password: string;
+  loginMethod?: LoginMethod;
+  clientType?: ClientType;
+  deviceId?: string;
+  rememberMe: boolean;
 }
 
 /**

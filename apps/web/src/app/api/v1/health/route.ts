@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { ApiResponse } from '@repo/shared/utils';
+import { ApiResponse } from '@/lib/api/api-response';
 import { prisma } from '@repo/database';
 
 export async function GET(request: NextRequest) {
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       version: 'v1',
     });
   } catch (error) {
-    return ApiResponse.error('Service unhealthy', 503, 'SERVICE_UNAVAILABLE', {
+    return ApiResponse.error('Service unhealthy', 503, {
       database: 'disconnected',
     });
   }

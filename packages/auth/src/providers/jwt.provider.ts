@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import type { AuthResult, AuthProvider } from '../types';
+import type { AuthResult, AuthProvider, LoginDto, RefreshTokenResponse } from '../types';
 import { 
   extractBearerTokenFromRequest,
   getUserFromAccessToken,
@@ -21,9 +21,9 @@ export class JWTAuthProvider implements AuthProvider {
       
       if (!token) {
         return {
-          authenticated: false,
-          user: null,
-          error: 'No Bearer token provided'
+          success: false,
+          user: undefined,
+          error: { code: 'NO_TOKEN', message: 'No Bearer token provided' }
         };
       }
       
@@ -32,9 +32,9 @@ export class JWTAuthProvider implements AuthProvider {
       
       if (!user) {
         return {
-          authenticated: false,
-          user: null,
-          error: 'Invalid or expired token'
+          success: false,
+          user: undefined,
+          error: { code: 'INVALID_TOKEN', message: 'Invalid or expired token' }
         };
       }
       
@@ -53,15 +53,15 @@ export class JWTAuthProvider implements AuthProvider {
       );
       
       return {
-        authenticated: true,
+        success: true,
         user,
-        clientType: 'mobile'
+        message: 'Authentication successful'
       };
     } catch (error) {
       return {
-        authenticated: false,
-        user: null,
-        error: error instanceof Error ? error.message : 'Authentication failed'
+        success: false,
+        user: undefined,
+        error: { code: 'AUTH_ERROR', message: error instanceof Error ? error.message : 'Authentication failed' }
       };
     }
   }
@@ -79,5 +79,48 @@ export class JWTAuthProvider implements AuthProvider {
   async clearSession(request: NextRequest): Promise<void> {
     // Token invalidation is handled by the refresh service
     // This is a no-op as tokens are stateless
+  }
+
+  /**
+   * Login method for JWT provider
+   */
+  async login(credentials: LoginDto): Promise<AuthResult> {
+    // This method would typically be implemented in a separate auth service
+    // For now, return error as this provider is for authentication, not login
+    return {
+      success: false,
+      error: { code: 'NOT_IMPLEMENTED', message: 'Login not implemented in JWT provider' }
+    };
+  }
+
+  /**
+   * Logout method for JWT provider
+   */
+  async logout(): Promise<void> {
+    // Token invalidation is handled by the refresh service
+    // This is a no-op as tokens are stateless
+  }
+
+  /**
+   * Refresh token method
+   */
+  async refresh(refreshToken: string): Promise<RefreshTokenResponse> {
+    // This would typically call the token refresh service
+    return {
+      success: false,
+      error: 'Refresh not implemented in JWT provider'
+    };
+  }
+
+  /**
+   * Validate token method
+   */
+  async validateToken(token: string): Promise<boolean> {
+    try {
+      const user = await getUserFromAccessToken(token);
+      return !!user;
+    } catch {
+      return false;
+    }
   }
 }

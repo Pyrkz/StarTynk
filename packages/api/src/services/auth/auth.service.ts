@@ -1,11 +1,18 @@
 import { prisma } from '@repo/database';
 import {
-  UnifiedLoginSchema,
-  RegisterSchema,
-  RefreshTokenSchema,
+  loginSchema,
+  registerSchema,
+  refreshTokenSchema,
   emailValidator,
   phoneValidator,
-} from '@repo/shared/validators';
+} from '@repo/validation';
+import type { 
+  AuthResponse, 
+  AuthTokenPayload, 
+  AuthTokensDTO as AuthTokens, 
+  TokenPayloadDTO as JwtPayload, 
+  TokenPayloadDTO as RefreshTokenPayload 
+} from '@repo/shared/types';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import {
@@ -28,10 +35,32 @@ export class AuthService {
   private readonly REFRESH_TOKEN_EXPIRES_IN = '7d';
 
   async login(data: unknown): Promise<AuthResponse> {
-    const validated = UnifiedLoginSchema.parse(data);
+    const validated = loginSchema.parse(data);
+
+    // Handle different login methods
+    let user: any;
+    let identifier: string;
+    let password: string | null = null;
+
+    switch (validated.method) {
+      case 'email':
+        identifier = validated.email;
+        password = validated.password;
+        break;
+      case 'phone':
+        identifier = validated.phone;
+        password = validated.password;
+        break;
+      case 'biometric':
+        // For biometric, we need to verify the biometric token
+        // This is a placeholder - implement actual biometric verification
+        throw new UnauthorizedError('Biometric login not yet implemented');
+      default:
+        throw new UnauthorizedError('Invalid login method');
+    }
 
     // Find user by email or phone
-    const user = await this.findUserByIdentifier(validated.identifier);
+    user = await this.findUserByIdentifier(identifier);
     if (!user) {
       throw new UnauthorizedError('Invalid credentials');
     }
@@ -41,26 +70,25 @@ export class AuthService {
       throw new ForbiddenError('Account is deactivated');
     }
 
-    // Verify password
-    const validPassword = await bcrypt.compare(
-      validated.password,
-      user.password
-    );
-    if (!validPassword) {
-      throw new UnauthorizedError('Invalid credentials');
+    // Verify password (skip for biometric)
+    if (password && user.password) {
+      const validPassword = await bcrypt.compare(password, user.password);
+      if (!validPassword) {
+        throw new UnauthorizedError('Invalid credentials');
+      }
     }
 
     // Update last login
     await prisma.user.update({
       where: { id: user.id },
-      data: { lastLogin: new Date() },
+      data: { lastLoginAt: new Date() },
     });
 
     // Generate tokens
     const tokens = this.generateTokens(user, validated.deviceId);
 
-    // Store refresh token if mobile client
-    if (validated.clientType === 'mobile' && validated.deviceId) {
+    // Store refresh token for mobile clients with deviceId
+    if (validated.deviceId && typeof validated.deviceId === 'string' && tokens.refreshToken) {
       await this.storeRefreshToken(
         user.id,
         tokens.refreshToken,
@@ -72,7 +100,7 @@ export class AuthService {
   }
 
   async register(data: unknown): Promise<AuthResponse> {
-    const validated = RegisterSchema.parse(data);
+    const validated = registerSchema.parse(data);
 
     // Check if user already exists
     const existingUser = await prisma.user.findFirst({
@@ -99,11 +127,9 @@ export class AuthService {
         email: validated.email,
         phone: validated.phone,
         password: hashedPassword,
-        firstName: validated.firstName,
-        lastName: validated.lastName,
+        name: validated.name,
         role: validated.role,
         isActive: true,
-        isVerified: false,
       },
     });
 
@@ -114,9 +140,13 @@ export class AuthService {
   }
 
   async refreshToken(data: unknown): Promise<AuthTokens> {
-    const validated = RefreshTokenSchema.parse(data);
+    const validated = refreshTokenSchema.parse(data);
 
     try {
+      if (!this.JWT_SECRET || this.JWT_SECRET === 'your-secret-key') {
+        throw new Error('JWT_SECRET not properly configured');
+      }
+      
       // Verify refresh token
       const payload = jwt.verify(
         validated.refreshToken,
@@ -152,7 +182,7 @@ export class AuthService {
       const newTokens = this.generateTokens(user, validated.deviceId);
 
       // Update stored refresh token (for mobile clients)
-      if (validated.deviceId) {
+      if (validated.deviceId && newTokens.refreshToken) {
         await prisma.refreshToken.updateMany({
           where: {
             token: validated.refreshToken,
@@ -194,6 +224,9 @@ export class AuthService {
 
   async verifyToken(token: string): Promise<JwtPayload> {
     try {
+      if (!this.JWT_SECRET || this.JWT_SECRET === 'your-secret-key') {
+        throw new Error('JWT_SECRET not properly configured');
+      }
       const payload = jwt.verify(token, this.JWT_SECRET) as JwtPayload;
       return payload;
     } catch (error) {
@@ -229,7 +262,11 @@ export class AuthService {
     });
   }
 
-  private generateTokens(user: any, deviceId?: string): AuthTokens {
+  private generateTokens(user: any, deviceId?: string): AuthTokens & { refreshToken: string } {
+    if (!this.JWT_SECRET || this.JWT_SECRET === 'your-secret-key') {
+      throw new Error('JWT_SECRET not properly configured');
+    }
+
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
@@ -264,40 +301,54 @@ export class AuthService {
   ): Promise<void> {
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
-    await prisma.refreshToken.upsert({
+    // First try to find existing token
+    const existingToken = await prisma.refreshToken.findFirst({
       where: {
-        userId_deviceId: {
-          userId,
-          deviceId,
-        },
-      },
-      update: {
-        token,
-        expiresAt,
-      },
-      create: {
         userId,
-        token,
         deviceId,
-        expiresAt,
       },
     });
+
+    if (existingToken) {
+      // Update existing token
+      await prisma.refreshToken.update({
+        where: { id: existingToken.id },
+        data: {
+          token,
+          expiresAt,
+          issuedAt: new Date(),
+        },
+      });
+    } else {
+      // Create new token
+      await prisma.refreshToken.create({
+        data: {
+          userId,
+          token,
+          deviceId,
+          expiresAt,
+          loginMethod: 'email', // Default login method
+          jti: `${userId}-${deviceId}-${Date.now()}`, // Generate JTI
+        },
+      });
+    }
   }
 
   private buildAuthResponse(user: any, tokens: AuthTokens): AuthResponse {
     return {
+      success: true,
       user: {
         id: user.id,
         email: user.email,
         phone: user.phone,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        name: user.name,
         role: user.role,
-        isActive: user.isActive,
-        isVerified: user.isVerified,
-        profilePicture: user.profilePicture,
+        emailVerified: user.emailVerified ? true : false,
+        phoneVerified: false, // Default value since we don't have phone verification yet
       },
-      tokens,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      expiresIn: tokens.expiresIn,
     };
   }
 }

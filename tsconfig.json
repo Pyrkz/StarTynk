@@ -14,7 +14,9 @@
       "@repo/shared": ["./packages/shared/src"],
       "@repo/shared/*": ["./packages/shared/src/*"],
       "@repo/ui": ["./packages/ui/src"],
-      "@repo/ui/*": ["./packages/ui/src/*"]
+      "@repo/ui/*": ["./packages/ui/src/*"],
+      "@repo/api": ["./packages/api/src"],
+      "@repo/api/*": ["./packages/api/src/*"]
     }
   },
   "exclude": ["node_modules"]

@@ -1,5 +1,5 @@
 import { User } from '@repo/database';
-import { CreateUserDTO, UpdateUserDTO } from '@repo/shared/types';
+import { CreateUserDTO, UpdateUserDTO } from '@repo/shared';
 import { IRepository, FindManyOptions } from '../base';
 
 export interface IUserRepository extends IRepository<User, CreateUserDTO, UpdateUserDTO> {

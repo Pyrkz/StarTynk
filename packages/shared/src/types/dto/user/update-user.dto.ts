@@ -4,6 +4,7 @@ import { Role } from '../../enums';
  * Update user DTO
  */
 export interface UpdateUserDTO {
+  email?: string | null;
   name?: string;
   role?: Role;
   phone?: string | null;
@@ -13,6 +14,7 @@ export interface UpdateUserDTO {
   employmentEndDate?: string | null;
   isActive?: boolean;
   image?: string | null;
+  password?: string;
 }
 
 /**

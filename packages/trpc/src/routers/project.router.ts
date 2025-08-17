@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { router, protectedProcedure } from '../trpc';
+import { router, protectedProcedure } from '../server';
 import { 
   authMiddleware, 
   requireCoordinatorOrAbove,
@@ -104,8 +104,7 @@ export const projectRouter = router({
         endDateTo,
         page, 
         limit, 
-        sortBy = 'name', 
-        sortOrder 
+        sort = { field: 'name', order: 'asc' } 
       } = input;
 
       try {
@@ -192,7 +191,7 @@ export const projectRouter = router({
               },
             },
           },
-          orderBy: { [sortBy]: sortOrder },
+          orderBy: { [sort.field]: sort.order },
           skip: (page - 1) * limit,
           take: limit,
         });

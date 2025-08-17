@@ -1,12 +1,12 @@
 import type { 
-  LoginRequest, 
+  UnifiedLoginRequest as LoginRequest, 
   UnifiedAuthResponse, 
-  UnifiedUser, 
-  RegisterRequest,
-  RefreshTokenRequest 
-} from '@repo/shared/types';
-import { authStorage } from '@repo/shared/storage';
-import type { UnifiedStorage } from '@repo/shared/storage';
+  UnifiedUserDTO as UnifiedUser, 
+  UnifiedRegisterRequest as RegisterRequest,
+  RefreshTokenRequest,
+  UnifiedStorage
+} from '@repo/shared';
+import { authStorage } from '@repo/shared';
 
 /**
  * Platform detection utility
@@ -79,8 +79,10 @@ export class UnifiedAuthService {
         // Handle remember me
         if (data.rememberMe) {
           await this.storage.setBoolean('rememberMe', true);
-          await this.storage.setItem('savedIdentifier', data.identifier);
-          await this.storage.setItem('loginMethod', data.loginMethod);
+          await this.storage.setItem('savedIdentifier', data.identifier || '');
+          if (data.loginMethod) {
+            await this.storage.setItem('loginMethod', data.loginMethod);
+          }
         }
       }
 

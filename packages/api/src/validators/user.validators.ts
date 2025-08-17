@@ -6,7 +6,7 @@ export const createUserSchema = z.object({
   phone: phoneSchema.optional(),
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
-  role: z.enum(['ADMIN', 'PROJECT_MANAGER', 'DEVELOPER', 'COORDINATOR']),
+  role: z.enum(['USER', 'ADMIN', 'MODERATOR', 'COORDINATOR', 'WORKER', 'DEVELOPER', 'PROJECT_MANAGER']),
   password: z.string()
     .min(8, 'Password must be at least 8 characters')
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain uppercase, lowercase, and number'),
@@ -18,12 +18,12 @@ export const updateUserSchema = z.object({
   phone: phoneSchema.optional(),
   firstName: z.string().min(1).optional(),
   lastName: z.string().min(1).optional(),
-  role: z.enum(['ADMIN', 'PROJECT_MANAGER', 'DEVELOPER', 'COORDINATOR']).optional(),
+  role: z.enum(['USER', 'ADMIN', 'MODERATOR', 'COORDINATOR', 'WORKER', 'DEVELOPER', 'PROJECT_MANAGER']).optional(),
   isActive: z.boolean().optional(),
 });
 
 export const listUsersSchema = paginationSchema.merge(searchSchema).merge(sortSchema).merge(z.object({
-  role: z.enum(['ADMIN', 'PROJECT_MANAGER', 'DEVELOPER', 'COORDINATOR']).optional(),
+  role: z.enum(['USER', 'ADMIN', 'MODERATOR', 'COORDINATOR', 'WORKER', 'DEVELOPER', 'PROJECT_MANAGER']).optional(),
   isActive: z.coerce.boolean().optional(),
 }));
 

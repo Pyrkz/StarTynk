@@ -68,6 +68,27 @@ export interface TaskCompletedEvent extends BaseEvent {
   completionRate: number;
 }
 
+// Payroll Events
+export interface PayrollCreatedEvent extends BaseEvent {
+  payrollId: string;
+  userId: string;
+  projectId: string;
+  amount: number;
+  timestamp: Date;
+}
+
+export interface PayrollUpdatedEvent extends BaseEvent {
+  payrollId: string;
+  changes: Record<string, any>;
+  timestamp: Date;
+}
+
+export interface PayrollStatusChangedEvent extends BaseEvent {
+  payrollId: string;
+  status: string;
+  timestamp: Date;
+}
+
 // System Events
 export interface ErrorEvent extends BaseEvent {
   error: Error;
@@ -95,6 +116,9 @@ export type EventMap = {
   'task.created': TaskCreatedEvent;
   'task.status.changed': TaskStatusChangedEvent;
   'task.completed': TaskCompletedEvent;
+  'payroll.created': PayrollCreatedEvent;
+  'payroll.updated': PayrollUpdatedEvent;
+  'payroll.status_changed': PayrollStatusChangedEvent;
   'system.error': ErrorEvent;
   'system.audit': AuditEvent;
 };

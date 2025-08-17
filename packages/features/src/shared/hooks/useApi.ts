@@ -1,6 +1,8 @@
-import { useQuery, useMutation, UseQueryOptions, UseMutationOptions } from '@tanstack/react-query';
-import axios, { AxiosRequestConfig, AxiosError } from 'axios';
-import { ApiResponse } from '@repo/shared/types';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import type { UseQueryOptions, UseMutationOptions } from '@tanstack/react-query';
+import axios from 'axios';
+import type { AxiosRequestConfig, AxiosError } from 'axios';
+import type { ApiResponse } from '@repo/shared/types';
 
 interface UseApiOptions<TData = unknown> extends Omit<UseQueryOptions<TData, AxiosError>, 'queryKey' | 'queryFn'> {
   url: string;
@@ -31,7 +33,7 @@ export function useApi<TData = unknown>(
         return response.data.data;
       }
       
-      throw new Error(response.data.error?.message || 'Request failed');
+      throw new Error(response.data.message || 'Request failed');
     },
     ...queryOptions,
   });
@@ -63,7 +65,7 @@ export function useApiMutation<TData = unknown, TVariables = unknown>(
         return response.data.data;
       }
       
-      throw new Error(response.data.error?.message || 'Request failed');
+      throw new Error(response.data.message || 'Request failed');
     },
     ...mutationOptions,
   });

@@ -26,7 +26,7 @@ function extractSessionToken(cookieHeader?: string): string | null {
     
   if (!sessionCookie) return null;
   
-  return sessionCookie.split('=')[1];
+  return sessionCookie.split('=')[1] || null;
 }
 
 /**
@@ -249,7 +249,7 @@ export const requireCoordinatorOrAbove = requireRole([Role.ADMIN, Role.MODERATOR
 /**
  * Validation middleware for request input
  */
-export const validationMiddleware = middleware(async ({ ctx, next, rawInput, path }) => {
+export const validationMiddleware = middleware(async ({ ctx, next, path }) => {
   try {
     return next({ ctx });
   } catch (error) {

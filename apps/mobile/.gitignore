@@ -31,15 +31,7 @@ yarn-error.*
 *.pem
 
 # local env files
-.env
 .env*.local
-
-# Environment configuration files (keep .env.example)
-.env.development
-.env.staging
-.env.production
 
 # typescript
 *.tsbuildinfo
-
-app-example

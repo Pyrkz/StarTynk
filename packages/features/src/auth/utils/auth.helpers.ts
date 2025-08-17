@@ -1,12 +1,16 @@
-import { UserRole } from '@repo/shared/types';
+import { Role } from '@repo/shared';
 
-export const roleLabels: Record<UserRole, string> = {
+export const roleLabels: Record<Role, string> = {
+  USER: 'Użytkownik',
   ADMIN: 'Administrator',
+  MODERATOR: 'Moderator',
   COORDINATOR: 'Koordynator',
-  EMPLOYEE: 'Pracownik',
+  WORKER: 'Pracownik',
+  DEVELOPER: 'Deweloper',
+  PROJECT_MANAGER: 'Kierownik Projektu',
 };
 
-export function getRoleLabel(role: UserRole): string {
+export function getRoleLabel(role: Role): string {
   return roleLabels[role] || role;
 }
 

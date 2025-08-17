@@ -1,5 +1,6 @@
 // Export the main app router and its type
-export { appRouter, type AppRouter } from './root';
+export { appRouter } from './root';
+export type { AppRouter } from './root';
 
 // Export server configuration
 export * from './server';
@@ -28,6 +29,8 @@ export {
   projectRouter,
   taskRouter,
   vehicleRouter,
+  notificationRouter,
+  syncRouter,
 } from './routers';
 
 // Export all middleware
@@ -37,6 +40,12 @@ export * from './middleware';
 export type { TRPCError } from '@trpc/server';
 export type { 
   inferRouterInputs, 
-  inferRouterOutputs,
-  CreateTRPCReact 
-} from '@trpc/react-query';
+  inferRouterOutputs
+} from '@trpc/server';
+
+// Type inference helpers
+import type { AppRouter } from './root';
+import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
+
+export type RouterInputs = inferRouterInputs<AppRouter>;
+export type RouterOutputs = inferRouterOutputs<AppRouter>;

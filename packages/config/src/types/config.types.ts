@@ -1,4 +1,4 @@
-export type Environment = 'development' | 'staging' | 'production' | 'test';
+import type { Environment } from '../env/env.schema';
 
 export interface BaseConfig {
   environment: Environment;

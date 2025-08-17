@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { authenticateToken, hasRequiredRole, type AuthUser } from '@/lib/auth/middleware';
 import { ApiResponse } from './response';
 import { handleApiError } from './error-handler';
-import { Role } from '@shared/types';
+import { Role } from '@repo/shared';
 
 export type RouteContext = {
   params: Record<string, string>;

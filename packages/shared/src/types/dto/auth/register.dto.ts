@@ -1,5 +1,5 @@
 import { Role, LoginMethod } from '../../enums';
-import { UserDTO } from '../user';
+import type { UserDTO } from '../user';
 
 /**
  * Registration request DTO

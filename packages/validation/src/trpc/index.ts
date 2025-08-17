@@ -260,7 +260,7 @@ export function createTRPCRateLimitMiddleware(
     try {
       await rateLimiter.consume(key, 1, configName);
       return opts.next();
-    } catch (error) {
+    } catch (error: any) {
       if (error.retryAfter) {
         throw new TRPCError({
           code: 'TOO_MANY_REQUESTS',

@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { router, protectedProcedure } from '../trpc';
+import { router, protectedProcedure } from '../server';
 import { 
   authMiddleware, 
   requireCoordinatorOrAbove,
@@ -118,8 +118,7 @@ export const taskRouter = router({
         createdBefore,
         page, 
         limit, 
-        sortBy = 'createdAt', 
-        sortOrder 
+        sort = { field: 'createdAt', order: 'asc' } 
       } = input;
 
       try {
@@ -223,7 +222,7 @@ export const taskRouter = router({
               },
             },
           },
-          orderBy: { [sortBy]: sortOrder },
+          orderBy: { [sort.field]: sort.order },
           skip: (page - 1) * limit,
           take: limit,
         });
@@ -503,7 +502,7 @@ export const taskRouter = router({
 
         // Check permissions - coordinators/admins can update any task, workers can only update assigned tasks
         const isAssigned = existingTask.assignments.length > 0;
-        const canUpdate = [Role.COORDINATOR, Role.MODERATOR, Role.ADMIN].includes(ctx.user.role as Role) || isAssigned;
+        const canUpdate = ['COORDINATOR', 'MODERATOR', 'ADMIN'].includes(ctx.user.role) || isAssigned;
 
         if (!canUpdate) {
           throw new TRPCError({
@@ -841,8 +840,8 @@ export const taskRouter = router({
           });
         }
 
-        // Calculate payment amount
-        const amount = (task.area * task.rate * completionRate) / 100;
+        // Calculate payment amount (convert Decimal to number for calculation)
+        const amount = (Number(task.area) * Number(task.rate) * completionRate) / 100;
 
         // Create payment calculation
         const payment = await ctx.prisma.paymentCalculation.create({
@@ -1040,8 +1039,8 @@ export const taskRouter = router({
               count: paidStats._count,
             },
             pending: {
-              amount: (paymentStats._sum.amount || 0) - (paidStats._sum.amount || 0),
-              count: paymentStats._count - paidStats._count,
+              amount: Number(paymentStats._sum.amount || 0) - Number(paidStats._sum.amount || 0),
+              count: Number(paymentStats._count) - Number(paidStats._count),
             },
           },
         };

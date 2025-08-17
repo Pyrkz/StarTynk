@@ -1,7 +1,7 @@
 import { prisma } from '@repo/database';
 import { ApiResponse } from '../../responses';
 import { ProjectNotFoundError } from '../../errors';
-import { GetProjectInput } from '../../validators';
+import type { GetProjectInput } from '../../validators';
 import { logger } from '../../middleware';
 
 export async function getProjectHandler(input: GetProjectInput): Promise<Response> {
@@ -14,8 +14,7 @@ export async function getProjectHandler(input: GetProjectInput): Promise<Respons
         developer: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
+            name: true,
             email: true,
             phone: true
           }
@@ -23,29 +22,26 @@ export async function getProjectHandler(input: GetProjectInput): Promise<Respons
         coordinator: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
+            name: true,
             email: true,
             phone: true
           }
         },
-        employees: {
+        projectAssignments: {
           select: {
             id: true,
             user: {
               select: {
                 id: true,
-                firstName: true,
-                lastName: true,
+                name: true,
                 email: true,
                 role: true
               }
             },
             role: true,
-            hourlyRate: true,
-            joinedAt: true
+            assignedDate: true
           },
-          orderBy: { joinedAt: 'desc' }
+          orderBy: { assignedDate: 'desc' }
         },
         tasks: {
           select: {
@@ -54,35 +50,47 @@ export async function getProjectHandler(input: GetProjectInput): Promise<Respons
             status: true,
             priority: true,
             dueDate: true,
-            assignedTo: {
+            assignments: {
               select: {
-                id: true,
-                firstName: true,
-                lastName: true
+                user: {
+                  select: {
+                    id: true,
+                    name: true
+                  }
+                }
               }
             }
           },
           orderBy: { createdAt: 'desc' },
           take: 10
         },
-        materials: {
+        materialOrders: {
           select: {
             id: true,
-            name: true,
-            quantity: true,
-            unit: true,
-            unitPrice: true,
-            totalPrice: true,
-            status: true
+            status: true,
+            totalAmount: true,
+            orderDate: true,
+            items: {
+              select: {
+                quantity: true,
+                unitPrice: true,
+                material: {
+                  select: {
+                    name: true,
+                    unit: true
+                  }
+                }
+              }
+            }
           },
           orderBy: { createdAt: 'desc' },
           take: 10
         },
         _count: {
           select: {
-            employees: true,
+            projectAssignments: true,
             tasks: true,
-            materials: true,
+            materialOrders: true,
             deliveries: true
           }
         }

@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+.env.local
+.env.production
+.DS_Store
+*.log
+.idea/
+.vscode/
+coverage/
+.nyc_output/
+/src/generated/prisma

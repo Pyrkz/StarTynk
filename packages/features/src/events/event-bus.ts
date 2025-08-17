@@ -1,5 +1,5 @@
-import { Logger } from '@repo/utils/logger';
-import { 
+import { Logger } from '@repo/utils';
+import type { 
   EventName, 
   EventPayload, 
   EventHandler, 

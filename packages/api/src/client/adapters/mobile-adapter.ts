@@ -1,4 +1,5 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios from 'axios';
+import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import type { HTTPAdapter, APIResponse, RequestConfig, APIError } from '../types/client.types';
 
 /**
@@ -6,7 +7,7 @@ import type { HTTPAdapter, APIResponse, RequestConfig, APIError } from '../types
  * Optimized for React Native with offline support and retry logic
  */
 export class MobileHTTPAdapter implements HTTPAdapter {
-  private client: AxiosInstance;
+  public client: AxiosInstance;
 
   constructor(baseURL: string) {
     this.client = axios.create({
@@ -100,9 +101,9 @@ export class MobileHTTPAdapter implements HTTPAdapter {
       timeout: config.timeout,
       validateStatus: config.validateStatus,
       responseType: config.responseType as any,
-      // Axios-specific options
-      maxRetries: config.maxRetries || 3,
-      retryDelay: (retryCount) => Math.pow(2, retryCount) * 1000, // Exponential backoff
+      // Custom retry configuration (handled separately from axios config)
+      // maxRetries: config.maxRetries || 3,
+      // retryDelay: (retryCount) => Math.pow(2, retryCount) * 1000, // Exponential backoff
     };
   }
 

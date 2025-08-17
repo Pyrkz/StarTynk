@@ -1,7 +1,9 @@
-import { 
+import type { 
   UnifiedStorage, 
   StorageInfo, 
-  StorageConfig, 
+  StorageConfig
+} from './storage.interface';
+import { 
   StorageError, 
   StorageErrorCode 
 } from './storage.interface';

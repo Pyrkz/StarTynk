@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import type { User } from '@repo/database';
-import type { AuthResult, AuthProvider } from '../types';
+import type { AuthResult, AuthProvider, LoginDto, RefreshTokenResponse } from '../types';
 import { getAuthConfig } from '../config';
 import { getUserById, logUserActivity, createSecurityContext } from '../services';
 
@@ -24,9 +24,9 @@ export class SessionAuthProvider implements AuthProvider {
         
         if (user) {
           return {
-            authenticated: true,
+            success: true,
             user,
-            clientType: 'web'
+            message: 'Session authenticated'
           };
         }
       }
@@ -36,22 +36,22 @@ export class SessionAuthProvider implements AuthProvider {
       
       if (sessionUser) {
         return {
-          authenticated: true,
+          success: true,
           user: sessionUser,
-          clientType: 'web'
+          message: 'Session authenticated'
         };
       }
       
       return {
-        authenticated: false,
-        user: null,
-        error: 'No valid session found'
+        success: false,
+        user: undefined,
+        error: { code: 'NO_SESSION', message: 'No valid session found' }
       };
     } catch (error) {
       return {
-        authenticated: false,
-        user: null,
-        error: error instanceof Error ? error.message : 'Session authentication failed'
+        success: false,
+        user: undefined,
+        error: { code: 'AUTH_ERROR', message: error instanceof Error ? error.message : 'Session authentication failed' }
       };
     }
   }
@@ -145,6 +145,48 @@ export class SessionAuthProvider implements AuthProvider {
       return user;
     } catch {
       return null;
+    }
+  }
+
+  /**
+   * Login method for session provider
+   */
+  async login(credentials: LoginDto): Promise<AuthResult> {
+    // This method would typically be implemented in a separate auth service
+    return {
+      success: false,
+      error: { code: 'NOT_IMPLEMENTED', message: 'Login not implemented in session provider' }
+    };
+  }
+
+  /**
+   * Logout method for session provider
+   */
+  async logout(): Promise<void> {
+    // Clear session is handled by clearSession method
+  }
+
+  /**
+   * Refresh token method
+   */
+  async refresh(refreshToken: string): Promise<RefreshTokenResponse> {
+    // Session-based auth doesn't typically use refresh tokens
+    return {
+      success: false,
+      error: 'Refresh not applicable for session-based auth'
+    };
+  }
+
+  /**
+   * Validate token method
+   */
+  async validateToken(token: string): Promise<boolean> {
+    try {
+      const config = getAuthConfig();
+      const payload = jwt.verify(token, config.sessionSecret);
+      return !!payload;
+    } catch {
+      return false;
     }
   }
 }

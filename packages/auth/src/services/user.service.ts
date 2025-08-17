@@ -1,12 +1,12 @@
 import { prisma } from '@repo/database';
 import type { User } from '@repo/database';
-import type { LoginMethod, UnifiedAuthResponse, ClientType, SecurityContext } from '../types';
+import type { LoginMethod, UnifiedAuthResponse, SecurityContext, UserResponseDTO } from '../types';
+import { ClientType } from '../types';
 import { 
   detectLoginMethod, 
   normalizeEmail, 
   normalizePhone, 
-  comparePassword, 
-  sanitizeUser 
+  comparePassword
 } from '../utils';
 import { createTokens } from './token.service';
 
@@ -93,14 +93,14 @@ export async function generateAuthResponse(
   await updateUserLoginStats(user.id);
   
   // Sanitize user data for response
-  const userDTO = {
+  const userDTO: UserResponseDTO = {
     id: user.id,
-    email: user.email || undefined,
+    email: user.email || '',
     phone: user.phone || undefined,
     name: user.name || undefined,
     role: user.role,
     emailVerified: !!user.emailVerified,
-    phoneVerified: !!user.phoneVerified,
+    phoneVerified: false, // phone verification not implemented yet
   };
   
   if (clientType === 'mobile') {
@@ -114,6 +114,7 @@ export async function generateAuthResponse(
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       expiresIn: tokens.expiresIn,
+      clientType: ClientType.MOBILE,
     };
   } else {
     // For web, rely on NextAuth session (no tokens returned)
@@ -122,6 +123,7 @@ export async function generateAuthResponse(
       user: userDTO,
       loginMethod,
       redirectUrl: '/dashboard',
+      clientType: ClientType.WEB,
     };
   }
 }
@@ -130,9 +132,9 @@ export async function generateAuthResponse(
  * Check if user is locked out due to failed login attempts
  */
 export async function checkUserLockout(
-  identifier: string,
-  maxAttempts: number = 5,
-  lockoutDuration: number = 15 * 60 * 1000 // 15 minutes
+  _identifier: string,
+  _maxAttempts: number = 5,
+  _lockoutDuration: number = 15 * 60 * 1000 // 15 minutes
 ): Promise<{ isLockedOut: boolean; remainingTime?: number }> {
   // This would typically use Redis or a separate rate limiting service
   // For now, we'll implement a basic in-memory solution
@@ -149,7 +151,7 @@ export async function checkUserLockout(
 export async function recordFailedLoginAttempt(
   identifier: string,
   ip?: string,
-  userAgent?: string
+  _userAgent?: string
 ): Promise<void> {
   // TODO: Implement failed login attempt tracking
   // This could be stored in a separate table or Redis
@@ -211,7 +213,7 @@ export function getSanitizedUser(user: User | null) {
     name: user.name || undefined,
     role: user.role,
     emailVerified: !!user.emailVerified,
-    phoneVerified: !!user.phoneVerified,
+    phoneVerified: false, // phone verification not implemented yet
     isActive: user.isActive,
     createdAt: user.createdAt,
     lastLoginAt: user.lastLoginAt,

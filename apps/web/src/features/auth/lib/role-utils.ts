@@ -1,4 +1,4 @@
-import type { Role } from '@repo/database'
+import type { Role } from '@repo/database/client-types'
 
 // Hierarchia ról - wyższa wartość = więcej uprawnień
 export const roleHierarchy: Record<Role, number> = {

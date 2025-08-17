@@ -25,7 +25,7 @@ export const sortingSchema = z.object({
   }).default('desc'),
 });
 
-export const dateRangeSchema = z.object({
+export const dateFilterSchema = z.object({
   from: z.coerce.date().optional(),
   to: z.coerce.date().optional(),
 }).refine(
@@ -47,5 +47,5 @@ export const searchSchema = z.object({
 
 export type PaginationInput = z.infer<typeof paginationSchema>;
 export type SortingInput = z.infer<typeof sortingSchema>;
-export type DateRangeInput = z.infer<typeof dateRangeSchema>;
+export type DateFilterInput = z.infer<typeof dateFilterSchema>;
 export type SearchInput = z.infer<typeof searchSchema>;

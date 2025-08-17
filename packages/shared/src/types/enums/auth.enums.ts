@@ -2,14 +2,8 @@
  * Authentication and authorization related enums
  */
 
-// Sync with Prisma schema enums
-export enum Role {
-  ADMIN = 'ADMIN',
-  MODERATOR = 'MODERATOR',
-  COORDINATOR = 'COORDINATOR',
-  USER = 'USER',
-  WORKER = 'WORKER'
-}
+// Re-export Role from database for convenience
+export { Role } from '@repo/database';
 
 export enum AuthProvider {
   EMAIL = 'EMAIL',

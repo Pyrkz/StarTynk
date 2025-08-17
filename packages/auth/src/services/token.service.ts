@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { prisma } from '@repo/database';
-import type { User } from '@repo/database';
+import type { User, Role } from '@repo/database';
 import type { TokenPayload, SecurityContext } from '../types';
 import { getAuthConfig } from '../config';
 import { extractIpAddress } from '../utils';
@@ -20,32 +21,43 @@ export async function createTokens(
   
   // Create access token payload
   const accessPayload: TokenPayload = {
+    sub: user.id,
     userId: user.id,
-    email: user.email || undefined,
-    phone: user.phone || undefined,
+    email: user.email || '',
     role: user.role,
     type: 'access',
+    loginMethod: 'email',
   };
   
   // Create access token
   const accessToken = jwt.sign(
     accessPayload,
     config.jwtSecret,
-    { expiresIn: config.tokenExpiry }
+    { expiresIn: config.tokenExpiry } as jwt.SignOptions
   );
   
-  // Create refresh token payload
+  // Create refresh token payload  
   const refreshPayload: TokenPayload = {
+    sub: user.id,
     userId: user.id,
+    email: user.email || '',
+    role: user.role,
     deviceId: securityContext.deviceId,
     type: 'refresh',
+    loginMethod: 'email',
   };
+  
+  // Generate JTI for refresh token
+  const jti = crypto.randomUUID();
+  
+  // Add JTI to refresh token payload
+  refreshPayload.jti = jti;
   
   // Create refresh token
   const refreshToken = jwt.sign(
     refreshPayload,
     config.jwtRefreshSecret,
-    { expiresIn: config.refreshExpiry }
+    { expiresIn: config.refreshExpiry } as jwt.SignOptions
   );
   
   // Calculate expiry time in milliseconds
@@ -58,10 +70,11 @@ export async function createTokens(
       token: refreshToken,
       userId: user.id,
       expiresAt,
-      deviceId: securityContext.deviceId,
-      userAgent: securityContext.userAgent,
-      ip: securityContext.ip,
-      loginMethod: securityContext.loginMethod,
+      deviceId: securityContext.deviceId || '',
+      userAgent: securityContext.userAgent || '',
+      ip: securityContext.ip || '',
+      loginMethod: securityContext.loginMethod || 'email',
+      jti: jti,
     },
   });
   
@@ -82,7 +95,7 @@ export async function verifyAccessToken(token: string): Promise<TokenPayload> {
   const config = getAuthConfig();
   
   try {
-    const payload = jwt.verify(token, config.jwtSecret) as TokenPayload;
+    const payload = jwt.verify(token, config.jwtSecret as string) as TokenPayload;
     
     if (payload.type !== 'access') {
       throw new Error('Invalid token type');
@@ -107,7 +120,7 @@ export async function verifyRefreshToken(token: string): Promise<TokenPayload> {
   const config = getAuthConfig();
   
   try {
-    const payload = jwt.verify(token, config.jwtRefreshSecret) as TokenPayload;
+    const payload = jwt.verify(token, config.jwtRefreshSecret as string) as TokenPayload;
     
     if (payload.type !== 'refresh') {
       throw new Error('Invalid token type');

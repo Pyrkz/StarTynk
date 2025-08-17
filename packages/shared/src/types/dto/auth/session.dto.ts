@@ -1,4 +1,4 @@
-import { UserSessionDTO } from '../user';
+import type { UserSessionDTO } from '../user';
 
 /**
  * Session check request DTO

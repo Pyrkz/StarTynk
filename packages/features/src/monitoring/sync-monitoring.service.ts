@@ -72,7 +72,7 @@ export interface CacheMetrics {
 
 export class SyncMonitoringService extends EventEmitter {
   private static instance: SyncMonitoringService;
-  private metricsInterval: NodeJS.Timer | null = null;
+  private metricsInterval: ReturnType<typeof setInterval> | null = null;
   private alertThresholds = {
     syncFailureRate: 0.1, // 10%
     notificationFailureRate: 0.05, // 5%

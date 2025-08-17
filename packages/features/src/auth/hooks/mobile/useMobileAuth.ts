@@ -9,12 +9,8 @@ export function useMobileAuth() {
   const baseAuth = useBaseAuth();
   const netInfo = useNetInfo();
 
-  // Sync network status
-  React.useEffect(() => {
-    if (netInfo.isConnected !== null) {
-      baseAuth.setOnlineStatus(netInfo.isConnected);
-    }
-  }, [netInfo.isConnected]);
+  // Sync network status - removed setOnlineStatus as it doesn't exist
+  const isOnline = netInfo.isConnected;
 
   return {
     ...baseAuth,

@@ -1,43 +1,43 @@
 import { authStore } from '../stores/auth.store';
-import { UserRole } from '@repo/shared/types';
+import { Role } from '@repo/shared/types';
 
 export function usePermissions() {
   const { user } = authStore();
 
-  const hasRole = (role: UserRole): boolean => {
+  const hasRole = (role: Role): boolean => {
     return user?.role === role;
   };
 
-  const hasAnyRole = (roles: UserRole[]): boolean => {
+  const hasAnyRole = (roles: Role[]): boolean => {
     return user ? roles.includes(user.role) : false;
   };
 
   const isAdmin = (): boolean => {
-    return hasRole('ADMIN');
+    return hasRole(Role.ADMIN);
   };
 
   const isCoordinator = (): boolean => {
-    return hasRole('COORDINATOR');
+    return hasRole(Role.COORDINATOR);
   };
 
   const isEmployee = (): boolean => {
-    return hasRole('EMPLOYEE');
+    return hasRole(Role.WORKER);
   };
 
   const canAccessAdminPanel = (): boolean => {
-    return hasAnyRole(['ADMIN', 'COORDINATOR']);
+    return hasAnyRole([Role.ADMIN, Role.COORDINATOR]);
   };
 
   const canManageUsers = (): boolean => {
-    return hasAnyRole(['ADMIN', 'COORDINATOR']);
+    return hasAnyRole([Role.ADMIN, Role.COORDINATOR]);
   };
 
   const canManageProjects = (): boolean => {
-    return hasAnyRole(['ADMIN', 'COORDINATOR']);
+    return hasAnyRole([Role.ADMIN, Role.COORDINATOR]);
   };
 
   const canViewReports = (): boolean => {
-    return hasAnyRole(['ADMIN', 'COORDINATOR']);
+    return hasAnyRole([Role.ADMIN, Role.COORDINATOR]);
   };
 
   return {

@@ -280,7 +280,7 @@ export class SmartCacheInvalidator {
       activeQueries: queries.filter(q => q.getObserversCount() > 0).length,
       staleQueries: queries.filter(q => q.isStale()).length,
       errorQueries: queries.filter(q => q.state.status === 'error').length,
-      loadingQueries: queries.filter(q => q.state.status === 'loading').length,
+      loadingQueries: queries.filter(q => q.state.status === 'pending').length,
       successQueries: queries.filter(q => q.state.status === 'success').length,
       memoryUsage: this.estimateMemoryUsage(),
     };
@@ -346,7 +346,7 @@ export class SmartCacheInvalidator {
         exportData[key] = {
           data: query.state.data,
           dataUpdatedAt: query.state.dataUpdatedAt,
-          staleTime: query.options.staleTime,
+          staleTime: (query.options as any).staleTime,
         };
       }
     });

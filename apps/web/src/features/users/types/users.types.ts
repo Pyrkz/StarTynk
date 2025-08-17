@@ -1,4 +1,4 @@
-import { User, InvitationCode, Role, UserActivityLog } from '@repo/database'
+import { User, InvitationCode, Role, UserActivityLog } from '@repo/database/client-types'
 
 // Enhanced User type with relations
 export interface UserWithRelations extends User {

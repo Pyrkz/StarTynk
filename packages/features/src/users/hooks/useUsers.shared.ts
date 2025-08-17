@@ -1,9 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { usersService } from '../services/users.service';
-import { UserDTO } from '@repo/shared/types';
+import { usersService, type CreateUserData } from '../services/users.service';
+import type { UserDTO } from '@repo/shared';
+import type { PaginatedResponse } from '@repo/shared';
 import { usePagination } from '../../shared/hooks/usePagination';
 import { useDebounce } from '../../shared/hooks/useDebounce';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface UseUsersOptions {
   initialFilters?: {
@@ -17,10 +18,12 @@ interface UseUsersOptions {
 export function useUsers(options: UseUsersOptions = {}) {
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState(options.initialFilters || {});
+  const [total, setTotal] = useState(0);
   const debouncedSearch = useDebounce(filters.search || '', 300);
   
   const pagination = usePagination({
     initialPageSize: options.pageSize || 10,
+    total,
   });
 
   const { data, isLoading, error } = useQuery({
@@ -32,23 +35,25 @@ export function useUsers(options: UseUsersOptions = {}) {
       page: pagination.page,
       limit: pagination.pageSize,
     }),
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
   });
 
-  // Update pagination total when data changes
-  if (data?.total !== pagination.total) {
-    pagination.changePageSize(pagination.pageSize); // This will update the total
-  }
+  // Update total when data changes
+  useEffect(() => {
+    if (data?.total !== undefined && data.total !== total) {
+      setTotal(data.total);
+    }
+  }, [data?.total, total]);
 
   return {
     users: data?.items || [],
-    total: data?.total || 0,
+    total,
     isLoading,
     error,
     filters,
     setFilters,
     pagination,
-    refetch: () => queryClient.invalidateQueries(['users']),
+    refetch: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
   };
 }
 
@@ -72,7 +77,7 @@ export function useCreateUser() {
   return useMutation({
     mutationFn: usersService.createUser,
     onSuccess: () => {
-      queryClient.invalidateQueries(['users']);
+      queryClient.invalidateQueries({ queryKey: ['users'] });
     },
   });
 }
@@ -85,7 +90,7 @@ export function useUpdateUser() {
       usersService.updateUser(id, data),
     onSuccess: (updatedUser) => {
       queryClient.setQueryData(['users', updatedUser.id], updatedUser);
-      queryClient.invalidateQueries(['users']);
+      queryClient.invalidateQueries({ queryKey: ['users'] });
     },
   });
 }
@@ -96,7 +101,7 @@ export function useDeleteUser() {
   return useMutation({
     mutationFn: usersService.deleteUser,
     onSuccess: () => {
-      queryClient.invalidateQueries(['users']);
+      queryClient.invalidateQueries({ queryKey: ['users'] });
     },
   });
 }
@@ -108,7 +113,7 @@ export function useInviteUser() {
     mutationFn: ({ email, role }: { email: string; role: string }) => 
       usersService.inviteUser(email, role),
     onSuccess: () => {
-      queryClient.invalidateQueries(['invitations']);
+      queryClient.invalidateQueries({ queryKey: ['invitations'] });
     },
   });
 }
@@ -119,7 +124,7 @@ export function useResendInvitation() {
   return useMutation({
     mutationFn: usersService.resendInvitation,
     onSuccess: () => {
-      queryClient.invalidateQueries(['invitations']);
+      queryClient.invalidateQueries({ queryKey: ['invitations'] });
     },
   });
 }

@@ -1,0 +1,44 @@
+### Health Check
+GET http://localhost:3000/health
+
+### Login with email
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "admin@startynk.com",
+  "password": "password123"
+}
+
+### Login with phone
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "+48123456789",
+  "password": "password123"
+}
+
+### Login with wrong password
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "admin@startynk.com",
+  "password": "wrongpassword"
+}
+
+### Get current user (requires token from login)
+GET http://localhost:3000/api/auth/me
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+
+### Refresh token
+POST http://localhost:3000/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "YOUR_REFRESH_TOKEN_HERE"
+}
+
+### Logout
+POST http://localhost:3000/api/auth/logout

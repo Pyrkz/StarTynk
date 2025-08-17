@@ -1,7 +1,7 @@
-import { prisma } from '@repo/database';
+import { prisma, Role } from '@repo/database';
 import { ApiResponse } from '../../responses';
 import { ApiError, UserNotFoundError } from '../../errors';
-import { UpdateUserInput } from '../../validators';
+import type { UpdateUserInput } from '../../validators';
 import { logger } from '../../middleware';
 
 export async function updateUserHandler(
@@ -46,24 +46,35 @@ export async function updateUserHandler(
       }
     }
 
-    // Update user
+    // Update user - construct name from firstName/lastName if provided
+    let updateData: any = {
+      ...(email && { email }),
+      ...(phone && { phone }),
+      ...(role && { role: role as Role }),
+      ...(typeof isActive === 'boolean' && { isActive }),
+      updatedAt: new Date()
+    };
+
+    // Handle firstName/lastName by updating the combined name field
+    if (firstName || lastName) {
+      const nameParts = existingUser.name?.split(' ') || ['', ''];
+      const currentFirstName = firstName || nameParts[0] || '';
+      const currentLastName = lastName || nameParts[1] || '';
+      
+      updateData = {
+        ...updateData,
+        name: `${currentFirstName} ${currentLastName}`.trim()
+      };
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: userId },
-      data: {
-        ...(email && { email }),
-        ...(phone && { phone }),
-        ...(firstName && { firstName }),
-        ...(lastName && { lastName }),
-        ...(role && { role }),
-        ...(typeof isActive === 'boolean' && { isActive }),
-        updatedAt: new Date()
-      },
+      data: updateData,
       select: {
         id: true,
         email: true,
         phone: true,
-        firstName: true,
-        lastName: true,
+        name: true,
         role: true,
         isActive: true,
         createdAt: true,

@@ -1,0 +1,70 @@
+// Client-safe type exports (no PrismaClient runtime)
+// This file can be safely imported in client components
+
+// Auto-generated Prisma type exports
+export type {
+  User,
+  Account,
+  Session,
+  VerificationToken,
+  InvitationCode,
+  UserActivityLog,
+  RefreshToken,
+  Developer,
+  Project,
+  Apartment,
+  Task,
+  TaskAssignment,
+  QualityControl,
+  MaterialCategory,
+  Material,
+  MaterialOrder,
+  MaterialOrderItem,
+  EquipmentCategory,
+  Equipment,
+  EquipmentAssignment,
+  EquipmentHistory,
+  Delivery,
+  DeliveryItem,
+  Vehicle,
+  VehicleAssignment,
+  VehicleMaintenance,
+  VehicleReminder,
+  Photo,
+  Comment,
+  PaymentCalculation,
+  ProjectAssignment,
+  Attendance,
+  LeaveRequest,
+  Payroll,
+  Bonus,
+  Deduction,
+} from '@prisma/client';
+
+// Export all enums (these are safe for client-side)
+export {
+  Role,
+  ProjectStatus,
+  TaskStatus,
+  TaskPriority,
+  QualityStatus,
+  QualityIssueType,
+  EquipmentStatus,
+  EquipmentHistoryAction,
+  VehicleStatus,
+  MaintenanceType,
+  ReminderType,
+  PhotoType,
+  Platform,
+  material_orders_status,
+  deliveries_status,
+  LeaveType,
+  LeaveStatus,
+  PaymentStatus,
+  PaymentMethod,
+  BonusType,
+  DeductionType,
+} from '@prisma/client';
+
+// Prisma utility types (without PrismaClient)
+export type { Prisma } from '@prisma/client';

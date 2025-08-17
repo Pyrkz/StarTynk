@@ -1,5 +1,5 @@
 import { PrismaClient, Prisma } from '@repo/database';
-import { Logger } from '@repo/utils/logger';
+import { Logger } from '@repo/utils';
 import { BusinessError } from '../errors';
 
 export interface TransactionOptions {
@@ -109,7 +109,8 @@ export class TransactionManager {
   ): Promise<T> {
     return this.execute(async (tx) => {
       const promises = operations.map(operation => operation(tx));
-      return Promise.all(promises) as Promise<T>;
+      const results = await Promise.all(promises);
+      return results as unknown as T;
     }, options);
   }
 

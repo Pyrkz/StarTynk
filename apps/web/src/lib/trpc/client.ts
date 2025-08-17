@@ -12,7 +12,7 @@ import type { AppRouter } from '@repo/trpc';
 /**
  * Create tRPC React hooks
  */
-export const trpc = createTRPCReact<AppRouter>();
+const trpc = createTRPCReact<AppRouter>();
 
 /**
  * Get base URL for API calls

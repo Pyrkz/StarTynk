@@ -1,4 +1,4 @@
-import DOMPurify from 'isomorphic-dompurify';
+import * as DOMPurify from 'isomorphic-dompurify';
 
 export class Sanitizer {
   // HTML sanitization for rich text
@@ -13,7 +13,7 @@ export class Sanitizer {
       ...options,
     };
     
-    return DOMPurify.sanitize(input, config);
+    return (DOMPurify as any).sanitize(input, config) as string;
   }
   
   // SQL injection prevention (escape special characters)

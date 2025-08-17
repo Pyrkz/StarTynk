@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { prisma } from '@repo/database';
-import type { User } from '@repo/database';
+import type { Role } from '@repo/database';
 import type { TokenPayload, SecurityContext } from '../types';
 import { getAuthConfig } from '../config';
 
@@ -10,8 +10,8 @@ import { getAuthConfig } from '../config';
  * Implements token rotation, device binding, and comprehensive security
  */
 export class TokenService {
-  private privateKey: string;
-  private publicKey: string;
+  private privateKey: string = '';
+  private publicKey: string = '';
   private config: any;
 
   constructor() {
@@ -49,18 +49,21 @@ export class TokenService {
    */
   async generateAccessToken(payload: {
     userId: string;
-    role: string;
+    role: Role;
     email: string;
     deviceId?: string;
+    loginMethod?: 'email' | 'phone';
   }): Promise<string> {
     const jti = crypto.randomUUID(); // JWT ID for tracking
     
     const tokenPayload: TokenPayload = {
+      sub: payload.userId,
       userId: payload.userId,
       email: payload.email,
       role: payload.role,
       type: 'access',
       deviceId: payload.deviceId,
+      loginMethod: payload.loginMethod || 'email',
       jti,
       iat: Math.floor(Date.now() / 1000),
     };
@@ -254,7 +257,7 @@ export class TokenService {
       data: {
         isRevoked: true,
         revokedAt: new Date(),
-        replacedBy: jwt.decode(newRefreshToken)?.jti as string,
+        replacedBy: (jwt.decode(newRefreshToken) as any)?.jti as string,
       },
     });
 

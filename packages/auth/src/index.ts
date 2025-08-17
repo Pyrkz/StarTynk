@@ -20,7 +20,7 @@ export * from './middleware';
 export * from './jobs/cleanup.job';
 export * from './jobs/token-cleanup.job';
 
-// Storage implementations
+// Legacy storage implementations (deprecated - use @repo/shared storage instead)
 export { AuthStorage } from './storage/storage.interface';
 export { WebAuthStorage } from './storage/web-storage';
 export { MobileAuthStorage } from './storage/mobile-storage';
@@ -63,6 +63,7 @@ export {
 
 export {
   rotateRefreshToken,
+  refreshAccessToken,
   cleanupExpiredTokens,
   revokeAllUserTokens,
   getUserActiveDevices,
@@ -74,6 +75,15 @@ export {
   validatePassword,
   generateSecurePassword,
 } from './utils/password.utils';
+
+// Export PasswordUtils namespace for compatibility
+import * as passwordUtils from './utils/password.utils';
+export const PasswordUtils = {
+  hash: passwordUtils.hashPassword,
+  verify: passwordUtils.comparePassword,
+  validate: passwordUtils.validatePassword,
+  generate: passwordUtils.generateSecurePassword,
+};
 
 export {
   generateSecureToken,
@@ -87,31 +97,45 @@ export {
 
 // Platform-specific factory functions
 import { UnifiedAuthService } from './services/auth.service';
-import { WebAuthStorage } from './storage/web-storage';
-import { MobileAuthStorage } from './storage/mobile-storage';
+import { authStorage } from '@repo/shared';
+import type { StorageConfig, UnifiedStorage } from '@repo/shared';
+
+/**
+ * Create auth service with custom storage
+ */
+export function createAuthServiceWithStorage(storage: UnifiedStorage, apiBaseUrl?: string): UnifiedAuthService {
+  return new UnifiedAuthService(storage, apiBaseUrl);
+}
 
 /**
  * Create auth service for web platform
  */
-export function createWebAuthService(apiBaseUrl?: string): UnifiedAuthService {
-  return new UnifiedAuthService(new WebAuthStorage(), apiBaseUrl);
+export function createWebAuthService(apiBaseUrl?: string, config?: StorageConfig): UnifiedAuthService {
+  // For web, we can use the default authStorage which uses WebStorage internally
+  if (config) {
+    const { WebStorage } = require('@repo/shared');
+    return new UnifiedAuthService(new WebStorage(config), apiBaseUrl);
+  }
+  return new UnifiedAuthService(authStorage, apiBaseUrl);
 }
 
 /**
  * Create auth service for mobile platform
  */
-export function createMobileAuthService(apiBaseUrl?: string): UnifiedAuthService {
-  return new UnifiedAuthService(new MobileAuthStorage(), apiBaseUrl);
+export function createMobileAuthService(apiBaseUrl?: string, config?: StorageConfig): UnifiedAuthService {
+  // For mobile, use default authStorage which will be MobileStorage when in mobile environment
+  // The shared package handles platform detection internally
+  return new UnifiedAuthService(authStorage, apiBaseUrl);
 }
 
 /**
  * Auto-detect platform and create appropriate auth service
  */
-export function createAuthService(apiBaseUrl?: string): UnifiedAuthService {
+export function createAuthService(apiBaseUrl?: string, config?: StorageConfig): UnifiedAuthService {
   if (typeof window !== 'undefined' && !('expo' in (globalThis as any))) {
-    return createWebAuthService(apiBaseUrl);
+    return createWebAuthService(apiBaseUrl, config);
   } else {
-    return createMobileAuthService(apiBaseUrl);
+    return createMobileAuthService(apiBaseUrl, config);
   }
 }
 

@@ -12,7 +12,7 @@ import {
   errorHandler,
   loggingMiddleware,
   defaultCors
-} from '@repo/api';
+} from '@repo/api/web';
 
 interface RouteParams {
   params: { id: string };

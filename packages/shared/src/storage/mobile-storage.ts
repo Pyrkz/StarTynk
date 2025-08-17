@@ -139,7 +139,7 @@ export class MobileStorage implements UnifiedStorage {
       return value;
     } catch (error) {
       // SecureStore throws if item doesn't exist
-      if (error.message?.includes('not found')) {
+      if ((error as any).message?.includes('not found')) {
         return null;
       }
       throw this.handleError(error, 'getSecureItem');
@@ -152,7 +152,7 @@ export class MobileStorage implements UnifiedStorage {
       await SecureStore.deleteItemAsync(secureKey, this.config.mobile?.secureStoreOptions);
     } catch (error) {
       // Ignore if item doesn't exist
-      if (!error.message?.includes('not found')) {
+      if (!(error as any).message?.includes('not found')) {
         throw this.handleError(error, 'removeSecureItem');
       }
     }

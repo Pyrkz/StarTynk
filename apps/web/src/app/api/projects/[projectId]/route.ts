@@ -5,7 +5,7 @@ import { authenticateToken, hasRequiredRole } from '@/lib/auth/middleware'
 import { ApiResponse } from '@/lib/api/response'
 import { sanitizeUser } from '@/lib/api/validators'
 import { z } from 'zod'
-import { Role, ProjectStatus } from '@shared/types'
+import { Role, ProjectStatus } from '@repo/shared/types'
 import { getMockProject } from './mock-data'
 import { updateProjectSchema } from '@/features/projekty/utils/validation'
 

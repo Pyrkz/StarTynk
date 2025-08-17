@@ -1,105 +1,177 @@
 import React from 'react';
-import { View, Text, ScrollView, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button } from '@/shared/components';
-import { useAuth } from '@/features/auth';
-import { useRouter } from 'expo-router';
-import { UserInfoCard, ProfileStats, ProfileMenu } from '../components';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  TouchableOpacity,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { useAppStore } from '../../../store/useAppStore';
+import { useAuth } from '../../auth/hooks/useAuth';
 
-export function ProfileScreen() {
-  const { user, logout } = useAuth();
-  const router = useRouter();
-
-  const handleLogout = () => {
-    Alert.alert(
-      'Wylogowanie',
-      'Czy na pewno chcesz się wylogować?',
-      [
-        { text: 'Anuluj', style: 'cancel' },
-        {
-          text: 'Wyloguj',
-          style: 'destructive',
-          onPress: async () => {
-            await logout();
-          },
-        },
-      ]
-    );
-  };
-
-  const menuItems = [
-    {
-      icon: 'person-outline',
-      title: 'Dane osobowe',
-      subtitle: 'Edytuj swoje dane',
-      onPress: () => Alert.alert('Info', 'Funkcja w przygotowaniu'),
-    },
-    {
-      icon: 'lock-closed-outline',
-      title: 'Zmień hasło',
-      subtitle: 'Zabezpiecz swoje konto',
-      onPress: () => Alert.alert('Info', 'Funkcja w przygotowaniu'),
-    },
-    {
-      icon: 'notifications-outline',
-      title: 'Powiadomienia',
-      subtitle: 'Zarządzaj powiadomieniami',
-      onPress: () => Alert.alert('Info', 'Funkcja w przygotowaniu'),
-    },
-    {
-      icon: 'help-circle-outline',
-      title: 'Pomoc',
-      subtitle: 'FAQ i wsparcie',
-      onPress: () => Alert.alert('Info', 'Funkcja w przygotowaniu'),
-    },
-    {
-      icon: 'information-circle-outline',
-      title: 'O aplikacji',
-      subtitle: 'Wersja 1.0.0',
-      onPress: () => Alert.alert('StarTynk Mobile', 'Wersja 1.0.0\n\n© 2024 StarTynk'),
-    },
-  ];
-
-  const stats = {
-    totalDaysWorked: 23,
-    totalTasksCompleted: 156,
-    averageRating: 4.8,
-  };
-
-  const userProfile = user ? {
-    id: user.id,
-    name: user.name || 'Użytkownik',
-    email: user.email,
-    phone: user.phone,
-    role: user.role || 'WORKER',
-  } : null;
+export default function ProfileScreen() {
+  const user = useAppStore((state) => state.user);
+  const { logout } = useAuth();
 
   return (
-    <SafeAreaView className="flex-1 bg-app-background">
-      <View className="px-4 py-4 border-b border-border-light bg-white">
-        <Text className="text-2xl font-semibold text-text-primary">Profil</Text>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Profil</Text>
       </View>
 
-      <ScrollView className="flex-1">
-        {/* User Info Card */}
-        <UserInfoCard user={userProfile} />
-
-        {/* Quick Stats */}
-        <ProfileStats stats={stats} />
-
-        {/* Menu Items */}
-        <ProfileMenu items={menuItems} />
-
-        {/* Logout Button */}
-        <View className="mx-4 mt-6 mb-6">
-          <Button
-            title="Wyloguj się"
-            onPress={handleLogout}
-            variant="secondary"
-            size="large"
-          />
+      <View style={styles.content}>
+        <View style={styles.profileInfo}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
+            </Text>
+          </View>
+          <Text style={styles.userName}>
+            {user?.name || 'Użytkownik'}
+          </Text>
+          <Text style={styles.userEmail}>{user?.email}</Text>
         </View>
-      </ScrollView>
+
+        <View style={styles.menuSection}>
+          <TouchableOpacity style={styles.menuItem}>
+            <Ionicons name="person-outline" size={24} color="#333" />
+            <Text style={styles.menuText}>Dane osobowe</Text>
+            <Ionicons name="chevron-forward" size={20} color="#999" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.menuItem, styles.menuItemMiddle]}>
+            <Ionicons name="settings-outline" size={24} color="#333" />
+            <Text style={styles.menuText}>Ustawienia</Text>
+            <Ionicons name="chevron-forward" size={20} color="#999" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]}>
+            <Ionicons name="help-circle-outline" size={24} color="#333" />
+            <Text style={styles.menuText}>Pomoc</Text>
+            <Ionicons name="chevron-forward" size={20} color="#999" />
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity 
+          onPress={logout}
+          style={styles.logoutButtonContainer}
+        >
+          <LinearGradient
+            colors={['#FEAD00', '#D75200']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.logoutButton}
+          >
+            <Text style={styles.logoutButtonText}>Wyloguj się</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFCF2',
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 24,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+  },
+  profileInfo: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#D75200',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  avatarText: {
+    color: '#fff',
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+  userName: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  userEmail: {
+    fontSize: 14,
+    color: '#666',
+  },
+  menuSection: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    marginBottom: 40,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  menuItemMiddle: {
+    borderBottomWidth: 1,
+  },
+  menuItemLast: {
+    borderBottomWidth: 0,
+  },
+  menuText: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+    marginLeft: 16,
+  },
+  logoutButtonContainer: {
+    marginTop: 'auto',
+    marginBottom: 20,
+    shadowColor: '#FFA500',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+    borderRadius: 12,
+  },
+  logoutButton: {
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  logoutButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+});

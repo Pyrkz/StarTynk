@@ -117,7 +117,6 @@ export function useAuthForm() {
       phone: formData.loginMethod === 'phone' ? formData.phone : undefined,
       password: formData.password,
       name: formData.name,
-      loginMethod: formData.loginMethod,
     };
 
     const response = await register(request);

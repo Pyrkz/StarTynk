@@ -1,4 +1,4 @@
-import { PaginationParams } from '../../api/pagination.types';
+import type { PaginationParams } from '../../api/pagination.types';
 import { ProjectStatus } from '../../enums';
 
 /**

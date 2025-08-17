@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient, UseQueryOptions, UseMutationOptions } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, type UseQueryOptions, type UseMutationOptions } from '@tanstack/react-query';
 import { cacheManager } from './cache-strategy';
 
 export interface CachedQueryOptions<TData = unknown, TError = unknown> 
@@ -133,9 +133,9 @@ export function useCachedMutation<TData = unknown, TError = unknown, TVariables 
     },
     onError: async (error, variables, context) => {
       // Revert optimistic updates on error
-      if (context && 'invalidateQueries' in context) {
+      if (context && typeof context === 'object' && context !== null && 'invalidateQueries' in context) {
         const ctx = context as any;
-        if (ctx.invalidateQueries) {
+        if (ctx.invalidateQueries && Array.isArray(ctx.invalidateQueries)) {
           await Promise.all(
             ctx.invalidateQueries.map((query: string) => 
               queryClient.invalidateQueries({ queryKey: [query] })

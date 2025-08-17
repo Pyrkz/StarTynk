@@ -5,7 +5,7 @@ import {
   errorHandler,
   loggingMiddleware,
   defaultCors
-} from '@repo/api';
+} from '@repo/api/web';
 
 export async function POST(request: NextRequest) {
   return loggingMiddleware(request, async (req) => {

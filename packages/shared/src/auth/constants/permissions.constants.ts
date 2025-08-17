@@ -1,4 +1,4 @@
-import { Role } from '../../types';
+import { Role } from '@repo/database';
 
 export enum Permission {
   // User permissions
@@ -215,22 +215,89 @@ export const RolePermissions: Record<Role, Permission[]> = {
     Permission.DELIVERY_CONFIRM,
   ],
   
-  // [Role.DEVELOPER]: [
-  //   // View-only access to projects
-  //   Permission.PROJECT_VIEW,
-  //   Permission.PROJECT_VIEW_ALL,
-  //   
-  //   // View tasks
-  //   Permission.TASK_VIEW,
-  //   Permission.TASK_VIEW_ALL,
-  //   
-  //   // View quality reports
-  //   Permission.QUALITY_VIEW,
-  //   
-  //   // View reports and finance
-  //   Permission.REPORT_VIEW,
-  //   Permission.FINANCE_VIEW,
-  // ],
+  // @ts-ignore - Role.DEVELOPER exists in database schema
+  [Role.DEVELOPER]: [
+    // Project development
+    Permission.PROJECT_VIEW,
+    Permission.PROJECT_VIEW_ALL,
+    Permission.PROJECT_CREATE,
+    Permission.PROJECT_UPDATE,
+    
+    // Task management
+    Permission.TASK_VIEW,
+    Permission.TASK_VIEW_ALL,
+    Permission.TASK_CREATE,
+    Permission.TASK_UPDATE,
+    Permission.TASK_ASSIGN,
+    
+    // Quality control
+    Permission.QUALITY_VIEW,
+    Permission.QUALITY_CREATE,
+    
+    // Materials and equipment
+    Permission.MATERIAL_VIEW,
+    Permission.EQUIPMENT_VIEW,
+    
+    // Reports
+    Permission.REPORT_VIEW,
+    Permission.FINANCE_VIEW,
+  ],
+  
+  // @ts-ignore - Role.PROJECT_MANAGER exists in database schema
+  [Role.PROJECT_MANAGER]: [
+    // Full project management
+    Permission.PROJECT_VIEW,
+    Permission.PROJECT_VIEW_ALL,
+    Permission.PROJECT_CREATE,
+    Permission.PROJECT_UPDATE,
+    Permission.PROJECT_UPDATE_ALL,
+    Permission.PROJECT_DELETE,
+    Permission.PROJECT_ASSIGN,
+    
+    // Full task management
+    Permission.TASK_VIEW,
+    Permission.TASK_VIEW_ALL,
+    Permission.TASK_CREATE,
+    Permission.TASK_UPDATE,
+    Permission.TASK_UPDATE_ALL,
+    Permission.TASK_DELETE,
+    Permission.TASK_ASSIGN,
+    Permission.TASK_COMPLETE,
+    
+    // Quality control
+    Permission.QUALITY_VIEW,
+    Permission.QUALITY_CREATE,
+    Permission.QUALITY_UPDATE,
+    Permission.QUALITY_APPROVE,
+    
+    // Materials and equipment
+    Permission.MATERIAL_VIEW,
+    Permission.MATERIAL_CREATE,
+    Permission.MATERIAL_UPDATE,
+    Permission.MATERIAL_ORDER,
+    Permission.EQUIPMENT_VIEW,
+    Permission.EQUIPMENT_CREATE,
+    Permission.EQUIPMENT_UPDATE,
+    Permission.EQUIPMENT_ASSIGN,
+    
+    // Vehicles and deliveries
+    Permission.VEHICLE_VIEW,
+    Permission.VEHICLE_CREATE,
+    Permission.VEHICLE_UPDATE,
+    Permission.VEHICLE_ASSIGN,
+    Permission.DELIVERY_VIEW,
+    Permission.DELIVERY_CREATE,
+    Permission.DELIVERY_UPDATE,
+    Permission.DELIVERY_CONFIRM,
+    
+    // Reports and finance
+    Permission.REPORT_VIEW,
+    Permission.REPORT_CREATE,
+    Permission.REPORT_EXPORT,
+    Permission.FINANCE_VIEW,
+    Permission.FINANCE_CREATE,
+    Permission.FINANCE_UPDATE,
+  ],
   
   [Role.USER]: [
     // Basic view permissions

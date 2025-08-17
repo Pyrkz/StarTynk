@@ -8,9 +8,9 @@
     "packages/config/*"
   ],
   "scripts": {
-    "dev": "turbo run dev",
-    "dev:web": "turbo run dev --filter=@repo/web",
-    "dev:mobile": "turbo run dev --filter=@repo/mobile",
+    "dev": "npx turbo run dev",
+    "dev:web": "npx turbo run dev --filter=@repo/web",
+    "dev:mobile": "npx turbo run dev --filter=@repo/mobile",
     "start": "turbo run start",
     "build": "turbo run build",
     "build:packages": "turbo run build --filter='./packages/*'",
@@ -47,29 +47,55 @@
     "health": "curl -f http://localhost:3000/api/health || echo 'Health check failed'"
   },
   "devDependencies": {
-    "turbo": "latest",
-    "prettier": "latest",
-    "husky": "latest",
-    "lint-staged": "latest",
-    "@types/jest": "^29.5.12",
-    "@types/supertest": "^2.0.16",
-    "jest": "^29.7.0",
-    "supertest": "^6.3.4",
-    "ts-jest": "^29.1.2",
-    "@testing-library/react": "^14.2.1",
-    "@testing-library/react-native": "^12.4.3",
-    "@testing-library/jest-dom": "^6.4.2",
-    "msw": "^2.1.7",
-    "tsx": "^4.7.1",
     "@playwright/test": "^1.42.1",
+    "@testing-library/dom": "^10.0.0",
+    "@testing-library/jest-dom": "^6.6.4",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/react-native": "^12.7.0",
+    "@types/jest": "^29.5.12",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/supertest": "^2.0.16",
     "autocannon": "^7.14.0",
     "axios": "^1.6.7",
     "chalk": "^5.3.0",
-    "node-mocks-http": "^1.14.1"
+    "husky": "latest",
+    "jest": "^30.0.5",
+    "lint-staged": "latest",
+    "msw": "^2.1.7",
+    "node-mocks-http": "^1.14.1",
+    "prettier": "latest",
+    "prisma": "^5.22.0",
+    "supertest": "^6.3.4",
+    "ts-jest": "^29.1.2",
+    "tsup": "^8.3.5",
+    "tsx": "^4.7.1",
+    "turbo": "latest",
+    "typescript": "^5"
   },
   "packageManager": "pnpm@9.0.0",
   "engines": {
     "node": ">=18.17.0",
     "pnpm": ">=9.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "@auth/core": "0.34.2",
+      "next-auth>@auth/core": "0.34.2",
+      "@prisma/client": "5.22.0",
+      "prisma": "5.22.0"
+    }
+  },
+  "dependencies": {
+    "@socket.io/redis-adapter": "^8.3.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node-cron": "^3.0.11",
+    "bcryptjs": "^3.0.2",
+    "deep-object-diff": "^1.1.9",
+    "deepmerge": "^4.3.1",
+    "ioredis": "^5.7.0",
+    "jsonwebtoken": "^9.0.2",
+    "socket.io": "^4.8.1",
+    "web-vitals": "^4.2.0",
+    "zod": "^4.0.17"
   }
 }

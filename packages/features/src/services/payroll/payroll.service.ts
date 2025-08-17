@@ -1,5 +1,6 @@
-import { PayrollRecord, PayrollStatus, BonusType, DeductionType } from '@repo/database';
-import { Logger } from '@repo/utils/logger';
+import type { PayrollRecord, PayrollStatus } from '@repo/database';
+import { BonusType, DeductionType } from '@repo/database';
+import { Logger } from '@repo/utils';
 import { BusinessError } from '../../errors';
 import { EventBus } from '../../events';
 import { TransactionManager } from '../../transactions';
@@ -14,12 +15,12 @@ const payrollCalculationSchema = z.object({
   hoursWorked: z.number().min(0),
   hourlyRate: z.number().min(0),
   bonuses: z.array(z.object({
-    type: z.enum(['QUALITY', 'PERFORMANCE', 'PROJECT_COMPLETION', 'ATTENDANCE', 'OTHER']),
+    type: z.nativeEnum(BonusType),
     amount: z.number().min(0),
     description: z.string()
   })).optional(),
   deductions: z.array(z.object({
-    type: z.enum(['ABSENCE', 'DAMAGE', 'ADVANCE', 'OTHER']),
+    type: z.nativeEnum(DeductionType),
     amount: z.number().min(0),
     description: z.string()
   })).optional()

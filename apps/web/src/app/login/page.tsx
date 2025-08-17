@@ -6,8 +6,17 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Input } from '@/components/ui/Input'
 import { Lock, Eye, EyeOff, AlertCircle } from 'lucide-react'
 import { loginSchema, registerWithInviteSchema } from '@/features/auth/schemas/auth.schema'
-// TODO: Replace with @repo/shared after consolidation
-// import { AUTH_ERRORS } from '@/features/auth/types/auth.types'
+// Define auth errors locally until shared package is consolidated
+const AUTH_ERRORS = {
+  'CredentialsSignin': 'Nieprawidłowe dane logowania',
+  'SessionRequired': 'Wymagana autoryzacja',
+  'InvalidCredentials': 'Nieprawidłowe dane logowania',
+  'UserNotFound': 'Użytkownik nie został znaleziony',
+  'InvalidPassword': 'Nieprawidłowe hasło',
+  'AccountInactive': 'Konto zostało dezaktywowane',
+  'NoPassword': 'Konto nie ma ustawionego hasła',
+  'Default': 'Wystąpił błąd podczas logowania'
+} as const
 
 function LoginForm() {
   const [email, setEmail] = useState('')

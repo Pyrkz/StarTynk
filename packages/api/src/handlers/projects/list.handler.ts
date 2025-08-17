@@ -1,6 +1,6 @@
 import { prisma } from '@repo/database';
 import { ApiResponse } from '../../responses';
-import { ListProjectsInput } from '../../validators';
+import type { ListProjectsInput } from '../../validators';
 import { applyFilters, applySorting, applyPagination, getProjectSortFields } from '../../utils';
 import { logger } from '../../middleware';
 
@@ -53,24 +53,22 @@ export async function listProjectsHandler(input: ListProjectsInput): Promise<Res
           developer: {
             select: {
               id: true,
-              firstName: true,
-              lastName: true,
+              name: true,
               email: true
             }
           },
           coordinator: {
             select: {
               id: true,
-              firstName: true,
-              lastName: true,
+              name: true,
               email: true
             }
           },
           _count: {
             select: {
-              employees: true,
+              projectAssignments: true,
               tasks: true,
-              materials: true
+              materialOrders: true
             }
           }
         }

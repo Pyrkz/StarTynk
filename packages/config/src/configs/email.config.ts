@@ -1,8 +1,8 @@
-import { EnvLoader } from '../env';
+import { getExtendedEnv } from '../env';
 import type { EmailConfig } from '../types';
 
 export function getEmailConfig(): EmailConfig {
-  const env = EnvLoader.get();
+  const env = getExtendedEnv();
   
   return {
     host: env.SMTP_HOST,
@@ -36,7 +36,7 @@ export function getNodemailerConfig() {
 }
 
 export function getEmailTemplates() {
-  const env = EnvLoader.get();
+  const env = getExtendedEnv();
   const appName = env.NEXT_PUBLIC_APP_NAME || env.EXPO_PUBLIC_APP_NAME;
   const appUrl = env.APP_URL;
   
@@ -105,7 +105,7 @@ export function getEmailTemplates() {
 }
 
 export function getEmailLimits() {
-  const env = EnvLoader.get();
+  const env = getExtendedEnv();
   
   return {
     // Rate limiting for emails

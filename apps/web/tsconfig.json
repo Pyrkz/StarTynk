@@ -22,8 +22,21 @@
       "@/*": ["./src/*"],
       "@repo/shared": ["../../packages/shared/src"],
       "@repo/shared/*": ["../../packages/shared/src/*"],
+      "@repo/shared/storage": ["../../packages/shared/src/storage/web"],
       "@repo/ui": ["../../packages/ui/src"],
-      "@repo/ui/*": ["../../packages/ui/src/*"]
+      "@repo/ui/*": ["../../packages/ui/src/*"],
+      "@repo/api": ["../../packages/api/src"],
+      "@repo/api/*": ["../../packages/api/src/*"],
+      "@repo/utils": ["../../packages/utils/src"],
+      "@repo/utils/*": ["../../packages/utils/src/*"],
+      "@repo/auth": ["../../packages/auth/src"],
+      "@repo/auth/*": ["../../packages/auth/src/*"],
+      "@repo/trpc": ["../../packages/trpc/src"],
+      "@repo/trpc/*": ["../../packages/trpc/src/*"],
+      "@repo/database": ["../../packages/database/src"],
+      "@repo/database/*": ["../../packages/database/src/*"],
+      "@repo/validation": ["../../packages/validation/src"],
+      "@repo/validation/*": ["../../packages/validation/src/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

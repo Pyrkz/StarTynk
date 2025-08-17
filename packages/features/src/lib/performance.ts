@@ -297,17 +297,38 @@ export function useRenderTime(componentName: string) {
 }
 
 // Web Vitals integration for web platform
-export function trackWebVitals() {
+export function trackWebVitals(onMetric?: (metric: any) => void) {
   if (typeof window === 'undefined') return;
 
-  // Core Web Vitals
-  import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
-    getCLS(console.log);
-    getFID(console.log);
-    getFCP(console.log);
-    getLCP(console.log);
-    getTTFB(console.log);
+  const metricHandler = onMetric || console.log;
+
+  // Core Web Vitals - using web-vitals v4+ API
+  import('web-vitals').then(({ onCLS, onFCP, onLCP, onTTFB, onINP }) => {
+    // Track Core Web Vitals metrics
+    onCLS(metricHandler);
+    onFCP(metricHandler);
+    onLCP(metricHandler);
+    onTTFB(metricHandler);
+    // Use onINP instead of deprecated getFID
+    onINP(metricHandler);
   }).catch(() => {
     // web-vitals not available, ignore
+  });
+}
+
+// Enhanced Web Vitals tracking with performance monitor integration
+export function trackWebVitalsWithMonitor() {
+  trackWebVitals((metric) => {
+    // Log to console for debugging
+    console.log(`[Web Vitals] ${metric.name}:`, metric.value);
+    
+    // Track in performance monitor
+    if (metric.name === 'LCP' || metric.name === 'FCP' || metric.name === 'TTFB') {
+      // These are timing metrics
+      performanceMonitor.trackRenderTime(`web-vital-${metric.name}`, metric.value);
+    }
+    
+    // Could also send to analytics or monitoring service
+    // analytics.track('web_vital', { metric: metric.name, value: metric.value });
   });
 }

@@ -15,7 +15,12 @@ const t = initTRPC.context<Context>().create({
         ...shape.data,
         zodError:
           error.cause instanceof ZodError ? error.cause.flatten() : null,
-        requestId: 'requestId' in error.cause ? error.cause.requestId : undefined,
+        requestId: 
+          error.cause && 
+          typeof error.cause === 'object' && 
+          'requestId' in error.cause 
+            ? (error.cause as any).requestId 
+            : undefined,
       },
     };
   },
@@ -31,7 +36,7 @@ export const middleware = t.middleware;
 /**
  * Create a logger middleware for development
  */
-const logger = middleware(async ({ path, type, next, ctx }) => {
+const logger = middleware(async ({ path, type, next }) => {
   const start = Date.now();
   const result = await next();
   const ms = Date.now() - start;

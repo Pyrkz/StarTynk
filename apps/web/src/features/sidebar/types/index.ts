@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import type { Role } from '@repo/database'
+import type { Role } from '@repo/database/client-types'
 
 // Navigation item types
 export interface NavigationItem {

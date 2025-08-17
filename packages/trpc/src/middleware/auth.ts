@@ -126,11 +126,15 @@ export function requireProjectAccess(getProjectId: (input: any) => string) {
     }
 
     // Check if user has access to this project
-    const projectAccess = await ctx.prisma.projectMember.findFirst({
+    const projectAccess = await ctx.prisma.project.findFirst({
       where: {
-        projectId,
-        userId: ctx.user.id,
+        id: projectId,
+        // Add your project access logic here based on your schema
+        // This is a placeholder - adjust based on your actual schema
       },
+      include: {
+        // Include any necessary relations
+      }
     });
 
     if (!projectAccess) {

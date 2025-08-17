@@ -1,4 +1,5 @@
-import { UserDTO, PaginatedResponse, ApiResponse } from '@repo/shared/types';
+import type { UserDTO, ApiResponse } from '@repo/shared';
+import type { PaginatedResponse } from '@repo/shared';
 import { tokenService } from '../../auth/services/token.service';
 
 interface UsersFilters {
@@ -11,7 +12,7 @@ interface UsersFilters {
   sortOrder?: 'asc' | 'desc';
 }
 
-interface CreateUserData {
+export interface CreateUserData {
   email: string;
   firstName: string;
   lastName: string;
@@ -32,7 +33,7 @@ class UsersService {
                    '/api/v1';
   }
 
-  async getUsers(filters: UsersFilters = {}): Promise<PaginatedResponse<UserDTO>> {
+  async getUsers(filters: UsersFilters = {}): Promise<{ items: UserDTO[]; total: number }> {
     const params = new URLSearchParams();
     
     Object.entries(filters).forEach(([key, value]) => {
@@ -50,13 +51,16 @@ class UsersService {
       throw new Error('Failed to fetch users');
     }
 
-    const data: ApiResponse<PaginatedResponse<UserDTO>> = await response.json();
+    const data: PaginatedResponse<UserDTO> = await response.json();
     
     if (!data.success) {
-      throw new Error(data.error?.message || 'Failed to fetch users');
+      throw new Error(data.message || 'Failed to fetch users');
     }
 
-    return data.data;
+    return {
+      items: data.data,
+      total: data.pagination.total
+    };
   }
 
   async getUserById(id: string): Promise<UserDTO> {
@@ -72,7 +76,7 @@ class UsersService {
     const data: ApiResponse<{ user: UserDTO }> = await response.json();
     
     if (!data.success) {
-      throw new Error(data.error?.message || 'Failed to fetch user');
+      throw new Error(data.message || 'Failed to fetch user');
     }
 
     return data.data.user;
@@ -96,7 +100,7 @@ class UsersService {
     const data: ApiResponse<{ user: UserDTO }> = await response.json();
     
     if (!data.success) {
-      throw new Error(data.error?.message || 'Failed to create user');
+      throw new Error(data.message || 'Failed to create user');
     }
 
     return data.data.user;
@@ -120,7 +124,7 @@ class UsersService {
     const data: ApiResponse<{ user: UserDTO }> = await response.json();
     
     if (!data.success) {
-      throw new Error(data.error?.message || 'Failed to update user');
+      throw new Error(data.message || 'Failed to update user');
     }
 
     return data.data.user;
@@ -140,7 +144,7 @@ class UsersService {
     const data: ApiResponse<void> = await response.json();
     
     if (!data.success) {
-      throw new Error(data.error?.message || 'Failed to delete user');
+      throw new Error(data.message || 'Failed to delete user');
     }
   }
 
@@ -162,7 +166,7 @@ class UsersService {
     const data: ApiResponse<void> = await response.json();
     
     if (!data.success) {
-      throw new Error(data.error?.message || 'Failed to send invitation');
+      throw new Error(data.message || 'Failed to send invitation');
     }
   }
 
@@ -180,7 +184,7 @@ class UsersService {
     const data: ApiResponse<void> = await response.json();
     
     if (!data.success) {
-      throw new Error(data.error?.message || 'Failed to resend invitation');
+      throw new Error(data.message || 'Failed to resend invitation');
     }
   }
 

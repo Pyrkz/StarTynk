@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { authenticateRequest } from '@repo/auth';
-import { ApiResponse } from '@repo/api/responses';
-import { SyncService } from '@repo/features/services/sync';
-import { Logger } from '@repo/utils/logger';
+import { ApiResponse } from '@repo/api/web';
+import { SyncService } from '@repo/features';
+import { Logger } from '@repo/utils';
 
 const logger = new Logger('MobileSyncPull');
 

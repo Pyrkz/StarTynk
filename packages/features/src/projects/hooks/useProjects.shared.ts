@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectsService } from '../services/projects.service';
-import { ProjectDTO } from '@repo/shared/types';
+import type { ProjectDTO } from '@repo/shared';
 import { usePagination } from '../../shared/hooks/usePagination';
 import { useDebounce } from '../../shared/hooks/useDebounce';
 import { useState } from 'react';
@@ -32,7 +32,7 @@ export function useProjects(options: UseProjectsOptions = {}) {
       page: pagination.page,
       limit: pagination.pageSize,
     }),
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
   });
 
   // Update pagination total when data changes
@@ -48,7 +48,7 @@ export function useProjects(options: UseProjectsOptions = {}) {
     filters,
     setFilters,
     pagination,
-    refetch: () => queryClient.invalidateQueries(['projects']),
+    refetch: () => queryClient.invalidateQueries({ queryKey: ['projects'] }),
   };
 }
 
@@ -72,7 +72,7 @@ export function useCreateProject() {
   return useMutation({
     mutationFn: projectsService.createProject,
     onSuccess: () => {
-      queryClient.invalidateQueries(['projects']);
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
   });
 }
@@ -85,7 +85,7 @@ export function useUpdateProject() {
       projectsService.updateProject(id, data),
     onSuccess: (updatedProject) => {
       queryClient.setQueryData(['projects', updatedProject.id], updatedProject);
-      queryClient.invalidateQueries(['projects']);
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
   });
 }
@@ -96,7 +96,7 @@ export function useDeleteProject() {
   return useMutation({
     mutationFn: projectsService.deleteProject,
     onSuccess: () => {
-      queryClient.invalidateQueries(['projects']);
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
   });
 }
@@ -108,8 +108,8 @@ export function useAssignUserToProject() {
     mutationFn: ({ projectId, userId }: { projectId: string; userId: string }) => 
       projectsService.assignUserToProject(projectId, userId),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['projects', variables.projectId]);
-      queryClient.invalidateQueries(['projects']);
+      queryClient.invalidateQueries({ queryKey: ['projects', variables.projectId] });
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
   });
 }
@@ -121,8 +121,8 @@ export function useRemoveUserFromProject() {
     mutationFn: ({ projectId, userId }: { projectId: string; userId: string }) => 
       projectsService.removeUserFromProject(projectId, userId),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['projects', variables.projectId]);
-      queryClient.invalidateQueries(['projects']);
+      queryClient.invalidateQueries({ queryKey: ['projects', variables.projectId] });
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
   });
 }

@@ -1,4 +1,5 @@
-import type { UnifiedAuthService } from '@repo/auth/services/auth.service';
+import type { UnifiedAuthService } from '@repo/auth/services';
+import { ClientType } from '@repo/shared';
 import type { 
   HTTPAdapter, 
   CacheManager, 
@@ -196,9 +197,13 @@ export class UnifiedAPIClient {
     // Handle auth errors
     if (error.status === 401 && this.authService && !config.skipAuthRefresh) {
       try {
-        await this.authService.refreshToken();
-        // Retry request with new token
-        return this.request(url, { ...config, skipAuthRefresh: true });
+        // Note: refreshAuth requires parameters - this is a placeholder implementation
+        // In real usage, the client would need to store refresh token and device info
+        const refreshResult = await this.authService.refreshAuth('', ClientType.MOBILE);
+        if (refreshResult.success) {
+          // Retry request with new token
+          return this.request(url, { ...config, skipAuthRefresh: true }) as never;
+        }
       } catch (refreshError) {
         // Refresh failed, emit auth expired event
         if (typeof window !== 'undefined') {

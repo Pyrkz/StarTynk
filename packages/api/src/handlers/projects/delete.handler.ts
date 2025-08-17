@@ -1,7 +1,7 @@
 import { prisma } from '@repo/database';
 import { ApiResponse } from '../../responses';
 import { ApiError, ProjectNotFoundError } from '../../errors';
-import { DeleteProjectInput } from '../../validators';
+import type { DeleteProjectInput } from '../../validators';
 import { logger } from '../../middleware';
 
 export async function deleteProjectHandler(input: DeleteProjectInput): Promise<Response> {
@@ -14,9 +14,9 @@ export async function deleteProjectHandler(input: DeleteProjectInput): Promise<R
       include: {
         _count: {
           select: {
-            employees: true,
+            projectAssignments: true,
             tasks: true,
-            materials: true,
+            materialOrders: true,
             deliveries: true
           }
         }
@@ -28,9 +28,9 @@ export async function deleteProjectHandler(input: DeleteProjectInput): Promise<R
     }
 
     // Prevent deletion of projects with dependencies
-    const hasEmployees = existingProject._count.employees > 0;
+    const hasEmployees = existingProject._count.projectAssignments > 0;
     const hasTasks = existingProject._count.tasks > 0;
-    const hasMaterials = existingProject._count.materials > 0;
+    const hasMaterials = existingProject._count.materialOrders > 0;
     const hasDeliveries = existingProject._count.deliveries > 0;
 
     if (hasEmployees || hasTasks || hasMaterials || hasDeliveries) {
@@ -39,9 +39,9 @@ export async function deleteProjectHandler(input: DeleteProjectInput): Promise<R
         'PROJECT_HAS_DEPENDENCIES',
         409,
         {
-          employees: existingProject._count.employees,
+          employees: existingProject._count.projectAssignments,
           tasks: existingProject._count.tasks,
-          materials: existingProject._count.materials,
+          materials: existingProject._count.materialOrders,
           deliveries: existingProject._count.deliveries
         }
       );
@@ -63,11 +63,11 @@ export async function deleteProjectHandler(input: DeleteProjectInput): Promise<R
       data: {
         status: 'CANCELLED',
         deletedAt: new Date(),
-        title: `[DELETED] ${existingProject.title}`
+        name: `[DELETED] ${existingProject.name}`
       },
       select: {
         id: true,
-        title: true,
+        name: true,
         status: true,
         deletedAt: true
       }
@@ -75,7 +75,7 @@ export async function deleteProjectHandler(input: DeleteProjectInput): Promise<R
 
     logger.info('Project soft deleted successfully', {
       projectId: id,
-      title: existingProject.title,
+      title: existingProject.name,
       previousStatus: existingProject.status
     });
 

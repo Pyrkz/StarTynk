@@ -1,0 +1,680 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============== AUTHENTICATION & USERS ==============
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          Role      @default(USER)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  invitedBy     String?
+  deletedAt     DateTime?
+  
+  // Enhanced user management fields
+  phone         String?
+  position      String?
+  department    String?
+  employmentStartDate DateTime?
+  employmentEndDate   DateTime?
+  lastLoginAt   DateTime?
+  loginCount    Int       @default(0)
+  
+  // Relations
+  accounts              Account[]
+  sessions              Session[]
+  invitationsSent       InvitationCode[] @relation("InvitedBy")
+  inviterUser           User?             @relation("InvitedUsers", fields: [invitedBy], references: [id])
+  invitedUsers          User[]            @relation("InvitedUsers")
+  taskAssignments       TaskAssignment[]
+  qualityControls       QualityControl[]
+  materialOrders        MaterialOrder[]
+  equipmentAssignments  EquipmentAssignment[]
+  deliveryReceipts      Delivery[]
+  vehicleAssignments    VehicleAssignment[]
+  comments              Comment[]
+  createdProjects       Project[] @relation("ProjectCreator")
+  coordinatedProjects   Project[] @relation("ProjectCoordinator")
+  activityLogs          UserActivityLog[]
+
+  @@map("users")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verificationtokens")
+}
+
+model InvitationCode {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  email     String
+  usedAt    DateTime?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  invitedBy String
+  
+  // Enhanced invitation fields
+  role      Role     @default(USER)
+  message   String?  @db.Text
+  resendCount Int    @default(0)
+  lastSentAt DateTime @default(now())
+  
+  inviter User @relation("InvitedBy", fields: [invitedBy], references: [id])
+
+  @@map("invitation_codes")
+}
+
+model UserActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String   // login, logout, role_changed, status_changed, etc.
+  details   Json?    // Additional action details
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id])
+  
+  @@index([userId, createdAt])
+  @@map("user_activity_logs")
+}
+
+// ============== PROJECTS & TASKS MODULE ==============
+model Developer {
+  id          String    @id @default(cuid())
+  name        String
+  address     String?
+  contact     String?
+  email       String?
+  phone       String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  projects Project[]
+
+  @@map("developers")
+}
+
+model Project {
+  id              String         @id @default(cuid())
+  name            String
+  address         String
+  developerId     String
+  startDate       DateTime
+  endDate         DateTime
+  baseRate        Decimal        @db.Decimal(10, 2)
+  status          ProjectStatus  @default(PLANNING)
+  description     String?        @db.Text
+  createdById     String
+  coordinatorId   String?
+  isActive        Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  deletedAt       DateTime?
+
+  // Relations
+  developer     Developer @relation(fields: [developerId], references: [id])
+  createdBy     User @relation("ProjectCreator", fields: [createdById], references: [id])
+  coordinator   User? @relation("ProjectCoordinator", fields: [coordinatorId], references: [id])
+  apartments    Apartment[]
+  tasks         Task[]
+  materialOrders MaterialOrder[]
+  deliveries    Delivery[]
+
+  @@map("projects")
+}
+
+model Apartment {
+  id          String    @id @default(cuid())
+  projectId   String
+  number      String
+  floor       Int?
+  area        Decimal?  @db.Decimal(8, 2)
+  rooms       Int?
+  type        String?   // mieszkanie, lokal, itp.
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  project Project @relation(fields: [projectId], references: [id])
+  tasks   Task[]
+
+  @@unique([projectId, number])
+  @@map("apartments")
+}
+
+model Task {
+  id              String       @id @default(cuid())
+  projectId       String
+  apartmentId     String?
+  title           String
+  description     String?      @db.Text
+  area            Decimal      @db.Decimal(8, 2)
+  rate            Decimal      @db.Decimal(10, 2)
+  status          TaskStatus   @default(NEW)
+  estimatedHours  Int?
+  actualHours     Int?
+  priority        TaskPriority @default(MEDIUM)
+  dueDate         DateTime?
+  isActive        Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  deletedAt       DateTime?
+
+  // Relations
+  project         Project @relation(fields: [projectId], references: [id])
+  apartment       Apartment? @relation(fields: [apartmentId], references: [id])
+  assignments     TaskAssignment[]
+  qualityControls QualityControl[]
+  payments        PaymentCalculation[]
+
+  @@map("tasks")
+}
+
+model TaskAssignment {
+  id        String   @id @default(cuid())
+  taskId    String
+  userId    String
+  role      String?  // główny wykonawca, pomocnik, itp.
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  task Task @relation(fields: [taskId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([taskId, userId])
+  @@map("task_assignments")
+}
+
+// ============== QUALITY CONTROL MODULE ==============
+model QualityControl {
+  id              String              @id @default(cuid())
+  taskId          String
+  controllerId    String
+  controlNumber   Int                 @default(1) // 1, 2, 3... dla kolejnych kontroli
+  status          QualityStatus       @default(PENDING)
+  completionRate  Int                 @default(0) // 0-100%
+  notes           String?             @db.Text
+  issuesFound     String?             @db.Text
+  correctionsNeeded String?           @db.Text
+  controlDate     DateTime            @default(now())
+  recontrolDate   DateTime?
+  issueType       QualityIssueType?
+  isActive        Boolean             @default(true)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  deletedAt       DateTime?
+
+  task       Task @relation(fields: [taskId], references: [id])
+  controller User @relation(fields: [controllerId], references: [id])
+
+  @@map("quality_controls")
+}
+
+// ============== MATERIALS & ORDERS MODULE ==============
+model MaterialCategory {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  materials Material[]
+
+  @@map("material_categories")
+}
+
+model Material {
+  id          String    @id @default(cuid())
+  name        String
+  categoryId  String
+  unit        String    // szt, kg, m2, m3, itp.
+  price       Decimal?  @db.Decimal(10, 2)
+  supplier    String?
+  description String?   @db.Text
+  imageUrl    String?
+  stockLevel  Int       @default(0)
+  minStock    Int       @default(0)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  category     MaterialCategory @relation(fields: [categoryId], references: [id])
+  orderItems   MaterialOrderItem[]
+  deliveryItems DeliveryItem[]
+
+  @@map("materials")
+}
+
+model MaterialOrder {
+  id          String           @id @default(cuid())
+  projectId   String
+  orderedById String
+  status      OrderStatus      @default(NEW)
+  totalAmount Decimal?         @db.Decimal(10, 2)
+  notes       String?          @db.Text
+  orderDate   DateTime         @default(now())
+  neededDate  DateTime?
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  deletedAt   DateTime?
+
+  project    Project @relation(fields: [projectId], references: [id])
+  orderedBy  User @relation(fields: [orderedById], references: [id])
+  items      MaterialOrderItem[]
+
+  @@map("material_orders")
+}
+
+model MaterialOrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  materialId String
+  quantity  Int
+  unitPrice Decimal @db.Decimal(10, 2)
+  notes     String?
+
+  order    MaterialOrder @relation(fields: [orderId], references: [id])
+  material Material @relation(fields: [materialId], references: [id])
+
+  @@unique([orderId, materialId])
+  @@map("material_order_items")
+}
+
+// ============== EQUIPMENT MODULE ==============
+model EquipmentCategory {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  equipment Equipment[]
+
+  @@map("equipment_categories")
+}
+
+model Equipment {
+  id             String           @id @default(cuid())
+  name           String
+  categoryId     String
+  serialNumber   String?
+  purchaseDate   DateTime?
+  purchasePrice  Decimal?         @db.Decimal(10, 2)
+  status         EquipmentStatus  @default(AVAILABLE)
+  condition      String?          // dobry, zadowalający, wymaga naprawy
+  description    String?          @db.Text
+  imageUrl       String?
+  isActive       Boolean          @default(true)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  deletedAt      DateTime?
+
+  category    EquipmentCategory @relation(fields: [categoryId], references: [id])
+  assignments EquipmentAssignment[]
+  history     EquipmentHistory[]
+
+  @@map("equipment")
+}
+
+model EquipmentAssignment {
+  id           String    @id @default(cuid())
+  equipmentId  String
+  userId       String
+  assignedDate DateTime  @default(now())
+  returnDate   DateTime?
+  notes        String?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  equipment Equipment @relation(fields: [equipmentId], references: [id])
+  user      User @relation(fields: [userId], references: [id])
+
+  @@map("equipment_assignments")
+}
+
+model EquipmentHistory {
+  id          String                @id @default(cuid())
+  equipmentId String
+  action      EquipmentHistoryAction
+  userId      String?
+  description String?               @db.Text
+  actionDate  DateTime              @default(now())
+  isActive    Boolean               @default(true)
+  createdAt   DateTime              @default(now())
+
+  equipment Equipment @relation(fields: [equipmentId], references: [id])
+
+  @@map("equipment_history")
+}
+
+// ============== DELIVERIES MODULE ==============
+model Delivery {
+  id            String        @id @default(cuid())
+  projectId     String
+  supplierName  String
+  deliveryDate  DateTime      @default(now())
+  receivedById  String
+  status        DeliveryStatus @default(PENDING)
+  deliveryType  String        // paleta, luzem, drobne
+  totalWeight   Decimal?      @db.Decimal(8, 2)
+  notes         String?       @db.Text
+  documentUrl   String?       // skan WZ
+  isActive      Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
+
+  project    Project @relation(fields: [projectId], references: [id])
+  receivedBy User @relation(fields: [receivedById], references: [id])
+  items      DeliveryItem[]
+
+  @@map("deliveries")
+}
+
+model DeliveryItem {
+  id               String  @id @default(cuid())
+  deliveryId       String
+  materialId       String
+  orderedQuantity  Int
+  deliveredQuantity Int
+  qualityStatus    String? // OK, uszkodzone, niezgodne
+  notes            String?
+
+  delivery Delivery @relation(fields: [deliveryId], references: [id])
+  material Material @relation(fields: [materialId], references: [id])
+
+  @@unique([deliveryId, materialId])
+  @@map("delivery_items")
+}
+
+// ============== FLEET MODULE ==============
+model Vehicle {
+  id              String     @id @default(cuid())
+  make            String
+  model           String
+  year            Int
+  licensePlate    String     @unique
+  vin             String?
+  insuranceExpiry DateTime?
+  inspectionExpiry DateTime?
+  purchaseDate    DateTime?
+  purchasePrice   Decimal?   @db.Decimal(10, 2)
+  status          VehicleStatus @default(ACTIVE)
+  isActive        Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  deletedAt       DateTime?
+
+  assignments  VehicleAssignment[]
+  maintenances VehicleMaintenance[]
+  reminders    VehicleReminder[]
+
+  @@map("vehicles")
+}
+
+model VehicleAssignment {
+  id         String    @id @default(cuid())
+  vehicleId  String
+  userId     String
+  startDate  DateTime  @default(now())
+  endDate    DateTime?
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id])
+  user    User @relation(fields: [userId], references: [id])
+
+  @@map("vehicle_assignments")
+}
+
+model VehicleMaintenance {
+  id            String           @id @default(cuid())
+  vehicleId     String
+  type          MaintenanceType
+  description   String           @db.Text
+  cost          Decimal          @db.Decimal(10, 2)
+  serviceDate   DateTime
+  nextDueDate   DateTime?
+  mileage       Int?
+  serviceProvider String?
+  invoiceUrl    String?
+  isActive      Boolean          @default(true)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  deletedAt     DateTime?
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id])
+
+  @@map("vehicle_maintenances")
+}
+
+model VehicleReminder {
+  id          String         @id @default(cuid())
+  vehicleId   String
+  type        ReminderType
+  dueDate     DateTime
+  description String
+  daysBefore  Int            @default(7)
+  isCompleted Boolean        @default(false)
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id])
+
+  @@map("vehicle_reminders")
+}
+
+// ============== SHARED MODULES ==============
+model Photo {
+  id          String    @id @default(cuid())
+  url         String
+  description String?
+  type        PhotoType
+  entityType  String    // task, quality_control, delivery, vehicle_maintenance, vehicle
+  entityId    String
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("photos")
+}
+
+model Comment {
+  id         String    @id @default(cuid())
+  content    String    @db.Text
+  authorId   String
+  entityType String    // project, task, quality_control, material_order, delivery
+  entityId   String
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  author User @relation(fields: [authorId], references: [id])
+
+  @@map("comments")
+}
+
+model PaymentCalculation {
+  id             String   @id @default(cuid())
+  taskId         String
+  area           Decimal  @db.Decimal(8, 2)
+  rate           Decimal  @db.Decimal(10, 2)
+  completionRate Int      // 0-100%
+  amount         Decimal  @db.Decimal(10, 2)
+  isPaid         Boolean  @default(false)
+  paidAt         DateTime?
+  notes          String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  task Task @relation(fields: [taskId], references: [id])
+
+  @@map("payment_calculations")
+}
+
+// ============== ENUMS ==============
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+  COORDINATOR
+  WORKER
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskStatus {
+  NEW
+  IN_PROGRESS
+  READY_FOR_PICKUP
+  APPROVED
+  PAID
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum QualityStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PARTIALLY_APPROVED
+}
+
+enum QualityIssueType {
+  OUR_FAULT
+  EXTERNAL_FAULT
+  MATERIAL_DEFECT
+  DESIGN_ISSUE
+}
+
+enum OrderStatus {
+  NEW
+  IN_PROGRESS
+  PARTIALLY_DELIVERED
+  COMPLETED
+  CANCELLED
+}
+
+enum EquipmentStatus {
+  AVAILABLE
+  ASSIGNED
+  DAMAGED
+  RETIRED
+}
+
+enum EquipmentHistoryAction {
+  ASSIGNED
+  RETURNED
+  DAMAGED
+  REPAIRED
+  RETIRED
+  PURCHASED
+}
+
+enum DeliveryStatus {
+  PENDING
+  RECEIVED
+  QUALITY_CHECK
+  ACCEPTED
+  REJECTED
+}
+
+enum VehicleStatus {
+  ACTIVE
+  MAINTENANCE
+  RETIRED
+}
+
+enum MaintenanceType {
+  INSPECTION
+  REPAIR
+  SERVICE
+  INSURANCE
+}
+
+enum ReminderType {
+  INSPECTION
+  INSURANCE
+  SERVICE
+  REPAIR
+}
+
+enum PhotoType {
+  BEFORE
+  AFTER
+  ISSUE
+  DOCUMENTATION
+  INVOICE
+}

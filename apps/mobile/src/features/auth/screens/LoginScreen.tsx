@@ -1,264 +1,277 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
-  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
-  Alert,
+  ScrollView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { Logo, Button, TextInput, Checkbox } from '@/shared/components';
-import { validateLoginForm } from '../utils/validation';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
+import Logo from '../../../shared/components/Logo';
+import { AuthStackParamList } from '../../../types/navigation.types';
+import { LoginCredentials } from '../../../types/user.types';
 import { useAuth } from '../hooks/useAuth';
-import type { LoginFormData } from '../types';
-import { LoginMethod } from '@repo/shared/types';
 
-export function LoginScreen() {
-  const { 
-    login, 
-    biometricLogin, 
-    canUseBiometrics, 
-    biometricInfo,
-    isLoading 
-  } = useAuth();
-  const [formData, setFormData] = useState<LoginFormData>({
-    loginMethod: 'phone',
-    phoneNumber: '',
-    email: '',
+type LoginScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
+
+export default function LoginScreen() {
+  const navigation = useNavigation<LoginScreenNavigationProp>();
+  const { login, isLoading, error } = useAuth();
+  
+  const [credentials, setCredentials] = useState<LoginCredentials>({
+    identifier: '',
     password: '',
-    rememberMe: false,
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isFormLoading, setIsFormLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
-  // TODO: Implement remember me functionality with SecureStore
-  // useEffect(() => {
-  //   const loadRememberedCredentials = async () => {
-  //     // Load from SecureStore
-  //   };
-  //   loadRememberedCredentials();
-  // }, []);
-
-  const handleInputChange = useCallback((field: keyof LoginFormData, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
-    }
-  }, [errors]);
-
-  const handleLogin = useCallback(async () => {
-    // Validate form
-    const validation = validateLoginForm(
-      formData.loginMethod as 'email' | 'phone',
-      formData.phoneNumber,
-      formData.email,
-      formData.password
-    );
-    
-    if (!validation.isValid) {
-      setErrors(validation.errors);
-      return;
-    }
-
-    setIsFormLoading(true);
+  const handleLogin = async () => {
     try {
-      const identifier = formData.loginMethod === 'phone' ? formData.phoneNumber : formData.email;
-      await login(identifier, formData.password, formData.loginMethod as LoginMethod);
-      
-      // Navigation will be handled by the auth state change
+      await login(credentials, rememberMe);
+      // Logowanie udane - nawigacja jest obsługiwana przez LoadingScreen
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Nie udało się zalogować. Spróbuj ponownie.';
-      Alert.alert('Błąd', errorMessage);
-    } finally {
-      setIsFormLoading(false);
+      console.error('Login error:', error);
     }
-  }, [formData, login]);
+  };
 
-  const handleRegister = useCallback(() => {
-    // TODO: Implement register screen
-    Alert.alert('Info', 'Rejestracja będzie dostępna wkrótce');
-  }, []);
+  const handleRegister = () => {
+    navigation.navigate('Register');
+  };
 
-  const handleForgotPassword = useCallback(() => {
-    // TODO: Implement forgot password screen
-    Alert.alert('Info', 'Resetowanie hasła będzie dostępne wkrótce');
-  }, []);
-
-  const handleBiometricLogin = useCallback(async () => {
-    try {
-      await biometricLogin();
-    } catch (error) {
-      console.error('Biometric login failed:', error);
-    }
-  }, [biometricLogin]);
-
-  const isAnyLoading = isLoading || isFormLoading;
+  const handleForgotPassword = () => {
+    navigation.navigate('ForgotPassword');
+  };
 
   return (
-    <SafeAreaView className="flex-1 bg-app-background">
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1"
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <View className="flex-1 px-6 justify-center">
-            {/* Logo */}
-            <View className="items-center mb-6">
-              <Logo size="large" />
-            </View>
+        <View style={styles.logoContainer}>
+          <Logo size="large" />
+        </View>
 
-            {/* Welcome text */}
-            <Text className="text-center text-text-secondary text-base mb-8">
-              Witaj z powrotem! Proszę wprowadź swoje dane.
-            </Text>
+        <Text style={styles.welcomeText}>
+          Witaj z powrotem! Proszę wprowadź swoje dane.
+        </Text>
 
-            {/* Login method toggle */}
-            <View className="flex-row bg-neutral-100 rounded-lg p-1 mb-6">
-              <Pressable
-                className={`flex-1 py-3 rounded-md ${
-                  formData.loginMethod === 'phone' ? 'bg-white shadow-sm' : ''
-                }`}
-                onPress={() => handleInputChange('loginMethod', 'phone')}
-              >
-                <Text
-                  className={`text-center font-medium ${
-                    formData.loginMethod === 'phone' ? 'text-foreground' : 'text-text-secondary'
-                  }`}
-                >
-                  Numer telefonu
-                </Text>
-              </Pressable>
-              <Pressable
-                className={`flex-1 py-3 rounded-md ${
-                  formData.loginMethod === 'email' ? 'bg-white shadow-sm' : ''
-                }`}
-                onPress={() => handleInputChange('loginMethod', 'email')}
-              >
-                <Text
-                  className={`text-center font-medium ${
-                    formData.loginMethod === 'email' ? 'text-foreground' : 'text-text-secondary'
-                  }`}
-                >
-                  Email
-                </Text>
-              </Pressable>
-            </View>
-
-            {/* Form */}
-            <View className="space-y-4">
-              {/* Phone number or Email input */}
-              {formData.loginMethod === 'phone' ? (
-                <TextInput
-                  placeholder="Numer telefonu"
-                  value={formData.phoneNumber}
-                  onChangeText={(value: string) => handleInputChange('phoneNumber', value)}
-                  keyboardType="phone-pad"
-                  autoCapitalize="none"
-                  error={errors.phoneNumber}
-                  containerClassName="mb-4"
-                  maxLength={9}
-                />
-              ) : (
-                <TextInput
-                  placeholder="Email"
-                  value={formData.email}
-                  onChangeText={(value: string) => handleInputChange('email', value)}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  error={errors.email}
-                  containerClassName="mb-4"
-                />
-              )}
-
-              {/* Password input */}
-              <TextInput
-                placeholder="Hasło"
-                value={formData.password}
-                onChangeText={(value: string) => handleInputChange('password', value)}
-                secureTextEntry
-                autoCapitalize="none"
-                error={errors.password}
-                containerClassName="mb-4"
-              />
-
-              {/* Remember me and Forgot password row */}
-              <View className="flex-row justify-between items-center mb-6">
-                <Checkbox
-                  checked={formData.rememberMe}
-                  onPress={() => handleInputChange('rememberMe', !formData.rememberMe)}
-                  label="Zapamiętaj mnie"
-                />
-                <Pressable onPress={handleForgotPassword}>
-                  <Text className="text-foreground text-base">
-                    Nie pamiętasz hasła?
-                  </Text>
-                </Pressable>
-              </View>
-
-              {/* Login button */}
-              <Button
-                title="Zaloguj się"
-                onPress={handleLogin}
-                variant="primary"
-                size="large"
-                loading={isAnyLoading}
-                disabled={isAnyLoading}
-                className="mb-4"
-              />
-
-              {/* Biometric login button */}
-              {canUseBiometrics && (
-                <Pressable
-                  onPress={handleBiometricLogin}
-                  disabled={isAnyLoading}
-                  className={`flex-row items-center justify-center bg-transparent border border-foreground rounded-lg py-3 px-4 mb-4 ${
-                    isAnyLoading ? 'opacity-50' : ''
-                  }`}
-                >
-                  <Ionicons 
-                    name={Platform.OS === 'ios' ? 'finger-print' : 'finger-print'} 
-                    size={20} 
-                    color="#FEAD00" 
-                    style={{ marginRight: 8 }}
-                  />
-                  <Text className="text-foreground text-base font-semibold">
-                    Zaloguj się biometrycznie
-                  </Text>
-                </Pressable>
-              )}
-
-              {/* Or divider */}
-              <Text className="text-center text-text-tertiary text-base my-4">
-                Lub
-              </Text>
-
-              {/* Register section */}
-              <View className="flex-row justify-center items-center">
-                <Text className="text-text-secondary text-base">
-                  Nie posiadasz konta?{' '}
-                </Text>
-                <Pressable onPress={handleRegister} disabled={isAnyLoading}>
-                  <Text className="text-foreground text-base font-semibold">
-                    Zarejestruj się
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
+        {error && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        )}
+
+        <View style={styles.formContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Numer telefonu lub email"
+            placeholderTextColor="#999"
+            value={credentials.identifier}
+            onChangeText={(text) => setCredentials({ ...credentials, identifier: text })}
+            keyboardType="default"
+            autoCapitalize="none"
+            editable={!isLoading}
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Hasło"
+            placeholderTextColor="#999"
+            value={credentials.password}
+            onChangeText={(text) => setCredentials({ ...credentials, password: text })}
+            secureTextEntry
+            autoCapitalize="none"
+            editable={!isLoading}
+          />
+
+          <View style={styles.rememberContainer}>
+            <TouchableOpacity 
+              style={styles.checkboxContainer}
+              onPress={() => setRememberMe(!rememberMe)}
+              disabled={isLoading}
+            >
+              <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+                {rememberMe && <Text style={styles.checkmark}>✓</Text>}
+              </View>
+              <Text style={styles.rememberText}>Zapamiętaj mnie</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={handleForgotPassword} disabled={isLoading}>
+              <Text style={styles.forgotText}>Nie pamiętasz hasła?</Text>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity 
+            onPress={handleLogin}
+            disabled={isLoading}
+            style={[styles.loginButtonContainer, isLoading && styles.loginButtonDisabled]}
+          >
+            <LinearGradient
+              colors={['#FEAD00', '#D75200']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.loginButton}
+            >
+              <Text style={styles.loginButtonText}>
+                {isLoading ? 'Logowanie...' : 'Zaloguj się'}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <Text style={styles.orText}>Lub</Text>
+
+          <View style={styles.registerContainer}>
+            <Text style={styles.noAccountText}>Nie posiadasz konta? </Text>
+            <TouchableOpacity onPress={handleRegister} disabled={isLoading}>
+              <Text style={styles.registerText}>Zarejestruj się</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFCF2',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingVertical: 40,
+    justifyContent: 'center',
+    minHeight: '100%',
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  welcomeText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 40,
+  },
+  errorContainer: {
+    backgroundColor: '#ffebee',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  errorText: {
+    color: '#c62828',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  formContainer: {
+    width: '100%',
+  },
+  input: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    fontSize: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  rememberContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: '#333',
+    marginRight: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: '#333',
+  },
+  checkmark: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  rememberText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  forgotText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  loginButtonContainer: {
+    marginBottom: 24,
+    shadowColor: '#FFA500',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+    borderRadius: 12,
+  },
+  loginButton: {
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  loginButtonDisabled: {
+    opacity: 0.6,
+  },
+  loginButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  orText: {
+    textAlign: 'center',
+    color: '#999',
+    fontSize: 16,
+    marginBottom: 24,
+  },
+  registerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noAccountText: {
+    fontSize: 16,
+    color: '#666',
+  },
+  registerText: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: 'bold',
+  },
+});

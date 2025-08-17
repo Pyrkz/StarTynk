@@ -1,6 +1,6 @@
 import { prisma } from '@repo/database';
 import bcrypt from 'bcryptjs';
-import { Role } from '@shared/types';
+import { Role } from '@repo/shared';
 
 export interface CreateUserData {
   email: string;

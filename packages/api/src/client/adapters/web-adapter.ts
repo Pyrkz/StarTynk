@@ -119,7 +119,7 @@ export class WebHTTPAdapter implements HTTPAdapter {
       case 'json':
       default:
         const text = await response.text();
-        return text ? JSON.parse(text) : null;
+        return text ? JSON.parse(text) : (null as T);
     }
   }
 

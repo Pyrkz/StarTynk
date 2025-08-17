@@ -106,9 +106,9 @@ export const performanceMiddleware = middleware(async ({ next, path, type, ctx }
  */
 export function timeoutMiddleware(timeoutMs: number = 30000) {
   return middleware(async ({ next, path, type }) => {
-    return Promise.race([
+    const result = await Promise.race([
       next(),
-      new Promise((_, reject) => {
+      new Promise<never>((_, reject) => {
         setTimeout(() => {
           reject(new TRPCError({
             code: 'TIMEOUT',
@@ -117,6 +117,7 @@ export function timeoutMiddleware(timeoutMs: number = 30000) {
         }, timeoutMs);
       }),
     ]);
+    return result;
   });
 }
 
@@ -175,35 +176,13 @@ export function concurrencyLimitMiddleware(maxConcurrent: number = 10) {
  * Health check middleware
  */
 export const healthCheckMiddleware = middleware(async ({ next, path }) => {
-  // Check if this is a health check endpoint
+  // Check if this is a health check endpoint  
   if (path.includes('health')) {
-    // Perform basic health checks
-    const checks = {
-      database: false,
-      memory: false,
-      timestamp: new Date().toISOString(),
-    };
-    
-    try {
-      // Database check
-      await next().then(() => {
-        checks.database = true;
-      });
-    } catch (error) {
-      console.error('Database health check failed:', error);
-    }
-    
-    // Memory check
-    const memUsage = process.memoryUsage();
-    const memUsageMB = memUsage.heapUsed / 1024 / 1024;
-    checks.memory = memUsageMB < 500; // Alert if using more than 500MB
-    
-    return {
-      status: checks.database && checks.memory ? 'healthy' : 'unhealthy',
-      checks,
-      uptime: process.uptime(),
-      version: process.env.npm_package_version,
-    };
+    // For health check endpoints, we bypass normal processing
+    throw new TRPCError({
+      code: 'METHOD_NOT_SUPPORTED',
+      message: 'Health check should be handled by dedicated endpoint'
+    });
   }
   
   return next();

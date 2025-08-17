@@ -1,6 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { z } from 'zod';
-import { ValidationError } from '../errors';
 
 export interface ValidationState<T> {
   data: T | null;
@@ -59,7 +58,7 @@ export function useValidation<T extends z.ZodSchema>(
   
   const values = useRef<Record<string, any>>(defaultValues);
   const touched = useRef<Set<string>>(new Set());
-  const debounceTimers = useRef<Record<string, NodeJS.Timeout>>({});
+  const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   
   // Validate entire form
   const validate = useCallback(async (data: unknown) => {
@@ -136,7 +135,7 @@ export function useValidation<T extends z.ZodSchema>(
         ...prev,
         errors: {
           ...prev.errors,
-          [field]: result.error.issues.map(i => i.message),
+          [field]: result.error.issues.map((i: any) => i.message),
         },
         isValid: false,
       }));

@@ -1,9 +1,9 @@
 import { PrismaClient, Prisma } from '@repo/database';
-import { Logger } from '@repo/utils/logger';
+import { Logger } from '@repo/utils';
 import { RepositoryError, NotFoundError, DuplicateError } from '../../errors';
-import { IRepository, FindManyOptions } from './repository.interface';
+import type { IRepository, FindManyOptions } from './repository.interface';
 
-export abstract class BaseRepository<T, CreateDTO, UpdateDTO> 
+export abstract class BaseRepository<T, CreateDTO extends Record<string, any>, UpdateDTO extends Record<string, any>> 
   implements IRepository<T, CreateDTO, UpdateDTO> {
   
   protected abstract model: string;
@@ -42,7 +42,7 @@ export abstract class BaseRepository<T, CreateDTO, UpdateDTO>
 
   async create(data: CreateDTO): Promise<T> {
     try {
-      this.logger.debug(`Creating ${this.model}`, data);
+      this.logger.debug(`Creating ${this.model}`, { data });
       const result = await (this.prisma as any)[this.model].create({
         data
       });
@@ -61,7 +61,7 @@ export abstract class BaseRepository<T, CreateDTO, UpdateDTO>
 
   async update(id: string, data: UpdateDTO): Promise<T> {
     try {
-      this.logger.debug(`Updating ${this.model} with id: ${id}`, data);
+      this.logger.debug(`Updating ${this.model} with id: ${id}`, { data });
       const result = await (this.prisma as any)[this.model].update({
         where: { id },
         data

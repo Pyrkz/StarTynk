@@ -1,16 +1,38 @@
-import type { Project, Task, Apartment, Developer, User } from '@repo/database';
+import type { Project, Task, Apartment, Developer, User, Role } from '@repo/database';
 import type { 
   ProjectDTO, 
-  ProjectListDTO, 
+  ProjectListItemDTO as ProjectListDTO, 
   ProjectDetailDTO,
   ApartmentDTO,
-  TaskDTO 
-} from '../types/dto/project.dto';
+  TaskDTO,
+  TaskListItemDTO
+} from '../types/dto/project';
+import { ProjectStatus, TaskStatus, TaskPriority } from '../types/enums';
+import { UserListItemDTO } from '../types/dto/user';
+import { Decimal } from '@prisma/client/runtime/library';
 
 /**
  * Project mapper class for converting between Prisma models and DTOs
  */
 export class ProjectMapper {
+  /**
+   * Convert User to UserListItemDTO helper
+   */
+  private static userToListDTO(user: User): UserListItemDTO {
+    return {
+      id: user.id,
+      email: user.email,
+      phone: user.phone,
+      name: user.name,
+      role: user.role as Role,
+      isActive: user.isActive,
+      lastLoginAt: user.lastLoginAt?.toISOString() ?? null,
+      position: user.position,
+      department: user.department,
+      lastActivityAt: user.lastLoginAt || user.updatedAt
+    };
+  }
+
   /**
    * Convert Project model to ProjectDTO
    */
@@ -25,21 +47,18 @@ export class ProjectMapper {
     const { deletedAt, ...dto } = project;
     return {
       ...dto,
+      status: dto.status as ProjectStatus,
+      baseRate: Number(dto.baseRate),
+      startDate: dto.startDate.toISOString(),
+      endDate: dto.endDate?.toISOString() || null,
+      createdAt: dto.createdAt.toISOString(),
+      updatedAt: dto.updatedAt.toISOString(),
       developer: relations?.developer ? {
         id: relations.developer.id,
-        name: relations.developer.name,
-        contact: relations.developer.contact
+        name: relations.developer.name
       } : undefined,
-      coordinator: relations?.coordinator ? {
-        id: relations.coordinator.id,
-        name: relations.coordinator.name,
-        email: relations.coordinator.email
-      } : undefined,
-      createdBy: relations?.createdBy ? {
-        id: relations.createdBy.id,
-        name: relations.createdBy.name,
-        email: relations.createdBy.email
-      } : undefined
+      coordinator: relations?.coordinator ? this.userToListDTO(relations.coordinator) : undefined,
+      createdBy: relations?.createdBy ? this.userToListDTO(relations.createdBy) : undefined
     };
   }
 
@@ -48,29 +67,25 @@ export class ProjectMapper {
    */
   static toListDTO(
     project: Project,
-    relations: {
-      developer: Developer;
+    relations?: {
+      developer?: Developer;
       coordinator?: User;
-    },
-    stats?: {
-      taskCount: number;
-      completedTaskCount: number;
-      progress: number;
+      _count?: {
+        tasks?: number;
+        apartments?: number;
+      };
     }
   ): ProjectListDTO {
     return {
       id: project.id,
       name: project.name,
       address: project.address,
-      status: project.status,
-      startDate: project.startDate,
-      endDate: project.endDate,
-      baseRate: project.baseRate,
-      developerName: relations.developer.name,
-      coordinatorName: relations.coordinator?.name,
-      progress: stats?.progress,
-      taskCount: stats?.taskCount,
-      completedTaskCount: stats?.completedTaskCount
+      status: project.status as ProjectStatus,
+      startDate: project.startDate.toISOString(),
+      endDate: project.endDate?.toISOString() || null,
+      developer: relations?.developer?.name,
+      coordinator: relations?.coordinator?.name ?? undefined,
+      _count: relations?._count
     };
   }
 
@@ -80,29 +95,28 @@ export class ProjectMapper {
   static toDetailDTO(
     project: Project,
     relations: {
-      developer: Developer;
+      developer?: Developer;
       coordinator?: User;
-      createdBy: User;
+      createdBy?: User;
+      apartments?: Apartment[];
+      recentTasks?: Task[];
     },
-    stats?: {
-      taskCount: number;
-      completedTaskCount: number;
-      apartmentCount: number;
+    statistics?: {
+      totalTasks: number;
+      completedTasks: number;
+      inProgressTasks: number;
+      totalApartments: number;
       totalArea: number;
-      progress: number;
-      estimatedCompletion: Date;
-    },
-    recentTasks?: Array<{
-      id: string;
-      title: string;
-      status: string;
-      assignedTo?: string;
-    }>
+      estimatedValue: number;
+      completionPercentage: number;
+    }
   ): ProjectDetailDTO {
+    const dto = this.toDTO(project, relations);
     return {
-      ...this.toDTO(project, relations),
-      stats,
-      recentTasks
+      ...dto,
+      apartments: relations.apartments?.map(apt => this.apartmentToDTO(apt)),
+      recentTasks: relations.recentTasks?.map(task => this.taskToListDTO(task, undefined, 0)),
+      statistics
     };
   }
 
@@ -117,86 +131,86 @@ export class ProjectMapper {
    * Convert array of Project models to ProjectListDTO array
    */
   static toListDTOArray(
-    projects: Array<Project & { developer: Developer; coordinator?: User }>,
-    statsMap?: Map<string, { taskCount: number; completedTaskCount: number; progress: number }>
+    projects: Array<Project & { 
+      developer?: Developer; 
+      coordinator?: User;
+      _count?: {
+        tasks?: number;
+        apartments?: number;
+      };
+    }>
   ): ProjectListDTO[] {
-    return projects.map(project => 
-      this.toListDTO(
-        project, 
-        { developer: project.developer, coordinator: project.coordinator },
-        statsMap?.get(project.id)
-      )
-    );
+    return projects.map(project => this.toListDTO(project, project));
   }
-}
 
-/**
- * Apartment mapper class
- */
-export class ApartmentMapper {
   /**
    * Convert Apartment model to ApartmentDTO
    */
-  static toDTO(
+  static apartmentToDTO(
     apartment: Apartment,
     stats?: {
-      taskCount: number;
-      completedTaskCount: number;
-      progress: number;
+      taskCount?: number;
+      completedTaskCount?: number;
+      progress?: number;
     }
   ): ApartmentDTO {
-    const { deletedAt, ...dto } = apartment;
     return {
-      ...dto,
-      ...stats
+      ...apartment,
+      area: apartment.area ? Number(apartment.area) : null,
+      createdAt: apartment.createdAt.toISOString(),
+      updatedAt: apartment.updatedAt.toISOString()
     };
   }
 
   /**
-   * Convert array of Apartment models to ApartmentDTO array
+   * Convert Task to TaskListItemDTO
    */
-  static toDTOArray(apartments: Apartment[]): ApartmentDTO[] {
-    return apartments.map(apartment => this.toDTO(apartment));
+  static taskToListDTO(
+    task: Task,
+    apartment?: { number: string },
+    assigneeCount?: number
+  ): TaskListItemDTO {
+    return {
+      id: task.id,
+      title: task.title,
+      status: task.status as TaskStatus,
+      priority: task.priority as TaskPriority,
+      area: Number(task.area),
+      rate: Number(task.rate),
+      dueDate: task.dueDate?.toISOString() ?? null,
+      apartmentNumber: apartment?.number,
+      assigneeCount: assigneeCount ?? 0
+    };
   }
-}
 
-/**
- * Task mapper class
- */
-export class TaskMapper {
   /**
    * Convert Task model to TaskDTO
    */
-  static toDTO(
+  static toTaskDTO(
     task: Task,
-    relations?: {
-      project?: { id: string; name: string };
-      apartment?: { id: string; number: string; floor?: number | null };
-      assignedUsers?: Array<{ id: string; name: string; role?: string }>;
-      qualityControl?: {
-        status: string;
-        completionRate: number;
-        lastControlDate?: Date;
-      };
-    }
+    assignees?: Array<{
+      userId: string;
+      userName?: string | null;
+      role?: string | null;
+      assignedAt?: Date;
+    }>
   ): TaskDTO {
     const { deletedAt, ...dto } = task;
     return {
       ...dto,
-      project: relations?.project,
-      apartment: relations?.apartment ? {
-        ...relations.apartment,
-        floor: relations.apartment.floor ?? undefined
-      } : undefined,
-      assignedUsers: relations?.assignedUsers,
-      qualityControl: relations?.qualityControl
+      status: dto.status as TaskStatus,
+      priority: dto.priority as TaskPriority,
+      area: Number(dto.area),
+      rate: Number(dto.rate),
+      dueDate: dto.dueDate?.toISOString() ?? null,
+      createdAt: dto.createdAt.toISOString(),
+      updatedAt: dto.updatedAt.toISOString(),
+      assignees: assignees?.map(a => ({
+        userId: a.userId,
+        userName: a.userName,
+        role: a.role,
+        assignedAt: a.assignedAt?.toISOString()
+      }))
     };
-  }
-
-  /**
-   * Convert array of Task models to TaskDTO array
-   */
-  static toDTOArray(tasks: Task[]): TaskDTO[] {
-    return tasks.map(task => this.toDTO(task));
   }
 }

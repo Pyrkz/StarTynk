@@ -1,4 +1,4 @@
-import type { Role } from '@repo/database'
+import type { Role } from '@repo/database/client-types'
 
 // Notification types
 export type NotificationType = 'info' | 'success' | 'warning' | 'error'

@@ -25,7 +25,10 @@ export function validateBody<T extends z.ZodSchema>(schema: T) {
         data = await request.json();
       } else if (contentType?.includes('multipart/form-data')) {
         const formData = await request.formData();
-        data = Object.fromEntries(formData.entries());
+        data = {};
+        for (const [key, value] of (formData as any).entries()) {
+          (data as any)[key] = value;
+        }
       } else {
         throw new ValidationError('Unsupported content type');
       }
@@ -44,7 +47,7 @@ export function validateQuery<T extends z.ZodSchema>(schema: T) {
   return async function queryValidationMiddleware(request: Request): Promise<z.infer<T>> {
     try {
       const url = new URL(request.url);
-      const data = Object.fromEntries(url.searchParams);
+      const data = Object.fromEntries(url.searchParams.entries());
       return await schema.parseAsync(data);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -73,7 +76,7 @@ async function extractRequestData(request: Request): Promise<any> {
   
   if (method === 'GET' || method === 'DELETE') {
     const url = new URL(request.url);
-    return Object.fromEntries(url.searchParams);
+    return Object.fromEntries(url.searchParams.entries());
   }
 
   const contentType = request.headers.get('content-type');
@@ -84,12 +87,20 @@ async function extractRequestData(request: Request): Promise<any> {
   
   if (contentType?.includes('multipart/form-data')) {
     const formData = await request.formData();
-    return Object.fromEntries(formData.entries());
+    const data: Record<string, any> = {};
+    for (const [key, value] of (formData as any).entries()) {
+      data[key] = value;
+    }
+    return data;
   }
   
   if (contentType?.includes('application/x-www-form-urlencoded')) {
     const formData = await request.formData();
-    return Object.fromEntries(formData.entries());
+    const data: Record<string, any> = {};
+    for (const [key, value] of (formData as any).entries()) {
+      data[key] = value;
+    }
+    return data;
   }
 
   return {};

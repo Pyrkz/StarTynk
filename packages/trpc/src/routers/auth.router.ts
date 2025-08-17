@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { router, publicProcedure, protectedProcedure } from '../trpc';
+import { router, publicProcedure, protectedProcedure } from '../server';
 import { authMiddleware } from '../middleware';
 import {
   unifiedLoginRequestSchema,
@@ -37,8 +37,9 @@ export const authRouter = router({
 
       try {
         // Determine login method if not provided
-        const detectedMethod: LoginMethod = loginMethod || 
-          (identifier.includes('@') ? LoginMethod.EMAIL : LoginMethod.PHONE);
+        const detectedMethod = loginMethod 
+          ? (loginMethod === 'email' ? LoginMethod.EMAIL : LoginMethod.PHONE)
+          : (identifier.includes('@') ? LoginMethod.EMAIL : LoginMethod.PHONE);
 
         // Find user by email or phone
         const whereClause = detectedMethod === LoginMethod.EMAIL 
@@ -112,10 +113,11 @@ export const authRouter = router({
               token: refreshToken,
               userId: user.id,
               expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-              deviceId: deviceId || null,
+              deviceId: deviceId || '',
               userAgent: ctx.userAgent || null,
               ip: ctx.ip || null,
               loginMethod: detectedMethod,
+              jti: `jti_${user.id}_${Date.now()}`, // JWT ID for tracking
             },
           });
 
@@ -192,7 +194,7 @@ export const authRouter = router({
         // Create user
         const user = await ctx.prisma.user.create({
           data: {
-            email,
+            email: email || '',
             phone,
             name,
             password: hashedPassword,
@@ -373,11 +375,13 @@ export const authRouter = router({
         const { TokenService } = await import('@repo/auth');
         const tokenService = new TokenService();
 
-        const payload = type === 'access' 
+        const result = type === 'access' 
           ? await tokenService.verifyAccessToken(token)
           : await tokenService.verifyRefreshToken(token);
 
-        if (!payload || !payload.userId) {
+        // Handle both access token (direct TokenPayload) and refresh token (object with payload property)
+        const actualPayload = 'payload' in result ? result.payload : result;
+        if (!result || (!(actualPayload as any).userId && !(actualPayload as any).sub)) {
           return {
             success: true,
             valid: false,
@@ -386,8 +390,9 @@ export const authRouter = router({
         }
 
         // Get user data
+        const userId = (actualPayload as any).userId || (actualPayload as any).sub;
         const user = await ctx.prisma.user.findUnique({
-          where: { id: payload.userId },
+          where: { id: userId },
           select: {
             id: true,
             email: true,
@@ -504,8 +509,9 @@ export const authRouter = router({
         }
 
         // Determine login method
-        const detectedMethod: LoginMethod = loginMethod || 
-          (identifier.includes('@') ? LoginMethod.EMAIL : LoginMethod.PHONE);
+        const detectedMethod: LoginMethod = loginMethod 
+          ? (loginMethod === 'email' ? LoginMethod.EMAIL : LoginMethod.PHONE)
+          : (identifier.includes('@') ? LoginMethod.EMAIL : LoginMethod.PHONE);
 
         // Find user
         const whereClause = detectedMethod === LoginMethod.EMAIL 

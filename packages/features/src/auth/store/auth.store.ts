@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import type { 
-  UnifiedUser, 
+  UnifiedUserDTO as UnifiedUser, 
   UnifiedAuthResponse, 
   LoginRequest, 
   RegisterRequest 
@@ -30,7 +30,7 @@ export interface AuthState {
   
   // Session data
   accessToken: string | null;
-  refreshToken: string | null;
+  refreshTokenValue: string | null;
   sessionExpiry: Date | null;
   
   // Platform info
@@ -54,7 +54,7 @@ export interface AuthActions {
   
   // State management
   setUser: (user: UnifiedUser | null) => void;
-  setTokens: (accessToken: string | null, refreshToken: string | null) => void;
+  setTokens: (accessToken: string | null, refreshTokenValue: string | null) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
@@ -65,6 +65,9 @@ export interface AuthActions {
   
   // Platform detection
   setPlatform: (platform: 'web' | 'mobile') => void;
+  
+  // Auth service integration
+  getAuthService: () => UnifiedAuthService;
 }
 
 /**
@@ -104,7 +107,7 @@ export const useAuthStore = create<AuthStore>()(
       error: null,
       loginError: null,
       accessToken: null,
-      refreshToken: null,
+      refreshTokenValue: null,
       sessionExpiry: null,
       platform: typeof window !== 'undefined' && !('expo' in (globalThis as any)) ? 'web' : 'mobile',
       isOnline: true,
@@ -126,7 +129,7 @@ export const useAuthStore = create<AuthStore>()(
               state.user = response.user!;
               state.isAuthenticated = true;
               state.accessToken = response.accessToken || null;
-              state.refreshToken = response.refreshToken || null;
+              state.refreshTokenValue = response.refreshToken || null;
               state.sessionExpiry = response.expiresIn 
                 ? new Date(Date.now() + response.expiresIn * 1000)
                 : null;
@@ -168,7 +171,7 @@ export const useAuthStore = create<AuthStore>()(
             state.user = null;
             state.isAuthenticated = false;
             state.accessToken = null;
-            state.refreshToken = null;
+            state.refreshTokenValue = null;
             state.sessionExpiry = null;
             state.isLogoutLoading = false;
             state.error = null;
@@ -181,7 +184,7 @@ export const useAuthStore = create<AuthStore>()(
             state.user = null;
             state.isAuthenticated = false;
             state.accessToken = null;
-            state.refreshToken = null;
+            state.refreshTokenValue = null;
             state.sessionExpiry = null;
             state.isLogoutLoading = false;
           });
@@ -203,7 +206,7 @@ export const useAuthStore = create<AuthStore>()(
               state.user = response.user!;
               state.isAuthenticated = true;
               state.accessToken = response.accessToken || null;
-              state.refreshToken = response.refreshToken || null;
+              state.refreshTokenValue = response.refreshToken || null;
               state.isLoading = false;
             });
           } else {
@@ -240,7 +243,7 @@ export const useAuthStore = create<AuthStore>()(
           if (response.success) {
             set((state) => {
               state.accessToken = response.accessToken || state.accessToken;
-              state.refreshToken = response.refreshToken || state.refreshToken;
+              state.refreshTokenValue = response.refreshToken || state.refreshTokenValue;
               state.sessionExpiry = response.expiresIn 
                 ? new Date(Date.now() + response.expiresIn * 1000)
                 : state.sessionExpiry;
@@ -299,10 +302,10 @@ export const useAuthStore = create<AuthStore>()(
         });
       },
 
-      setTokens: (accessToken: string | null, refreshToken: string | null) => {
+      setTokens: (accessToken: string | null, refreshTokenValue: string | null) => {
         set((state) => {
           state.accessToken = accessToken;
-          state.refreshToken = refreshToken;
+          state.refreshTokenValue = refreshTokenValue;
         });
       },
 
@@ -341,7 +344,7 @@ export const useAuthStore = create<AuthStore>()(
               state.user = null;
               state.isAuthenticated = false;
               state.accessToken = null;
-              state.refreshToken = null;
+              state.refreshTokenValue = null;
             });
           }
           
@@ -377,7 +380,7 @@ export const useAuthStore = create<AuthStore>()(
         user: state.user,
         isAuthenticated: state.isAuthenticated,
         accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
+        refreshTokenValue: state.refreshTokenValue,
         platform: state.platform,
       }),
     }

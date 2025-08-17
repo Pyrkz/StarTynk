@@ -1,4 +1,5 @@
-import { ApiResponse, ApiError, PaginatedResponse } from '../types/api';
+import { ApiResponse, ApiError } from '../types/interfaces/api.interface';
+import { PaginatedResponse } from '../types/api/responses.types';
 
 /**
  * Create a successful API response

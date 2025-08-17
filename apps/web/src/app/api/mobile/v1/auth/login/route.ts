@@ -20,6 +20,6 @@ export async function POST(request: NextRequest) {
   );
   
   // Import the unified handler dynamically to avoid circular dependencies
-  const { POST: unifiedPost } = await import('../../../v1/auth/unified-login/route');
+  const { POST: unifiedPost } = await import('../../../../v1/auth/unified-login/route');
   return unifiedPost(unifiedRequest);
 }

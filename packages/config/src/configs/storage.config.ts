@@ -1,8 +1,8 @@
-import { EnvLoader } from '../env';
+import { getExtendedEnv } from '../env';
 import type { StorageConfig, MonitoringConfig } from '../types';
 
 export function getStorageConfig(): StorageConfig {
-  const env = EnvLoader.get();
+  const env = getExtendedEnv();
   
   return {
     awsRegion: env.AWS_REGION,
@@ -31,7 +31,7 @@ export function getS3Config() {
 }
 
 export function getUploadConfig() {
-  const env = EnvLoader.get();
+  const env = getExtendedEnv();
   
   return {
     // File size limits (in bytes)
@@ -80,7 +80,7 @@ export function getUploadConfig() {
 }
 
 export function getMonitoringConfig(): MonitoringConfig {
-  const env = EnvLoader.get();
+  const env = getExtendedEnv();
   
   return {
     sentryDsn: env.SENTRY_DSN,
@@ -91,7 +91,7 @@ export function getMonitoringConfig(): MonitoringConfig {
 
 export function getSentryConfig() {
   const monitoringConfig = getMonitoringConfig();
-  const env = EnvLoader.get();
+  const env = getExtendedEnv();
   
   if (!monitoringConfig.enabled) {
     return null;

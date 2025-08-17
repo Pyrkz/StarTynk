@@ -1,6 +1,6 @@
 import { prisma } from '@repo/database';
 import { ApiResponse } from '../../responses';
-import { ListUsersInput } from '../../validators';
+import type { ListUsersInput } from '../../validators';
 import { applyFilters, applySorting, applyPagination, getUserSortFields } from '../../utils';
 import { logger } from '../../middleware';
 
@@ -34,8 +34,7 @@ export async function listUsersHandler(input: ListUsersInput): Promise<Response>
         select: {
           id: true,
           email: true,
-          firstName: true,
-          lastName: true,
+          name: true,
           role: true,
           isActive: true,
           createdAt: true,
@@ -43,7 +42,7 @@ export async function listUsersHandler(input: ListUsersInput): Promise<Response>
           lastLoginAt: true,
           _count: {
             select: {
-              developedProjects: true,
+              // developedProjects: true, // Field not found in schema
               coordinatedProjects: true
             }
           }

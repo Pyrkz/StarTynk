@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@repo/database';
 import { verifyRefreshToken, verifyRefreshTokenInDb, createTokens, createSecurityContext } from '@repo/auth';
-import { ApiResponse } from '@repo/api/responses';
-import { Logger } from '@repo/utils/logger';
+import { ApiResponse } from '@repo/api/web';
+import { Logger } from '@repo/utils';
 
 const logger = new Logger('MobileTokenRefresh');
 

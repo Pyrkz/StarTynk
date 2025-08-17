@@ -2,7 +2,7 @@ import { prisma } from '@repo/database';
 import { refreshAccessToken } from '@repo/auth';
 import { ApiResponse } from '../../responses';
 import { AuthError } from '../../errors';
-import { RefreshTokenInput } from '../../validators';
+import type { RefreshTokenInput } from '../../validators';
 import { logger } from '../../middleware';
 
 export async function refreshHandler(input: RefreshTokenInput): Promise<Response> {
@@ -43,8 +43,7 @@ export async function refreshHandler(input: RefreshTokenInput): Promise<Response
         user: {
           id: tokenRecord.user.id,
           email: tokenRecord.user.email,
-          firstName: tokenRecord.user.firstName,
-          lastName: tokenRecord.user.lastName,
+          name: tokenRecord.user.name || '',
           role: tokenRecord.user.role,
           isActive: tokenRecord.user.isActive
         }

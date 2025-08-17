@@ -1,5 +1,6 @@
 import { PrismaClient } from '@repo/database';
-import { PaginationParams, calculatePagination } from '../utils/pagination';
+import type { PaginationParams } from '../utils/pagination';
+import { calculatePagination } from '../utils/pagination';
 
 export abstract class BaseRepository<T> {
   protected prisma: PrismaClient;
@@ -102,7 +103,7 @@ export abstract class BaseRepository<T> {
     return count > 0;
   }
 
-  async transaction<R>(fn: (tx: PrismaClient) => Promise<R>): Promise<R> {
+  async transaction<R>(fn: (tx: Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>) => Promise<R>): Promise<R> {
     return this.prisma.$transaction(fn);
   }
 }

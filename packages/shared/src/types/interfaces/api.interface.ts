@@ -8,6 +8,7 @@ export interface ApiRequest {
 }
 
 export interface ApiResponse<T = any> {
+  success: boolean;
   data?: T;
   error?: ApiError;
   meta?: ApiMeta;
@@ -17,6 +18,7 @@ export interface ApiError {
   message: string;
   code: string;
   statusCode?: number;
+  field?: string;
   details?: any;
 }
 

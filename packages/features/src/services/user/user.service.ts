@@ -1,8 +1,9 @@
-import { User } from '@repo/database';
-import { UserDTO, UserMapper, CreateUserDTO, UpdateUserDTO } from '@repo/shared/types';
-import { createUserSchema, updateUserSchema } from '@repo/validation/schemas';
-import { Logger } from '@repo/utils/logger';
-import { hash, compare } from '@repo/utils/crypto';
+import type { User } from '@repo/database';
+import type { UserDTO, CreateUserDTO, UpdateUserDTO } from '@repo/shared';
+import { UserMapper } from '@repo/shared';
+import { createUserSchema, updateUserSchema } from '@repo/validation';
+import { Logger } from '@repo/utils';
+import { hash, compare } from '@repo/utils';
 import { UserRepository } from '../../repositories/user';
 import { BusinessError, UnauthorizedError, ConflictError } from '../../errors';
 import { EventBus } from '../../events';
@@ -85,10 +86,17 @@ export class UserService implements IUserService {
       const hashedPassword = await hash(validated.password);
       
       // Create user
-      const user = await this.userRepository.create({
+      const createData: any = {
         ...validated,
         password: hashedPassword
-      });
+      };
+      
+      // Convert string date to Date for database if it exists
+      if (validated.employmentStartDate) {
+        createData.employmentStartDate = new Date(validated.employmentStartDate);
+      }
+      
+      const user = await this.userRepository.create(createData);
 
       // Emit event
       await this.eventBus.emit('user.created', {
@@ -118,7 +126,17 @@ export class UserService implements IUserService {
       }
 
       // Update user
-      const updated = await this.userRepository.update(id, validated);
+      const updateData: any = { ...validated };
+      
+      // Convert string dates to Date for database if they exist
+      if ('employmentStartDate' in validated && validated.employmentStartDate) {
+        updateData.employmentStartDate = new Date(validated.employmentStartDate);
+      }
+      if ('employmentEndDate' in validated && (validated as any).employmentEndDate) {
+        updateData.employmentEndDate = new Date((validated as any).employmentEndDate);
+      }
+      
+      const updated = await this.userRepository.update(id, updateData);
 
       // Emit event
       await this.eventBus.emit('user.updated', {
@@ -285,8 +303,19 @@ export class UserService implements IUserService {
 
       // Create users in transaction
       const createdUsers = await this.transactionManager.execute(async (tx) => {
+        // Convert string dates to Date objects for database
+        const usersWithDates = usersWithHashedPasswords.map(user => {
+          const userData: any = { ...user };
+          if (user.employmentStartDate) {
+            userData.employmentStartDate = new Date(user.employmentStartDate);
+          }
+          if ((user as any).employmentEndDate) {
+            userData.employmentEndDate = new Date((user as any).employmentEndDate);
+          }
+          return userData;
+        });
         // Use the repository's bulk create method
-        return await this.userRepository.bulkCreate(usersWithHashedPasswords);
+        return await this.userRepository.bulkCreate(usersWithDates);
       });
 
       // Emit events for all created users

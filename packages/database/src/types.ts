@@ -68,3 +68,7 @@ export type { Prisma } from '@prisma/client';
 
 // Re-export the client for convenience
 export { PrismaClient } from '@prisma/client';
+
+// Type aliases for backward compatibility
+export type PayrollRecord = import('@prisma/client').Payroll;
+export type PayrollStatus = import('@prisma/client').PaymentStatus;

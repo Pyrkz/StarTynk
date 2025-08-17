@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@repo/database';
 import { authenticateRequest } from '@repo/auth';
-import { ApiResponse } from '@repo/api/responses';
+import { ApiResponse } from '@repo/api/web';
 import { MobileTaskDTO } from '@repo/shared/types/dto/mobile';
-import { Logger } from '@repo/utils/logger';
+import { Logger } from '@repo/utils';
 
 const logger = new Logger('MobileProjectTasks');
 

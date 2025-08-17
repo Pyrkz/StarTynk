@@ -82,8 +82,8 @@ export default function UsersPage() {
   }, [])
 
   const handlePageChange = useCallback((newPage: number) => {
-    setFilters({ ...filters, page: newPage })
-  }, [filters, setFilters])
+    setFilters((prev) => ({ ...prev, page: newPage }))
+  }, [setFilters])
 
   const totalPages = Math.ceil(total / (filters.pageSize || 20))
 

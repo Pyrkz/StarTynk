@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { router, protectedProcedure } from '../trpc';
+import { router, protectedProcedure } from '../server';
 import { prisma } from '@repo/database';
 import { TRPCError } from '@trpc/server';
 import { createHash } from 'crypto';
@@ -29,7 +29,7 @@ export const syncRouter = router({
   syncItem: protectedProcedure
     .input(SyncItemSchema)
     .mutation(async ({ ctx, input }) => {
-      const { userId } = ctx;
+      const userId = ctx.user.id;
       const { entityType, entityId, operation, payload, checksum, localId } = input;
       
       try {
@@ -88,7 +88,7 @@ export const syncRouter = router({
         await prisma.syncQueue.create({
           data: {
             userId,
-            deviceId: ctx.deviceId || 'unknown',
+            deviceId: (ctx as any).deviceId || 'unknown',
             entityType,
             entityId: localId,
             serverId,
@@ -113,7 +113,7 @@ export const syncRouter = router({
         await prisma.syncQueue.create({
           data: {
             userId,
-            deviceId: ctx.deviceId || 'unknown',
+            deviceId: (ctx as any).deviceId || 'unknown',
             entityType,
             entityId: localId,
             operation,
@@ -136,7 +136,7 @@ export const syncRouter = router({
   syncBatch: protectedProcedure
     .input(BatchSyncSchema)
     .mutation(async ({ ctx, input }) => {
-      const { userId } = ctx;
+      const userId = ctx.user.id;
       const { items } = input;
       const results: any[] = [];
       
@@ -220,7 +220,7 @@ export const syncRouter = router({
           prisma.syncQueue.create({
             data: {
               userId,
-              deviceId: ctx.deviceId || 'unknown',
+              deviceId: (ctx as any).deviceId || 'unknown',
               entityType: item.entityType,
               entityId: item.localId,
               serverId: results[index].serverId,
@@ -247,7 +247,7 @@ export const syncRouter = router({
       entities: z.array(z.string()),
     }))
     .query(async ({ ctx, input }) => {
-      const { userId } = ctx;
+      const userId = ctx.user.id;
       const { since, entities } = input;
       const updates: Record<string, any[]> = {};
       
@@ -311,7 +311,7 @@ export const syncRouter = router({
   // Get sync status
   getSyncStatus: protectedProcedure
     .query(async ({ ctx }) => {
-      const { userId } = ctx;
+      const userId = ctx.user.id;
       
       const [pending, failed, lastSync] = await Promise.all([
         prisma.syncQueue.count({
@@ -337,7 +337,7 @@ export const syncRouter = router({
   // Retry failed items
   retryFailed: protectedProcedure
     .mutation(async ({ ctx }) => {
-      const { userId } = ctx;
+      const userId = ctx.user.id;
       
       const failed = await prisma.syncQueue.updateMany({
         where: { userId, status: 'FAILED' },
@@ -357,7 +357,7 @@ export const syncRouter = router({
       status: z.enum(['SUCCESS', 'FAILED', 'ALL']).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
-      const { userId } = ctx;
+      const userId = ctx.user.id;
       const { status } = input;
       
       const where: any = { userId };

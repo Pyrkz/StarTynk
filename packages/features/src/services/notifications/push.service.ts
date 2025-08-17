@@ -1,6 +1,6 @@
-import { Expo, ExpoPushMessage, ExpoPushTicket } from 'expo-server-sdk';
+import { Expo, type ExpoPushMessage, type ExpoPushTicket } from 'expo-server-sdk';
 import { prisma } from '@repo/database';
-import { Logger } from '@repo/utils/logger';
+import { Logger } from '@repo/utils';
 
 export class PushNotificationService {
   private expo: Expo;
@@ -229,3 +229,5 @@ export class PushNotificationService {
     return chunks;
   }
 }
+
+export const pushNotificationService = new PushNotificationService();

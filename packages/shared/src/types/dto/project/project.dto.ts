@@ -1,7 +1,7 @@
 import { ProjectStatus } from '../../enums';
-import { UserListItemDTO } from '../user';
-import { ApartmentDTO } from './apartment.dto';
-import { TaskListItemDTO } from './task.dto';
+import type { UserListItemDTO } from '../user';
+import type { ApartmentDTO } from './apartment.dto';
+import type { TaskListItemDTO } from './task.dto';
 
 export interface ProjectDTO {
   id: string;
@@ -13,7 +13,7 @@ export interface ProjectDTO {
     name: string;
   };
   startDate: string;
-  endDate: string;
+  endDate: string | null;
   baseRate: number;
   status: ProjectStatus;
   description?: string | null;
@@ -38,7 +38,7 @@ export interface ProjectListItemDTO {
   address: string;
   status: ProjectStatus;
   startDate: string;
-  endDate: string;
+  endDate: string | null;
   developer?: string;
   coordinator?: string;
   _count?: {

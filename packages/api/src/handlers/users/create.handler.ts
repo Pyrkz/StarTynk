@@ -2,7 +2,7 @@ import { prisma } from '@repo/database';
 import { hashPassword } from '@repo/auth';
 import { ApiResponse } from '../../responses';
 import { ApiError } from '../../errors';
-import { CreateUserInput } from '../../validators';
+import type { CreateUserInput } from '../../validators';
 import { logger } from '../../middleware';
 
 export async function createUserHandler(input: CreateUserInput): Promise<Response> {
@@ -31,14 +31,13 @@ export async function createUserHandler(input: CreateUserInput): Promise<Respons
     // Hash password
     const hashedPassword = await hashPassword(password);
 
-    // Create user
+    // Create user - use name field combined from firstName/lastName
     const user = await prisma.user.create({
       data: {
         email,
         phone,
-        firstName,
-        lastName,
-        role,
+        name: `${firstName} ${lastName}`.trim(),
+        role: role as any,
         password: hashedPassword,
         isActive
       },
@@ -46,8 +45,7 @@ export async function createUserHandler(input: CreateUserInput): Promise<Respons
         id: true,
         email: true,
         phone: true,
-        firstName: true,
-        lastName: true,
+        name: true,
         role: true,
         isActive: true,
         createdAt: true
